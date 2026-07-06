@@ -209,10 +209,7 @@
       </div>
       <div class="result-item">
         <h3>Tier</h3>
-        <div style="display:flex;align-items:center;gap:0.5rem">
-          <div class="result-value" id="tier-value"></div>
-          <button class="edge-btn" id="setback-edge-btn" style="display:none;margin:0">Spend Edge</button>
-        </div>
+        <div class="result-value" id="tier-value"></div>
         <div class="result-sub" id="tier-detail"></div>
       </div>
       <div class="result-item">
@@ -242,7 +239,6 @@ const POOL = 4;
 let dice = [0, 0, 0, 0];
 let baseDice = [0, 0, 0, 0];
 let edgesUsed = [false, false, false, false];
-let edgeUpgraded = false;
 
 const dieEls = [];
 const edgeBtns = [];
@@ -306,7 +302,6 @@ function roll() {
   dice = dice.map(() => Math.floor(Math.random() * DIE_SIDES) + 1);
   baseDice = [...dice];
   edgesUsed = [false, false, false, false];
-  edgeUpgraded = false;
   updateDiceDisplay();
   calculate();
 }
@@ -423,8 +418,7 @@ function calculate() {
     finalResults = rawResults;
   }
 
-  let net = finalResults.reduce((a, b) => a + b, 0);
-  if (net === 0 && edgeUpgraded) net = 1;
+  const net = finalResults.reduce((a, b) => a + b, 0);
 
   // Tier
   let tier, tierCls, tierDesc;
@@ -503,20 +497,6 @@ function calculate() {
   const eventDetailEl = document.getElementById('event-detail');
   eventDetailEl.textContent = eventDesc + ' (' + evens + 'e / ' + (4 - evens) + 'o)';
   eventDetailEl.className = 'result-sub neutral-sub';
-
-  // Edge upgrade for Setback
-  const upgradeBtn = document.getElementById('setback-edge-btn');
-  const rawNet = finalResults.reduce((a, b) => a + b, 0);
-  if (rawNet === 0) {
-    upgradeBtn.style.display = 'inline-block';
-    upgradeBtn.textContent = edgeUpgraded ? 'Undo' : 'Spend Edge';
-  } else {
-    upgradeBtn.style.display = 'none';
-  }
-  if (edgeUpgraded) {
-    detail += ' (edge spent — upgraded to success)';
-    detailEl.textContent = detail;
-  }
 
   // Breakdown table
   const bd = document.getElementById('breakdown');
@@ -623,11 +603,6 @@ document.getElementById('tn').addEventListener('input', updateOdds);
 document.getElementById('difficulty').addEventListener('input', updateOdds);
 document.getElementById('criticals').addEventListener('input', () => {
   if (dice.some(d => d > 0)) { updateDiceDisplay(); calculate(); }
-  updateOdds();
-});
-document.getElementById('setback-edge-btn').addEventListener('click', () => {
-  edgeUpgraded = !edgeUpgraded;
-  calculate();
   updateOdds();
 });
 updateOdds();

@@ -33,7 +33,7 @@ The Core must stand alone as a complete game. The Advanced book is additive, not
 | Net | Tier | Meaning |
 |---|---|---|
 | −1 or less | **Misfortune** | Failure, things get complicated |
-| 0 | **Setback** | Success with a cost |
+| 0 | **Setback** | Failure |
 | 1+ | **Triumph** | Clean success and beyond |
 
 **Resolution flow**:
@@ -92,7 +92,7 @@ Difficulty is 0–12. The GM picks a number based on the situation. No table loo
 
 At Difficulty 12 every die is a penalty — the normal calculation can never exceed Setback. A Critical Success (4 evens) ignores penalties, making success possible against impossible odds. The GM may let the roll happen for dramatic effect, knowing a breakout is always possible.
 
-**No cap on TN vs Difficulty.** A die that beats the TN but is also ≤ Difficulty still counts as a penalty. This is intentional — the situation's difficulty can overwhelm a character's skill.
+**Difficulty caps at TN−1 internally.** Difficulty can never equal or exceed TN — a die that beats the TN is always a success, never a penalty. This avoids contradictory outcomes where the same die scores and loses a success. The input field is freely editable; the cap is enforced in resolution and odds calculations only.
 
 ## Rationale for d12
 
