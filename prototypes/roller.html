@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dice Roller</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f5f5f5; color: #1a1a1a; margin: 0; padding: 2rem;
+    display: flex; justify-content: center;
+  }
+  .container { max-width: 800px; width: 100%; }
+  h1 { font-size: 1.25rem; font-weight: 600; margin: 0 0 0.25rem; }
+  .subtitle { color: #666; font-size: 0.85rem; margin: 0 0 1.5rem; }
+  .controls {
+    background: #fff; border-radius: 8px; padding: 1.25rem;
+    display: flex; gap: 1.5rem; align-items: flex-end; margin-bottom: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    flex-wrap: wrap;
+  }
+  .control-group { display: flex; flex-direction: column; gap: 0.35rem; }
+  .control-group label { font-size: 0.8rem; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.03em; }
+  .controls input {
+    width: 100px; padding: 0.5rem 0.75rem; font-size: 1.1rem;
+    border: 1px solid #ccc; border-radius: 6px; font-variant-numeric: tabular-nums;
+  }
+  .controls input:focus { outline: none; border-color: #4a90d9; box-shadow: 0 0 0 3px rgba(74,144,217,0.15); }
+
+  .toggle-group { display: flex; align-items: center; gap: 0.5rem; padding-bottom: 0.2rem; }
+  .toggle-group label { font-size: 0.8rem; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.03em; }
+  .toggle { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider { position: absolute; cursor: pointer; inset: 0; background: #ccc; border-radius: 20px; transition: 0.2s; }
+  .toggle-slider::before { content: ''; position: absolute; height: 16px; width: 16px; left: 2px; bottom: 2px; background: #fff; border-radius: 50%; transition: 0.2s; }
+  .toggle input:checked + .toggle-slider { background: #4a6fa5; }
+  .toggle input:checked + .toggle-slider::before { transform: translateX(16px); }
+
+  .btn {
+    padding: 0.5rem 1.25rem; font-size: 1rem; font-weight: 600;
+    border: none; border-radius: 6px; cursor: pointer; color: #fff;
+    background: #4a6fa5; transition: background 0.15s;
+  }
+  .btn:hover { background: #3b5d8f; }
+  .btn:active { transform: scale(0.97); }
+
+  .dice-area {
+    background: #fff; border-radius: 8px; padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 1.5rem;
+  }
+  .dice-row {
+    display: flex; gap: 1rem; justify-content: center; margin-bottom: 1rem;
+  }
+  .die-slot {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .die-shell {
+    width: 88px; height: 88px;
+    clip-path: polygon(50% 0%, 97.6% 34.5%, 79.4% 90.5%, 20.6% 90.5%, 2.4% 34.5%);
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s;
+  }
+  .die-shell.default { background: #ddd; }
+  .die-shell.even { background: #d4a017; }
+  .die-shell.odd { background: #000; }
+  .die {
+    width: 80px; height: 80px;
+    clip-path: polygon(50% 0%, 97.6% 34.5%, 79.4% 90.5%, 20.6% 90.5%, 2.4% 34.5%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-size: 2rem; font-weight: 700; background: #fafafa;
+    user-select: none; transition: transform 0.15s;
+    position: relative;
+  }
+
+  .die.edged { transform: scale(1.05); }
+  .die-label {
+    font-size: 1rem; font-weight: 700;
+    line-height: 1;
+  }
+  .die-label.success-label { color: #2b7a4b; }
+  .die-label.penalty-label { color: #c94f4f; }
+  .die-label.neutral-label { color: #999; }
+  .edge-badge {
+    position: absolute; top: -4px; right: -4px; z-index: 1;
+    background: #d4a017; color: #fff; font-size: 0.55rem; font-weight: 700;
+    width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+    pointer-events: none;
+  }
+
+  .edge-btn {
+    padding: 0.35rem 0.75rem; font-size: 0.8rem; font-weight: 600;
+    border: 2px solid #2b7a4b; border-radius: 6px; cursor: pointer;
+    background: #fff; color: #2b7a4b; transition: all 0.15s;
+    width: 110px; text-align: center;
+  }
+  .edge-btn:hover:not(:disabled) { background: #2b7a4b; color: #fff; }
+  .edge-btn:disabled { opacity: 0.35; cursor: not-allowed; border-color: #ccc; color: #999; }
+
+  .result-card {
+    background: #fff; border-radius: 8px; padding: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 1.5rem;
+  }
+  .result-grid {
+    display: flex; gap: 1.5rem; flex-wrap: wrap;
+  }
+  .result-item { flex: 1; min-width: 140px; }
+  .result-item h3 {
+    font-size: 0.75rem; font-weight: 600; color: #777;
+    text-transform: uppercase; letter-spacing: 0.04em; margin: 0 0 0.35rem;
+  }
+  .result-value {
+    font-size: 1.75rem; font-weight: 700; line-height: 1.2;
+  }
+  .result-value.triumph { color: #2b7a4b; }
+  .result-value.setback { color: #d4893b; }
+  .result-value.mishap { color: #c94f4f; }
+  .result-value.inspired2 { color: #d4a017; }
+  .result-value.inspired1 { color: #7b4fa0; }
+  .result-value.clash { color: #999; }
+  .result-value.threat1 { color: #c9444f; }
+  .result-value.threat2 { color: #111; }
+  .result-sub { font-size: 0.8rem; color: #888; margin-top: 0.15rem; }
+  .result-sub.positive { color: #2b7a4b; }
+  .result-sub.negative { color: #c94f4f; }
+  .result-sub.neutral-sub { color: #888; }
+
+  .even-odd-label { font-size: 0.85rem; margin-top: 0.5rem; color: #555; font-weight: 500; }
+
+  .state-badge {
+    display: inline-block; padding: 0.2rem 0.6rem; border-radius: 4px;
+    font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
+  }
+  .state-badge.pos { background: #e8f5e9; color: #2b7a4b; }
+  .state-badge.neg { background: #fde8e8; color: #c94f4f; }
+  .state-badge.neu { background: #f5f5f5; color: #888; }
+
+  h2 { font-size: 0.9rem; font-weight: 600; margin: 0 0 0.75rem; }
+
+  .breakdown {
+    margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #eee;
+  }
+  .breakdown h3 {
+    font-size: 0.75rem; font-weight: 600; color: #777;
+    text-transform: uppercase; letter-spacing: 0.04em; margin: 0 0 0.5rem;
+  }
+  .breakdown-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  .breakdown-table td { padding: 0.25rem 0.5rem; border-bottom: 1px solid #f0f0f0; font-size: 0.9rem; }
+  .breakdown-table td:last-child { text-align: right; }
+  .breakdown-table tr:last-child td { border-bottom: none; }
+
+  .odds-divider { border: none; border-top: 1px solid #ddd; margin: 1.5rem 0 0; }
+  .odds-card { display: flex; flex-direction: column; gap: 1rem; padding: 1rem 0 0; }
+  .num { text-align: right; }
+  .tier-cards { display: flex; gap: 0.75rem; }
+  .tier-card { flex: 1; background: #fff; border-radius: 8px; padding: 0.75rem 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08); text-align: center; }
+  .tier-card-name { font-size: 0.8rem; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.04em; }
+  .tier-card-pct { font-size: 1.5rem; font-weight: 700; margin: 0.25rem 0; }
+  .sf-cards { display: flex; gap: 0.75rem; margin-bottom: 0; }
+  .sf-card { flex: 1; background: #fff; border-radius: 8px; padding: 0.75rem 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08); text-align: center; }
+  .sf-card-name { font-size: 0.8rem; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.04em; }
+  .sf-card-pct { font-size: 1.5rem; font-weight: 700; margin: 0.25rem 0; }
+  .net-cards { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .net-card { flex: 1 0 60px; background: #fff; border-radius: 8px; padding: 0.5rem 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08); text-align: center; min-width: 60px; }
+  .net-card-val { font-size: 1.1rem; font-weight: 700; }
+  .net-card-pct { font-size: 0.8rem; color: #666; margin-top: 0.15rem; }
+
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Dice Check</h1>
+
+  <div class="controls">
+    <div class="control-group">
+      <label for="tn">Target Number</label>
+      <input id="tn" type="number" min="1" max="12" value="8">
+    </div>
+    <div class="control-group">
+      <label for="difficulty">Difficulty</label>
+      <input id="difficulty" type="number" min="0" max="12" value="3">
+    </div>
+    <div class="toggle-group">
+      <label>Criticals</label>
+      <label class="toggle">
+        <input type="checkbox" id="criticals" checked>
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <button class="btn" id="roll-btn">Roll 4d12</button>
+  </div>
+
+  <div class="dice-area" id="dice-area">
+    <div class="dice-row" id="dice-row"></div>
+  </div>
+
+  <div class="result-card" id="results" style="display:none">
+    <div class="result-grid">
+      <div class="result-item">
+        <h3>Net Successes</h3>
+        <div class="result-value" id="net-value"></div>
+        <div class="result-sub" id="net-detail"></div>
+      </div>
+      <div class="result-item">
+        <h3>Tier</h3>
+        <div style="display:flex;align-items:center;gap:0.5rem">
+          <div class="result-value" id="tier-value"></div>
+          <button class="edge-btn" id="setback-edge-btn" style="display:none;margin:0">Spend Edge</button>
+        </div>
+        <div class="result-sub" id="tier-detail"></div>
+      </div>
+      <div class="result-item">
+        <h3>Event</h3>
+        <div class="result-value" id="event-value"></div>
+        <div class="result-sub" id="event-detail"></div>
+      </div>
+    </div>
+
+    <div class="breakdown" id="breakdown" style="display:none">
+      <h3>Per-Die Breakdown</h3>
+      <table class="breakdown-table" id="breakdown-table"></table>
+    </div>
+  </div>
+  <hr class="odds-divider">
+  <div class="odds-card">
+    <div class="sf-cards" id="odds-sf-body"></div>
+    <div class="tier-cards" id="odds-tier-body"></div>
+    <div class="net-cards" id="odds-net-body"></div>
+  </div>
+</div>
+
+<script>
+const DIE_SIDES = 12;
+const POOL = 4;
+
+let dice = [0, 0, 0, 0];
+let baseDice = [0, 0, 0, 0];
+let edgesUsed = [false, false, false, false];
+let edgeUpgraded = false;
+
+const dieEls = [];
+const edgeBtns = [];
+
+function getTN() {
+  return Math.min(12, Math.max(1, parseInt(document.getElementById('tn').value) || 8));
+}
+function getDifficulty() {
+  const raw = Math.min(12, Math.max(0, parseInt(document.getElementById('difficulty').value) || 0));
+  const tn = getTN();
+  return Math.min(raw, tn - 1);
+}
+function criticalsEnabled() {
+  return document.getElementById('criticals').checked;
+}
+function dieResult(die, tn, difficulty) {
+  if (die <= difficulty) return -1;
+  if (die >= tn && die > difficulty) return 1;
+  return 0;
+}
+function edgeWouldHelp(die, tn, difficulty) {
+  if (die === 12) return false;
+  return dieResult(Math.min(12, die + 2), tn, difficulty) > dieResult(die, tn, difficulty);
+}
+
+function init() {
+  const diceRow = document.getElementById('dice-row');
+  diceRow.innerHTML = '';
+
+  for (let i = 0; i < POOL; i++) {
+    const slot = document.createElement('div');
+    slot.className = 'die-slot';
+
+    const label = document.createElement('div');
+    label.className = 'die-label';
+    slot.appendChild(label);
+
+    const shell = document.createElement('div');
+    shell.className = 'die-shell default';
+    slot.appendChild(shell);
+
+    const die = document.createElement('div');
+    die.className = 'die';
+    die.innerHTML = `<span class="die-num"></span>`;
+    shell.appendChild(die);
+
+    const btn = document.createElement('button');
+    btn.className = 'edge-btn';
+    btn.textContent = 'Spend Edge';
+    btn.disabled = true;
+    btn.addEventListener('click', () => toggleEdge(i));
+    slot.appendChild(btn);
+
+    diceRow.appendChild(slot);
+    dieEls[i] = die;
+    edgeBtns[i] = btn;
+  }
+}
+
+function roll() {
+  dice = dice.map(() => Math.floor(Math.random() * DIE_SIDES) + 1);
+  baseDice = [...dice];
+  edgesUsed = [false, false, false, false];
+  edgeUpgraded = false;
+  updateDiceDisplay();
+  calculate();
+}
+
+function toggleEdge(index) {
+  if (edgesUsed[index]) {
+    dice[index] = baseDice[index];
+    edgesUsed[index] = false;
+  } else {
+    dice[index] = Math.min(12, baseDice[index] + 2);
+    edgesUsed[index] = true;
+  }
+  updateDiceDisplay();
+  calculate();
+}
+
+function updateDiceDisplay() {
+  const tn = getTN();
+  const difficulty = getDifficulty();
+  const evens = dice.filter(d => d > 0 && d % 2 === 0).length;
+  const criticalFailure = evens === 0 && dice.some(d => d > 0);
+
+  for (let i = 0; i < POOL; i++) {
+    const d = dice[i];
+    const el = dieEls[i];
+    const shell = el.parentElement;
+    const slot = shell.parentElement;
+    const numEl = el.querySelector('.die-num');
+    const labelEl = slot.querySelector('.die-label');
+    const existingBadge = slot.querySelector('.edge-badge');
+
+    numEl.textContent = d || '';
+
+    if (d === 0) {
+      el.className = 'die';
+      shell.className = 'die-shell default';
+      labelEl.textContent = '';
+      labelEl.className = 'die-label';
+      edgeBtns[i].disabled = true;
+      edgeBtns[i].textContent = 'Spend Edge';
+      if (existingBadge) existingBadge.remove();
+      continue;
+    }
+
+    let label, cls;
+    if (d <= difficulty) {
+      label = '-1';
+      cls = 'penalty-label';
+    } else if (d >= tn && d > difficulty) {
+      label = '+1';
+      cls = 'success-label';
+    } else {
+      label = '0';
+      cls = 'neutral-label';
+    }
+
+    el.className = 'die';
+    if (edgesUsed[i]) el.classList.add('edged');
+
+    shell.className = 'die-shell ' + (d % 2 === 0 ? 'even' : 'odd');
+
+    if (existingBadge) existingBadge.remove();
+
+    if (edgesUsed[i]) {
+      const badge = document.createElement('div');
+      badge.className = 'edge-badge';
+      badge.textContent = 'E';
+      slot.appendChild(badge);
+    }
+
+    labelEl.textContent = label;
+    labelEl.className = 'die-label ' + cls;
+
+    const btn = edgeBtns[i];
+    if (edgesUsed[i]) {
+      btn.disabled = false;
+      btn.textContent = 'Undo';
+    } else {
+      btn.disabled = criticalFailure || !edgeWouldHelp(d, tn, difficulty);
+      btn.textContent = 'Spend Edge';
+    }
+  }
+}
+
+function calculate() {
+  const tn = getTN();
+  const difficulty = getDifficulty();
+  const resultsDiv = document.getElementById('results');
+
+  if (dice.some(d => d === 0)) {
+    resultsDiv.style.display = 'none';
+    return;
+  }
+
+  // Per-die raw result before parity override
+  const rawResults = dice.map(d => {
+    if (d <= difficulty) return -1;
+    if (d >= tn && d > difficulty) return 1;
+    return 0;
+  });
+
+  const evens = dice.filter(d => d > 0 && d % 2 === 0).length;
+
+  // Apply parity overrides
+  const crits = criticalsEnabled();
+  let finalResults;
+  if (crits && evens === 4) {
+    finalResults = rawResults.map(r => r === 1 ? 1 : 0);
+    finalResults.push(1);
+  } else if (crits && evens === 0) {
+    finalResults = rawResults.map(r => r === -1 ? -1 : 0);
+    finalResults.push(-1);
+  } else {
+    finalResults = rawResults;
+  }
+
+  let net = finalResults.reduce((a, b) => a + b, 0);
+  if (net === 0 && edgeUpgraded) net = 1;
+
+  // Tier
+  let tier, tierCls, tierDesc;
+  if (net <= -1) {
+    tier = 'Misfortune';
+    tierCls = 'mishap';
+    tierDesc = 'Failure, things get complicated';
+  } else if (net === 0) {
+    tier = 'Setback';
+    tierCls = 'setback';
+    tierDesc = 'Failure';
+  } else {
+    tier = 'Triumph';
+    tierCls = 'triumph';
+    tierDesc = 'Clean success and beyond';
+  }
+
+  // Resource / Event
+  let eventName, eventCls, eventDesc;
+  if (!crits) {
+    eventName = 'Off';
+    eventCls = 'neutral-sub';
+    eventDesc = 'Critical events disabled.';
+  } else if (evens === 4) {
+    eventName = 'Critical Success';
+    eventCls = 'inspired2';
+    eventDesc = 'Ignore penalties. +1 success. Gain +2 Inspiration.';
+  } else if (evens === 3) {
+    eventName = '—';
+    eventCls = 'inspired1';
+    eventDesc = 'Gain +1 Inspiration.';
+  } else if (evens === 2) {
+    eventName = 'Clash';
+    eventCls = 'clash';
+    eventDesc = 'No resource gain.';
+  } else if (evens === 1) {
+    eventName = '—';
+    eventCls = 'threat1';
+    eventDesc = 'GM gains +1 Tension.';
+  } else {
+    eventName = 'Critical Failure';
+    eventCls = 'threat2';
+    eventDesc = 'Ignore successes. −1 success. GM gains +2 Tension.';
+  }
+
+  // Update UI
+  resultsDiv.style.display = 'block';
+
+  const netEl = document.getElementById('net-value');
+  netEl.textContent = net >= 0 ? '+' + net : net;
+  const isSuccess = net >= 1;
+  netEl.className = 'result-value ' + (isSuccess ? 'triumph' : 'mishap');
+
+  const detailEl = document.getElementById('net-detail');
+  const successCount = rawResults.filter(r => r === 1).length;
+  const failCount = rawResults.filter(r => r === -1).length;
+  let detail = successCount + ' success' + (successCount !== 1 ? 'es' : '');
+  if (failCount > 0) detail += ', ' + failCount + ' penalt' + (failCount !== 1 ? 'ies' : 'y');
+  if (crits && evens === 4) detail += ' (penalties ignored, +1 success — Critical Success)';
+  if (crits && evens === 0) detail += ' (successes ignored, −1 success — Critical Failure)';
+  detailEl.textContent = detail;
+  detailEl.className = 'result-sub ' + (isSuccess ? 'positive' : 'negative');
+
+  const tierEl = document.getElementById('tier-value');
+  tierEl.textContent = tier;
+  tierEl.className = 'result-value ' + tierCls;
+
+  const tierDetailEl = document.getElementById('tier-detail');
+  tierDetailEl.textContent = tierDesc;
+  tierDetailEl.className = 'result-sub neutral-sub';
+
+  const eventEl = document.getElementById('event-value');
+  eventEl.textContent = eventName;
+  eventEl.className = 'result-value ' + eventCls;
+
+  const eventDetailEl = document.getElementById('event-detail');
+  eventDetailEl.textContent = eventDesc + ' (' + evens + 'e / ' + (4 - evens) + 'o)';
+  eventDetailEl.className = 'result-sub neutral-sub';
+
+  // Edge upgrade for Setback
+  const upgradeBtn = document.getElementById('setback-edge-btn');
+  const rawNet = finalResults.reduce((a, b) => a + b, 0);
+  if (rawNet === 0) {
+    upgradeBtn.style.display = 'inline-block';
+    upgradeBtn.textContent = edgeUpgraded ? 'Undo' : 'Spend Edge';
+  } else {
+    upgradeBtn.style.display = 'none';
+  }
+  if (edgeUpgraded) {
+    detail += ' (edge spent — upgraded to success)';
+    detailEl.textContent = detail;
+  }
+
+  // Breakdown table
+  const bd = document.getElementById('breakdown');
+  const bdTable = document.getElementById('breakdown-table');
+  const hasEdges = edgesUsed.some(e => e);
+
+  if (hasEdges) {
+    bd.style.display = 'block';
+    bdTable.innerHTML = `
+      <tr><td>Base dice</td><td>${baseDice.join(', ')}</td></tr>
+      <tr><td>After edges</td><td>${dice.map((d, i) => edgesUsed[i] ? d + ' (E)' : d).join(', ')}</td></tr>
+      <tr><td>Per die</td><td>${rawResults.map(r => r >= 0 ? '+' + r : r).join(', ')}</td></tr>
+      <tr><td>After parity</td><td>${finalResults.map(r => r >= 0 ? '+' + r : r).join(', ')}</td></tr>
+    `;
+  } else {
+    bd.style.display = 'none';
+  }
+}
+
+document.getElementById('roll-btn').addEventListener('click', roll);
+document.getElementById('tn').addEventListener('input', () => {
+  if (dice.some(d => d > 0)) { updateDiceDisplay(); calculate(); }
+});
+document.getElementById('difficulty').addEventListener('input', () => {
+  if (dice.some(d => d > 0)) { updateDiceDisplay(); calculate(); }
+});
+
+init();
+
+const TIERS = [
+  { lo: 1,         hi: Infinity, name: 'Triumph', desc: 'Clean success and beyond',   cls: 'bar-decisive' },
+  { lo: 0,         hi: 0,  name: 'Setback',  desc: 'Failure',                          cls: 'bar-setback' },
+  { lo: -Infinity, hi: -1, name: 'Misfortune',   desc: 'Failure, things get complicated', cls: 'bar-mishap' },
+];
+
+function calcDist(tn, difficulty, crits) {
+  const dist = {};
+  const faces = [1,2,3,4,5,6,7,8,9,10,11,12];
+  for (const d1 of faces)
+  for (const d2 of faces)
+  for (const d3 of faces)
+  for (const d4 of faces) {
+    const evens = (d1%2===0) + (d2%2===0) + (d3%2===0) + (d4%2===0);
+    let net;
+    if (crits && evens === 4)
+      net = (d1 >= tn && d1 > difficulty ? 1 : 0)
+          + (d2 >= tn && d2 > difficulty ? 1 : 0)
+          + (d3 >= tn && d3 > difficulty ? 1 : 0)
+          + (d4 >= tn && d4 > difficulty ? 1 : 0) + 1;
+    else if (crits && evens === 0)
+      net = (d1 <= difficulty ? -1 : 0)
+          + (d2 <= difficulty ? -1 : 0)
+          + (d3 <= difficulty ? -1 : 0)
+          + (d4 <= difficulty ? -1 : 0) - 1;
+    else
+      net = (d1 >= tn && d1 > difficulty ? 1 : d1 <= difficulty ? -1 : 0)
+          + (d2 >= tn && d2 > difficulty ? 1 : d2 <= difficulty ? -1 : 0)
+          + (d3 >= tn && d3 > difficulty ? 1 : d3 <= difficulty ? -1 : 0)
+          + (d4 >= tn && d4 > difficulty ? 1 : d4 <= difficulty ? -1 : 0);
+    dist[net] = (dist[net] || 0) + 1;
+  }
+  const total = DIE_SIDES ** POOL;
+  for (const k in dist) dist[k] /= total;
+  return dist;
+}
+
+function fmt(p) {
+  return (p * 100).toFixed(2) + '%';
+}
+
+function updateOdds() {
+  const tn = getTN();
+  const difficulty = getDifficulty();
+  const crits = criticalsEnabled();
+
+  const dist = calcDist(tn, difficulty, crits);
+
+  document.getElementById('odds-sf-body').innerHTML = [
+    { name: 'Success', lo: 1, hi: Infinity, cls: 'triumph' },
+    { name: 'Failure', lo: -Infinity, hi: 0, cls: 'mishap' },
+  ].map(t => {
+    const prob = Object.entries(dist)
+      .filter(([k]) => t.lo <= +k && +k <= t.hi)
+      .reduce((s, [,v]) => s + v, 0);
+    const color = t.cls === 'triumph' ? '#2b7a4b' : '#c94f4f';
+    return `<div class="sf-card"><div class="sf-card-name">${t.name}</div><div class="sf-card-pct" style="color:${color}">${fmt(prob)}</div></div>`;
+  }).join('');
+
+  document.getElementById('odds-tier-body').innerHTML = TIERS.map(t => {
+    const prob = Object.entries(dist)
+      .filter(([k]) => t.lo <= +k && +k <= t.hi)
+      .reduce((s, [,v]) => s + v, 0);
+    return `<div class="tier-card"><div class="tier-card-name">${t.name}</div><div class="tier-card-pct" style="color:${t.cls === 'bar-decisive' ? '#2b7a4b' : t.cls === 'bar-setback' ? '#d4893b' : '#c94f4f'}">${fmt(prob)}</div></div>`;
+  }).join('');
+
+  const nets = Object.keys(dist).map(Number).sort((a,b) => b-a);
+  document.getElementById('odds-net-body').innerHTML = nets.map(k => {
+    const color = k <= -1 ? '#c94f4f' : k === 0 ? '#d4893b' : '#2b7a4b';
+    return `<div class="net-card"><div class="net-card-val" style="color:${color}">${k >= 0 ? '+' : ''}${k}</div><div class="net-card-pct">${fmt(dist[k])}</div></div>`;
+  }).join('');
+}
+
+document.getElementById('tn').addEventListener('input', updateOdds);
+document.getElementById('difficulty').addEventListener('input', updateOdds);
+document.getElementById('criticals').addEventListener('input', () => {
+  if (dice.some(d => d > 0)) { updateDiceDisplay(); calculate(); }
+  updateOdds();
+});
+document.getElementById('setback-edge-btn').addEventListener('click', () => {
+  edgeUpgraded = !edgeUpgraded;
+  calculate();
+  updateOdds();
+});
+updateOdds();
+</script>
+</body>
+</html>
