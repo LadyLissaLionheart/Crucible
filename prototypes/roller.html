@@ -11,7 +11,7 @@
     background: #f5f5f5; color: #1a1a1a; margin: 0; padding: 2rem;
     display: flex; justify-content: center;
   }
-  .container { max-width: 800px; width: 100%; }
+  .container { max-width: 1000px; width: 100%; }
   h1 { font-size: 1.25rem; font-weight: 600; margin: 0 0 0.25rem; }
   .subtitle { color: #666; font-size: 0.85rem; margin: 0 0 1.5rem; }
   .controls {
@@ -21,7 +21,7 @@
     flex-wrap: wrap;
   }
   .control-group { display: flex; flex-direction: column; gap: 0.35rem; }
-  .control-group label { font-size: 0.8rem; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.03em; }
+  .control-group label { font-size: 0.8rem; font-weight: 600; color: #777; text-transform: uppercase; letter-spacing: 0.03em; }
   .controls input {
     width: 100px; padding: 0.5rem 0.75rem; font-size: 1.1rem;
     border: 1px solid #ccc; border-radius: 6px; font-variant-numeric: tabular-nums;
@@ -29,7 +29,7 @@
   .controls input:focus { outline: none; border-color: #4a90d9; box-shadow: 0 0 0 3px rgba(74,144,217,0.15); }
 
   .toggle-group { display: flex; align-items: center; gap: 0.5rem; padding-bottom: 0.2rem; }
-  .toggle-group label { font-size: 0.8rem; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.03em; }
+  .toggle-group label { font-size: 0.8rem; font-weight: 600; color: #777; text-transform: uppercase; letter-spacing: 0.03em; }
   .toggle { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
   .toggle input { opacity: 0; width: 0; height: 0; }
   .toggle-slider { position: absolute; cursor: pointer; inset: 0; background: #ccc; border-radius: 20px; transition: 0.2s; }
@@ -45,12 +45,107 @@
   .btn:hover { background: #3b5d8f; }
   .btn:active { transform: scale(0.97); }
 
+  .roll-area {
+    display: flex; gap: 1rem; margin-bottom: 1.5rem; align-items: stretch;
+  }
+  .roll-card {
+    background: #fff; border-radius: 8px; padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    display: flex; flex-direction: column; align-items: stretch; justify-content: center;
+    min-height: 247px; gap: 0.5rem;
+  }
+  .roll-card .btn {
+    flex: 1; width: 100%;
+  }
+  .roll-card .crit-btn {
+    height: 36px; flex: none; font-size: 0.85rem;
+    background: #d4a017; white-space: nowrap;
+  }
+  .roll-card .crit-btn:hover { background: #b8891a; }
+  .roll-card .crit-fail {
+    background: #9b59b6;
+  }
+  .roll-card .crit-fail:hover { background: #7d4799; }
+  .outcome-card {
+    background: #fff; border-radius: 8px; padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    flex: 0 0 250px; min-width: 250px; max-width: 250px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: flex-start;
+    min-height: 247px; position: relative;
+  }
+  .outcome-d12-wrap {
+    position: relative;
+    display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+    overflow: visible;
+  }
+  .outcome-d12-stack {
+    position: relative;
+    width: 90px; height: 90px;
+    z-index: 1;
+  }
+  .outcome-d12-back {
+    position: absolute; top: 0; left: 0;
+    width: 90px; height: 90px;
+    clip-path: polygon(50% 0%, 97.6% 34.5%, 79.4% 90.5%, 20.6% 90.5%, 2.4% 34.5%);
+    background: #fff;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .outcome-d12-back-inner {
+    width: 80px; height: 80px;
+    clip-path: polygon(50% 0%, 97.6% 34.5%, 79.4% 90.5%, 20.6% 90.5%, 2.4% 34.5%);
+    background: #0a2e4d; opacity: 0.4; transition: opacity 0.2s;
+  }
+  .outcome-d12-back.active .outcome-d12-back-inner { opacity: 1; }
+  .outcome-d12-shell {
+    position: absolute; top: 0; left: 0;
+    width: 90px; height: 90px;
+    clip-path: polygon(50% 0%, 97.6% 34.5%, 79.4% 90.5%, 20.6% 90.5%, 2.4% 34.5%);
+    background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s;
+    z-index: 1;
+  }
+  .outcome-d12 {
+    width: 80px; height: 80px;
+    clip-path: polygon(50% 0%, 97.6% 34.5%, 79.4% 90.5%, 20.6% 90.5%, 2.4% 34.5%);
+    background: #0a2e4d; opacity: 0.4; transition: opacity 0.2s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .outcome-d12.active { opacity: 1; }
+  .outcome-label {
+    font-size: 2rem; font-weight: 700;
+    line-height: 1;
+    height: 1.2em;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .outcome-label.success-label { color: #2b7a4b; }
+  .outcome-label.crit-label { color: #d4a017; }
+  .outcome-label.penalty-label { color: #c94f4f; }
+  .outcome-label.disaster-label { color: #7b4fa0; }
+  .outcome-label.neutral-label { color: #999; }
+  .pay-cost-btn {
+    padding: 0.3rem 0.8rem; font-size: 0.85rem; font-weight: 600;
+    border: 2px solid #777; border-radius: 6px; cursor: pointer;
+    background: #fff; color: #777; transition: all 0.15s;
+    width: 180px; white-space: nowrap;
+  }
+  .pay-cost-btn:hover { background: #777; color: #fff; }
+  .outcome-label.outcome-label-text { font-size: 1.35rem; height: 2.4rem; }
+  .outcome-label .spent { color: inherit; }
+  .outcome-mag {
+    font-size: 2rem; font-weight: 700; color: #fff;
+  }
+
   .dice-area {
     background: #fff; border-radius: 8px; padding: 1.5rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    min-height: 247px;
+    display: flex; align-items: flex-start; justify-content: center;
+    flex: 1;
   }
   .dice-row {
-    display: flex; gap: 1rem; justify-content: center; margin-bottom: 1rem;
+    display: flex; gap: 1rem;
   }
   .die-slot {
     position: relative;
@@ -60,14 +155,20 @@
     gap: 0.5rem;
   }
   .die-shell {
-    width: 88px; height: 88px;
+    width: 90px; height: 90px;
     clip-path: polygon(50% 0%, 97.6% 34.5%, 79.4% 90.5%, 20.6% 90.5%, 2.4% 34.5%);
     display: flex; align-items: center; justify-content: center;
     transition: background 0.2s;
   }
   .die-shell.default { background: #ddd; }
+  .die-shell.default.expertise { background: #0a2e4d; opacity: 0.4; }
   .die-shell.even { background: #d4a017; }
-  .die-shell.odd { background: #000; }
+  .die-shell.odd { background: #9b59b6; }
+  .die.expertise { background: #0a2e4d; }
+  .die.expertise.even { background: #0a2e4d; }
+  .die.expertise.odd { background: #061d33; }
+  .die.expertise .die-num { color: #fff; }
+  .die-shell.default .die { background: transparent; }
   .die {
     width: 80px; height: 80px;
     clip-path: polygon(50% 0%, 97.6% 34.5%, 79.4% 90.5%, 20.6% 90.5%, 2.4% 34.5%);
@@ -77,14 +178,16 @@
     position: relative;
   }
 
-  .die.edged { transform: scale(1.05); }
+  .die.edged { }
   .die-label {
-    font-size: 1rem; font-weight: 700;
+    font-size: 2rem; font-weight: 700;
     line-height: 1;
+    height: 1.2em;
   }
   .die-label.success-label { color: #2b7a4b; }
   .die-label.penalty-label { color: #c94f4f; }
   .die-label.neutral-label { color: #999; }
+  .die-label.ignored { color: #aaa; }
   .edge-badge {
     position: absolute; top: -4px; right: -4px; z-index: 1;
     background: #d4a017; color: #fff; font-size: 0.55rem; font-weight: 700;
@@ -103,35 +206,73 @@
   .edge-btn:hover:not(:disabled) { background: #2b7a4b; color: #fff; }
   .edge-btn:disabled { opacity: 0.35; cursor: not-allowed; border-color: #ccc; color: #999; }
 
+  .adv-group {
+    display: none;
+  }
+
+  .pay-cost-area {
+    text-align: center;
+    margin-top: 8px;
+  }
+  .outcome-resource {
+    font-size: 1.05rem; font-weight: 600; text-align: center;
+    position: absolute; bottom: 20px; left: 0; right: 0;
+  }
+  .outcome-resource.inspired2 { color: #d4a017; }
+  .outcome-resource.inspired1 { color: #d4a017; }
+  .outcome-resource.clash { color: #999; }
+  .outcome-resource.threat1 { color: #7b4fa0; }
+  .outcome-resource.threat2 { color: #7b4fa0; }
+  .adv-group.disabled { border-color: #ccc; }
+  .adv-group.disabled .adv-btn-side { color: #999; }
+  .adv-group.disabled .adv-btn-center { color: #999; border-left-color: #ccc; border-right-color: #ccc; }
+  .adv-btn-side {
+    padding: 0.35rem 0; font-size: 0.8rem; font-weight: 700;
+    border: none; cursor: pointer; background: #fff; color: #2b7a4b;
+    transition: all 0.15s; flex: 0 0 2rem; width: 2rem;
+    display: flex; align-items: center; justify-content: center;
+    line-height: 1;
+  }
+  .adv-btn-side:hover:not(:disabled) { background: #2b7a4b; color: #fff; }
+  .adv-btn-side:disabled { opacity: 0.35; cursor: not-allowed; color: #999; }
+  .adv-btn-center {
+    flex: 1; text-align: center; padding: 0.35rem 0.5rem; font-size: 0.8rem;
+    font-weight: 600; color: #2b7a4b; background: #fff; white-space: nowrap;
+    display: flex; align-items: center; justify-content: center;
+    border-left: 1px solid #2b7a4b; border-right: 1px solid #2b7a4b;
+  }
+
   .result-card {
     background: #fff; border-radius: 8px; padding: 1.25rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-top: 1rem; margin-bottom: 1.5rem;
   }
+  .result-card.collapsed { display: none; }
   .result-grid {
     display: flex; gap: 1.5rem; flex-wrap: wrap;
   }
-  .result-item { flex: 1; min-width: 140px; }
+  .result-item { flex: 1; min-width: 140px; height: 6rem; }
   .result-item h3 {
     font-size: 0.75rem; font-weight: 600; color: #777;
     text-transform: uppercase; letter-spacing: 0.04em; margin: 0 0 0.35rem;
   }
   .result-value {
     font-size: 1.75rem; font-weight: 700; line-height: 1.2;
+    white-space: nowrap;
   }
   .result-value.triumph { color: #2b7a4b; }
-  .result-value.setback { color: #d4893b; }
+  .result-value.setback { color: #777; }
   .result-value.mishap { color: #c94f4f; }
   .result-value.inspired2 { color: #d4a017; }
-  .result-value.inspired1 { color: #7b4fa0; }
+  .result-value.inspired1 { color: #d4a017; }
   .result-value.clash { color: #999; }
-  .result-value.threat1 { color: #c9444f; }
-  .result-value.threat2 { color: #111; }
+  .result-value.threat1 { color: #7b4fa0; }
+  .result-value.threat2 { color: #7b4fa0; }
   .result-sub { font-size: 0.8rem; color: #888; margin-top: 0.15rem; }
   .result-sub.positive { color: #2b7a4b; }
   .result-sub.negative { color: #c94f4f; }
   .result-sub.neutral-sub { color: #888; }
 
-  .even-odd-label { font-size: 0.85rem; margin-top: 0.5rem; color: #555; font-weight: 500; }
+  .even-odd-label { font-size: 0.85rem; margin-top: 0.5rem; color: #777; font-weight: 500; }
 
   .state-badge {
     display: inline-block; padding: 0.2rem 0.6rem; border-radius: 4px;
@@ -157,19 +298,44 @@
 
   .odds-divider { border: none; border-top: 1px solid #ddd; margin: 1.5rem 0 0; }
   .odds-card { display: flex; flex-direction: column; gap: 1rem; padding: 1rem 0 0; }
+  .odds-card.collapsed { display: none; }
+  .toggle-divider { cursor: pointer; position: relative; height: 1px; background: #ddd; margin: 1.5rem 0 0; border: none; padding-left: 1rem; }
+  .toggle-divider::before { content: attr(data-label); position: absolute; left: 13px; top: -0.5rem; font-size: 0.85rem; font-weight: 600; color: #888; background: #f5f5f5; padding: 0 5px; white-space: nowrap; }
+  .toggle-divider::after { content: '▼'; position: absolute; left: 0; top: -0.55rem; font-size: 0.85rem; color: #999; transition: transform 0.2s; width: 10px; text-align: center; }
+  .toggle-divider.collapsed::after { content: '▶'; }
   .num { text-align: right; }
   .tier-cards { display: flex; gap: 0.75rem; }
   .tier-card { flex: 1; background: #fff; border-radius: 8px; padding: 0.75rem 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08); text-align: center; }
-  .tier-card-name { font-size: 0.8rem; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.04em; }
+  .tier-card-name { font-size: 0.8rem; font-weight: 600; color: #777; text-transform: uppercase; letter-spacing: 0.04em; }
   .tier-card-pct { font-size: 1.5rem; font-weight: 700; margin: 0.25rem 0; }
   .sf-cards { display: flex; gap: 0.75rem; margin-bottom: 0; }
   .sf-card { flex: 1; background: #fff; border-radius: 8px; padding: 0.75rem 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08); text-align: center; }
-  .sf-card-name { font-size: 0.8rem; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.04em; }
+  .sf-card-name { font-size: 0.8rem; font-weight: 600; color: #777; text-transform: uppercase; letter-spacing: 0.04em; }
   .sf-card-pct { font-size: 1.5rem; font-weight: 700; margin: 0.25rem 0; }
   .net-cards { display: flex; gap: 0.5rem; flex-wrap: wrap; }
   .net-card { flex: 1 0 60px; background: #fff; border-radius: 8px; padding: 0.5rem 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08); text-align: center; min-width: 60px; }
   .net-card-val { font-size: 1.1rem; font-weight: 700; }
   .net-card-pct { font-size: 0.8rem; color: #666; margin-top: 0.15rem; }
+
+  .mag-chart {
+    display: flex; align-items: flex-end; gap: 2px; height: 120px;
+    padding: 0.5rem 0;
+  }
+  .mag-bar-wrap {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    height: 100%; justify-content: flex-end;
+  }
+  .mag-bar {
+    width: 100%; background: #0a2e4d; border-radius: 2px 2px 0 0;
+    transition: height 0.2s;
+  }
+  .mag-bar-label {
+    font-size: 0.7rem; color: #666; margin-top: 0.25rem; font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .mag-bar-pct {
+    font-size: 0.65rem; color: #888; margin-top: 0.1rem;
+  }
 
 </style>
 </head>
@@ -183,24 +349,53 @@
       <input id="tn" type="number" min="1" max="12" value="8">
     </div>
     <div class="control-group">
-      <label for="difficulty">Difficulty</label>
-      <input id="difficulty" type="number" min="0" max="12" value="3">
+      <label for="risk">Risk</label>
+      <input id="risk" type="number" min="0" max="12" value="3">
     </div>
-    <div class="toggle-group">
-      <label>Criticals</label>
-      <label class="toggle">
-        <input type="checkbox" id="criticals" checked>
-        <span class="toggle-slider"></span>
-      </label>
+    <div class="control-group">
+      <label for="expertise">Expertise</label>
+      <input id="expertise" type="number" min="1" max="4" value="1">
     </div>
-    <button class="btn" id="roll-btn">Roll 4d12</button>
+    <div class="control-group">
+      <label for="successes-mag">Successes Magnitude</label>
+      <input id="successes-mag" type="number" min="0" max="20" value="2">
+    </div>
   </div>
 
-  <div class="dice-area" id="dice-area">
-    <div class="dice-row" id="dice-row"></div>
+  <div class="roll-area">
+    <div class="roll-card" id="roll-card">
+      <button class="btn crit-btn" id="crit-success-btn">Critical Success</button>
+      <button class="btn" id="roll-btn">Roll Dice</button>
+      <button class="btn crit-btn crit-fail" id="crit-fail-btn">Critical Failure</button>
+    </div>
+    <div class="outcome-card" id="outcome-card">
+      <div class="outcome-d12-wrap">
+        <div class="outcome-label" id="outcome-label"></div>
+        <div class="outcome-d12-stack" id="outcome-d12-stack">
+          <div class="outcome-d12-shell" id="outcome-d12-shell">
+            <div class="outcome-d12" id="outcome-d12">
+              <div class="outcome-mag" id="outcome-mag"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="adv-group disabled">
+        <button class="adv-btn-side" id="adv-btn-sub" disabled>&minus;</button>
+        <div class="adv-btn-center">Spend Successes</div>
+        <button class="adv-btn-side" id="adv-btn-add" disabled>&plus;</button>
+      </div>
+      <div class="pay-cost-area" id="pay-cost-area" style="display:none">
+        <button class="pay-cost-btn" id="pay-cost-btn">Pay Cost to Succeed</button>
+      </div>
+      <div class="outcome-resource" id="outcome-resource"></div>
+    </div>
+    <div class="dice-area" id="dice-area">
+      <div class="dice-row" id="dice-row"></div>
+    </div>
   </div>
 
-  <div class="result-card" id="results" style="display:none">
+  <div class="toggle-divider" id="results-toggle" data-label="Roll Details" title="Click to expand/collapse"></div>
+  <div class="result-card" id="results">
     <div class="result-grid">
       <div class="result-item">
         <h3>Net Successes</h3>
@@ -208,14 +403,19 @@
         <div class="result-sub" id="net-detail"></div>
       </div>
       <div class="result-item">
-        <h3>Tier</h3>
+        <h3>Outcome</h3>
         <div class="result-value" id="tier-value"></div>
         <div class="result-sub" id="tier-detail"></div>
       </div>
       <div class="result-item">
-        <h3>Event</h3>
-        <div class="result-value" id="event-value"></div>
-        <div class="result-sub" id="event-detail"></div>
+        <h3>Effect Magnitude</h3>
+        <div class="result-value" id="magnitude-value"></div>
+        <div class="result-sub" id="magnitude-detail"></div>
+      </div>
+      <div class="result-item">
+        <h3>Resources</h3>
+        <div class="result-value" id="resource-value"></div>
+        <div class="result-sub" id="resource-detail"></div>
       </div>
     </div>
 
@@ -224,11 +424,13 @@
       <table class="breakdown-table" id="breakdown-table"></table>
     </div>
   </div>
-  <hr class="odds-divider">
-  <div class="odds-card">
+  <div class="toggle-divider" id="odds-toggle" data-label="Dice Statistics" title="Click to expand/collapse"></div>
+  <div class="odds-card" id="odds-body">
     <div class="sf-cards" id="odds-sf-body"></div>
     <div class="tier-cards" id="odds-tier-body"></div>
     <div class="net-cards" id="odds-net-body"></div>
+    <hr class="odds-divider" style="margin: 0.5rem 0;">
+    <div class="tier-cards" id="odds-mag-stats"></div>
   </div>
 </div>
 
@@ -239,6 +441,10 @@ const POOL = 4;
 let dice = [0, 0, 0, 0];
 let baseDice = [0, 0, 0, 0];
 let edgesUsed = [false, false, false, false];
+let successesSpent = 0;
+let successesUses = 0;
+let freshRoll = false;
+let costPaid = false;
 
 const dieEls = [];
 const edgeBtns = [];
@@ -246,22 +452,66 @@ const edgeBtns = [];
 function getTN() {
   return Math.min(12, Math.max(1, parseInt(document.getElementById('tn').value) || 8));
 }
-function getDifficulty() {
-  const raw = Math.min(12, Math.max(0, parseInt(document.getElementById('difficulty').value) || 0));
+function getRisk() {
+  const raw = Math.min(12, Math.max(0, parseInt(document.getElementById('risk').value) || 0));
   const tn = getTN();
   return Math.min(raw, tn - 1);
 }
-function criticalsEnabled() {
-  return document.getElementById('criticals').checked;
+function getExpertise() {
+  return Math.min(4, Math.max(1, parseInt(document.getElementById('expertise').value) || 1));
 }
-function dieResult(die, tn, difficulty) {
-  if (die <= difficulty) return -1;
-  if (die >= tn && die > difficulty) return 1;
+function getSuccessesMagnitude() {
+  return Math.min(20, Math.max(0, parseInt(document.getElementById('successes-mag').value) ?? 2));
+}
+function dieResult(die, tn, risk) {
+  if (die <= risk) return -1;
+  if (die >= tn && die > risk) return 1;
   return 0;
 }
-function edgeWouldHelp(die, tn, difficulty) {
+function edgeWouldHelp(die, tn, risk) {
   if (die === 12) return false;
-  return dieResult(Math.min(12, die + 2), tn, difficulty) > dieResult(die, tn, difficulty);
+  return dieResult(Math.min(12, die + 2), tn, risk) > dieResult(die, tn, risk);
+}
+function edgeNegatesPenalty(die, tn, risk) {
+  if (die === 12) return false;
+  return dieResult(die, tn, risk) === -1 && dieResult(Math.min(12, die + 2), tn, risk) > -1;
+}
+function updateOutcomeStack(expertise) {
+  const stack = document.getElementById('outcome-d12-stack');
+  stack.querySelectorAll('.outcome-d12-back').forEach(b => b.remove());
+  const shell = document.getElementById('outcome-d12-shell');
+  for (let i = 1; i < expertise; i++) {
+    const back = document.createElement('div');
+    back.className = 'outcome-d12-back';
+    if (dice.some(d => d > 0)) back.classList.add('active');
+    back.innerHTML = '<div class="outcome-d12-back-inner"></div>';
+    if (i === 3) {
+      back.style.left = '0px';
+      back.style.top = '-23px';
+    } else {
+      const group = Math.ceil(i / 2);
+      const sign = i % 2 === 1 ? 1 : -1;
+      back.style.left = (sign * group * 30) + 'px';
+      back.style.top = '0px';
+    }
+    back.style.zIndex = 1 - i;
+    stack.insertBefore(back, shell);
+  }
+  stack.style.transform = expertise >= 4 ? 'translateY(11px)' : '';
+}
+
+function saveState() {
+  localStorage.setItem('diceRollerTN', document.getElementById('tn').value);
+  localStorage.setItem('diceRollerRisk', document.getElementById('risk').value);
+  localStorage.setItem('diceRollerExpertise', document.getElementById('expertise').value);
+  localStorage.setItem('diceRollerSuccessesMag', document.getElementById('successes-mag').value);
+}
+function restoreState() {
+  const keys = { tn: 'diceRollerTN', risk: 'diceRollerRisk', expertise: 'diceRollerExpertise', 'successes-mag': 'diceRollerSuccessesMag' };
+  for (const [id, key] of Object.entries(keys)) {
+    const val = localStorage.getItem(key);
+    if (val !== null) document.getElementById(id).value = val;
+  }
 }
 
 function init() {
@@ -296,12 +546,44 @@ function init() {
     dieEls[i] = die;
     edgeBtns[i] = btn;
   }
+  updateDiceDisplay();
+  updateOutcomeStack(parseInt(document.getElementById('expertise').value) || 0);
 }
 
 function roll() {
   dice = dice.map(() => Math.floor(Math.random() * DIE_SIDES) + 1);
   baseDice = [...dice];
   edgesUsed = [false, false, false, false];
+  successesSpent = 0;
+  successesUses = 0;
+  freshRoll = true;
+  costPaid = false;
+  updateDiceDisplay();
+  calculate();
+}
+
+function rollCritSuccess() {
+  dice = dice.map(() => Math.floor(Math.random() * DIE_SIDES) + 1);
+  dice = dice.map(d => d % 2 !== 0 ? Math.min(DIE_SIDES, d + 1) : d);
+  baseDice = [...dice];
+  edgesUsed = [false, false, false, false];
+  successesSpent = 0;
+  successesUses = 0;
+  freshRoll = true;
+  costPaid = false;
+  updateDiceDisplay();
+  calculate();
+}
+
+function rollCritFailure() {
+  dice = dice.map(() => Math.floor(Math.random() * DIE_SIDES) + 1);
+  dice = dice.map(d => d % 2 === 0 ? d - 1 : d);
+  baseDice = [...dice];
+  edgesUsed = [false, false, false, false];
+  successesSpent = 0;
+  successesUses = 0;
+  freshRoll = true;
+  costPaid = false;
   updateDiceDisplay();
   calculate();
 }
@@ -320,59 +602,58 @@ function toggleEdge(index) {
 
 function updateDiceDisplay() {
   const tn = getTN();
-  const difficulty = getDifficulty();
+  const risk = getRisk();
+  const expertise = getExpertise();
   const evens = dice.filter(d => d > 0 && d % 2 === 0).length;
   const criticalFailure = evens === 0 && dice.some(d => d > 0);
 
-  for (let i = 0; i < POOL; i++) {
-    const d = dice[i];
-    const el = dieEls[i];
-    const shell = el.parentElement;
-    const slot = shell.parentElement;
-    const numEl = el.querySelector('.die-num');
-    const labelEl = slot.querySelector('.die-label');
-    const existingBadge = slot.querySelector('.edge-badge');
+    for (let i = 0; i < POOL; i++) {
+      const d = dice[i];
+      const el = dieEls[i];
+      const shell = el.parentElement;
+      const slot = shell.parentElement;
+      const numEl = el.querySelector('.die-num');
+      const labelEl = slot.querySelector('.die-label');
+      const existingBadge = slot.querySelector('.edge-badge');
 
-    numEl.textContent = d || '';
+      numEl.textContent = d || '';
 
-    if (d === 0) {
-      el.className = 'die';
-      shell.className = 'die-shell default';
-      labelEl.textContent = '';
-      labelEl.className = 'die-label';
-      edgeBtns[i].disabled = true;
-      edgeBtns[i].textContent = 'Spend Edge';
-      if (existingBadge) existingBadge.remove();
-      continue;
-    }
+      if (d === 0) {
+        el.className = 'die';
+        shell.className = 'die-shell default' + (i < expertise ? ' expertise' : '');
+        labelEl.textContent = '';
+        labelEl.className = 'die-label';
+        edgeBtns[i].disabled = true;
+        edgeBtns[i].textContent = 'Spend Edge';
+        if (existingBadge) existingBadge.remove();
+        continue;
+      }
 
-    let label, cls;
-    if (d <= difficulty) {
-      label = '-1';
-      cls = 'penalty-label';
-    } else if (d >= tn && d > difficulty) {
-      label = '+1';
-      cls = 'success-label';
-    } else {
-      label = '0';
-      cls = 'neutral-label';
-    }
+      const xSvg = '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>';
+      const checkSvg = '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 13 10 18 19 6"/></svg>';
+
+      let label, cls;
+      if (d <= risk) {
+        cls = evens === 4 ? 'ignored' : 'penalty-label';
+        label = xSvg;
+      } else if (d >= tn && d > risk) {
+        cls = evens === 0 ? 'ignored' : 'success-label';
+        label = checkSvg;
+      } else {
+        label = '';
+        cls = 'neutral-label';
+      }
 
     el.className = 'die';
     if (edgesUsed[i]) el.classList.add('edged');
+    if (i < expertise) el.classList.add('expertise');
 
-    shell.className = 'die-shell ' + (d % 2 === 0 ? 'even' : 'odd');
+    const parity = d % 2 === 0 ? 'even' : 'odd';
+    shell.className = 'die-shell ' + parity;
 
     if (existingBadge) existingBadge.remove();
 
-    if (edgesUsed[i]) {
-      const badge = document.createElement('div');
-      badge.className = 'edge-badge';
-      badge.textContent = 'E';
-      slot.appendChild(badge);
-    }
-
-    labelEl.textContent = label;
+    labelEl.innerHTML = label;
     labelEl.className = 'die-label ' + cls;
 
     const btn = edgeBtns[i];
@@ -380,7 +661,11 @@ function updateDiceDisplay() {
       btn.disabled = false;
       btn.textContent = 'Undo';
     } else {
-      btn.disabled = criticalFailure || !edgeWouldHelp(d, tn, difficulty);
+      if (criticalFailure) {
+        btn.disabled = !edgeNegatesPenalty(d, tn, risk);
+      } else {
+        btn.disabled = !edgeWouldHelp(d, tn, risk);
+      }
       btn.textContent = 'Spend Edge';
     }
   }
@@ -388,84 +673,97 @@ function updateDiceDisplay() {
 
 function calculate() {
   const tn = getTN();
-  const difficulty = getDifficulty();
+  const risk = getRisk();
+  const expertise = getExpertise();
+  const successesMagnitude = getSuccessesMagnitude();
   const resultsDiv = document.getElementById('results');
 
   if (dice.some(d => d === 0)) {
-    resultsDiv.style.display = 'none';
     return;
   }
 
   // Per-die raw result before parity override
   const rawResults = dice.map(d => {
-    if (d <= difficulty) return -1;
-    if (d >= tn && d > difficulty) return 1;
+    if (d <= risk) return -1;
+    if (d >= tn && d > risk) return 1;
     return 0;
   });
 
   const evens = dice.filter(d => d > 0 && d % 2 === 0).length;
 
   // Apply parity overrides
-  const crits = criticalsEnabled();
   let finalResults;
-  if (crits && evens === 4) {
+  if (evens === 4) {
     finalResults = rawResults.map(r => r === 1 ? 1 : 0);
-    finalResults.push(1);
-  } else if (crits && evens === 0) {
+    finalResults.push(1, 1);
+  } else if (evens === 0) {
     finalResults = rawResults.map(r => r === -1 ? -1 : 0);
-    finalResults.push(-1);
+    finalResults.push(-1, -1);
   } else {
     finalResults = rawResults;
   }
 
   const net = finalResults.reduce((a, b) => a + b, 0);
 
+  if (freshRoll) {
+    successesUses = Math.max(0, net);
+    successesSpent = successesUses * successesMagnitude;
+    freshRoll = false;
+  } else {
+    successesUses = Math.max(0, net);
+    successesSpent = successesUses * successesMagnitude;
+  }
+
   // Tier
   let tier, tierCls, tierDesc;
-  if (net <= -1) {
+  if (evens === 4) {
+    tier = 'Critical Success';
+    tierCls = 'inspired2';
+    tierDesc = 'Exceptional success';
+  } else if (evens === 0) {
+    tier = 'Disaster';
+    tierCls = 'threat2';
+    tierDesc = 'Catastrophic failure';
+  } else if (net <= -1) {
     tier = 'Misfortune';
     tierCls = 'mishap';
-    tierDesc = 'Failure, things get complicated';
+    tierDesc = 'Failure with setbacks';
   } else if (net === 0) {
     tier = 'Setback';
     tierCls = 'setback';
-    tierDesc = 'Failure';
+    tierDesc = 'Failure or success with a cost';
   } else {
     tier = 'Triumph';
     tierCls = 'triumph';
-    tierDesc = 'Clean success and beyond';
+    tierDesc = 'Success with bonuses';
   }
 
-  // Resource / Event
-  let eventName, eventCls, eventDesc;
-  if (!crits) {
-    eventName = 'Off';
-    eventCls = 'neutral-sub';
-    eventDesc = 'Critical events disabled.';
-  } else if (evens === 4) {
-    eventName = 'Critical Success';
-    eventCls = 'inspired2';
-    eventDesc = 'Ignore penalties. +1 success. Gain +2 Inspiration.';
-  } else if (evens === 3) {
-    eventName = '—';
-    eventCls = 'inspired1';
-    eventDesc = 'Gain +1 Inspiration.';
-  } else if (evens === 2) {
-    eventName = 'Clash';
-    eventCls = 'clash';
-    eventDesc = 'No resource gain.';
-  } else if (evens === 1) {
-    eventName = '—';
-    eventCls = 'threat1';
-    eventDesc = 'GM gains +1 Tension.';
+  // Effect Magnitude
+  const expertiseDice = dice.slice(0, expertise);
+  let magnitude = expertiseDice.reduce((a, b) => a + b, 0);
+  const isCrit = evens === 4;
+  const baseMagnitude = magnitude;
+  if (net > 0) magnitude += net * successesMagnitude;
+  const canApplyMagnitude = tier === 'Triumph' || (tier === 'Setback' && costPaid) || tier === 'Critical Success';
+  let magnitudeDesc;
+  if (tier === 'Misfortune' || tier === 'Disaster') {
+    magnitudeDesc = 'No effect';
+  } else if (tier === 'Setback' && !costPaid) {
+    magnitudeDesc = 'Pay cost to apply';
   } else {
-    eventName = 'Critical Failure';
-    eventCls = 'threat2';
-    eventDesc = 'Ignore successes. −1 success. GM gains +2 Tension.';
+    const diceStr = expertiseDice.join(' + ');
+    let baseParts = [diceStr];
+    if (isCrit) baseParts.push('2 Successes (Critical)');
+    const baseStr = expertiseDice.length === 1 && !isCrit ? 'Roll: ' + baseMagnitude : 'Roll: ' + baseParts.join(' + ') + ` = ${baseMagnitude}`;
+    if (net > 0) {
+      const totalStr = 'Successes: +' + `${net * successesMagnitude} (${net} × ${successesMagnitude}) = ${magnitude}`;
+      magnitudeDesc = baseStr + '\n' + totalStr;
+    } else {
+      magnitudeDesc = baseStr;
+    }
   }
 
   // Update UI
-  resultsDiv.style.display = 'block';
 
   const netEl = document.getElementById('net-value');
   netEl.textContent = net >= 0 ? '+' + net : net;
@@ -477,8 +775,8 @@ function calculate() {
   const failCount = rawResults.filter(r => r === -1).length;
   let detail = successCount + ' success' + (successCount !== 1 ? 'es' : '');
   if (failCount > 0) detail += ', ' + failCount + ' penalt' + (failCount !== 1 ? 'ies' : 'y');
-  if (crits && evens === 4) detail += ' (penalties ignored, +1 success — Critical Success)';
-  if (crits && evens === 0) detail += ' (successes ignored, −1 success — Critical Failure)';
+  if (evens === 4) detail += ' (penalties ignored, +2 successes — Critical Success)';
+  if (evens === 0) detail += ' (successes ignored, −2 successes — Critical Failure)';
   detailEl.textContent = detail;
   detailEl.className = 'result-sub ' + (isSuccess ? 'positive' : 'negative');
 
@@ -490,13 +788,107 @@ function calculate() {
   tierDetailEl.textContent = tierDesc;
   tierDetailEl.className = 'result-sub neutral-sub';
 
-  const eventEl = document.getElementById('event-value');
-  eventEl.textContent = eventName;
-  eventEl.className = 'result-value ' + eventCls;
+  const magnitudeEl = document.getElementById('magnitude-value');
+  magnitudeEl.textContent = canApplyMagnitude ? (baseMagnitude === magnitude ? magnitude : baseMagnitude + ' / ' + magnitude) : '—';
+  magnitudeEl.className = 'result-value ' + (canApplyMagnitude ? 'triumph' : 'neutral-sub');
 
-  const eventDetailEl = document.getElementById('event-detail');
-  eventDetailEl.textContent = eventDesc + ' (' + evens + 'e / ' + (4 - evens) + 'o)';
-  eventDetailEl.className = 'result-sub neutral-sub';
+  const magnitudeDetailEl = document.getElementById('magnitude-detail');
+  magnitudeDetailEl.innerHTML = magnitudeDesc.replace(/\n/g, '<br>');
+  magnitudeDetailEl.className = 'result-sub ' + (canApplyMagnitude ? 'positive' : 'neutral-sub');
+
+  // Outcome card
+  const outcomeLabel = document.getElementById('outcome-label');
+  const outcomeMag = document.getElementById('outcome-mag');
+  const isDisaster = evens === 0;
+
+  if (net > 0) {
+    outcomeLabel.textContent = 'Success +' + net;
+    outcomeLabel.className = 'outcome-label outcome-label-text ' + (isCrit ? 'crit-label' : 'success-label');
+  } else if (net < 0) {
+    outcomeLabel.textContent = 'Failure −' + Math.abs(net);
+    outcomeLabel.className = 'outcome-label outcome-label-text ' + (isDisaster ? 'disaster-label' : 'penalty-label');
+  } else {
+    if (costPaid) {
+      outcomeLabel.textContent = 'Success';
+      outcomeLabel.className = 'outcome-label outcome-label-text success-label';
+    } else {
+      outcomeLabel.textContent = 'Failure';
+      outcomeLabel.className = 'outcome-label outcome-label-text penalty-label';
+    }
+  }
+
+  const successesPool = Math.max(0, net);
+  const outcomeValue = canApplyMagnitude ? baseMagnitude + successesSpent : (tier === 'Setback' ? baseMagnitude : '—');
+  outcomeMag.textContent = outcomeValue;
+  const outcomeD12 = document.getElementById('outcome-d12');
+  outcomeD12.classList.add('active');
+  const outcomeShell = document.getElementById('outcome-d12-shell');
+  outcomeShell.classList.remove('even', 'odd');
+
+  // Stack back dice for expertise
+  updateOutcomeStack(expertise);
+  const advGroup = document.querySelector('.adv-group');
+  const subDisabled = !canApplyMagnitude || successesUses <= 0;
+  const addDisabled = !canApplyMagnitude || successesUses >= successesPool;
+  advGroup.classList.toggle('disabled', subDisabled && addDisabled);
+  document.getElementById('adv-btn-sub').disabled = subDisabled;
+  document.getElementById('adv-btn-add').disabled = addDisabled;
+
+  // Pay Cost button
+  const payCostArea = document.getElementById('pay-cost-area');
+  const payCostBtn = document.getElementById('pay-cost-btn');
+  if (tier === 'Setback' && !costPaid) {
+    payCostArea.style.display = '';
+    payCostBtn.textContent = 'Pay Cost to Succeed';
+  } else if (tier === 'Setback' && costPaid) {
+    payCostArea.style.display = '';
+    payCostBtn.textContent = 'Undo';
+  } else {
+    payCostArea.style.display = 'none';
+  }
+
+  // Resources
+  const resourceEl = document.getElementById('resource-value');
+  const resourceDetailEl = document.getElementById('resource-detail');
+  const outcomeResource = document.getElementById('outcome-resource');
+  const odds = 4 - evens;
+  const parityStr = evens + ' even, ' + odds + ' odd';
+  if (evens === 4) {
+    resourceEl.textContent = '2 Inspiration';
+    resourceEl.className = 'result-value inspired2';
+    outcomeResource.textContent = 'You gain 2 inspiration';
+    outcomeResource.className = 'outcome-resource inspired2';
+    resourceDetailEl.textContent = parityStr;
+    resourceDetailEl.className = 'result-sub neutral-sub';
+  } else if (evens === 3) {
+    resourceEl.textContent = '1 Inspiration';
+    resourceEl.className = 'result-value inspired1';
+    outcomeResource.textContent = 'You gain 1 inspiration';
+    outcomeResource.className = 'outcome-resource inspired1';
+    resourceDetailEl.textContent = parityStr;
+    resourceDetailEl.className = 'result-sub neutral-sub';
+  } else if (evens === 2) {
+    resourceEl.textContent = '—';
+    resourceEl.className = 'result-value clash';
+    outcomeResource.textContent = '';
+    outcomeResource.className = 'outcome-resource clash';
+    resourceDetailEl.textContent = parityStr;
+    resourceDetailEl.className = 'result-sub neutral-sub';
+  } else if (evens === 1) {
+    resourceEl.textContent = '1 Tension';
+    resourceEl.className = 'result-value threat1';
+    outcomeResource.textContent = 'GM gains 1 tension';
+    outcomeResource.className = 'outcome-resource threat1';
+    resourceDetailEl.textContent = parityStr;
+    resourceDetailEl.className = 'result-sub neutral-sub';
+  } else {
+    resourceEl.textContent = '2 Tension';
+    resourceEl.className = 'result-value threat2';
+    outcomeResource.textContent = 'GM gains 2 tension';
+    outcomeResource.className = 'outcome-resource threat2';
+    resourceDetailEl.textContent = parityStr;
+    resourceDetailEl.className = 'result-sub neutral-sub';
+  }
 
   // Breakdown table
   const bd = document.getElementById('breakdown');
@@ -517,13 +909,49 @@ function calculate() {
 }
 
 document.getElementById('roll-btn').addEventListener('click', roll);
+document.getElementById('crit-success-btn').addEventListener('click', rollCritSuccess);
+document.getElementById('crit-fail-btn').addEventListener('click', rollCritFailure);
+document.getElementById('pay-cost-area').addEventListener('click', (e) => {
+  if (e.target.id === 'pay-cost-btn') {
+    if (costPaid) {
+      costPaid = false;
+    } else {
+      costPaid = true;
+    }
+    calculate();
+  }
+});
+document.getElementById('adv-btn-add').addEventListener('click', () => {
+  successesSpent += getSuccessesMagnitude();
+  successesUses++;
+  calculate();
+});
+document.getElementById('adv-btn-sub').addEventListener('click', () => {
+  successesSpent -= getSuccessesMagnitude();
+  successesUses--;
+  calculate();
+});
 document.getElementById('tn').addEventListener('input', () => {
+  saveState();
   if (dice.some(d => d > 0)) { updateDiceDisplay(); calculate(); }
 });
-document.getElementById('difficulty').addEventListener('input', () => {
+document.getElementById('risk').addEventListener('input', () => {
+  saveState();
   if (dice.some(d => d > 0)) { updateDiceDisplay(); calculate(); }
+});
+document.getElementById('expertise').addEventListener('input', () => {
+  saveState();
+  updateDiceDisplay();
+  updateOutcomeStack(parseInt(document.getElementById('expertise').value) || 0);
+  if (dice.some(d => d > 0)) { calculate(); }
+});
+document.getElementById('successes-mag').addEventListener('input', () => {
+  saveState();
+  updateDiceDisplay();
+  if (dice.some(d => d > 0)) { calculate(); }
 });
 
+restoreState();
 init();
 
 const TIERS = [
@@ -532,35 +960,36 @@ const TIERS = [
   { lo: -Infinity, hi: -1, name: 'Misfortune',   desc: 'Failure, things get complicated', cls: 'bar-mishap' },
 ];
 
-function calcDist(tn, difficulty, crits) {
-  const dist = {};
+function calcDist(tn, risk, expertise, successesMagnitude) {
+  const netDist = {};
+  const magDist = {};
   const faces = [1,2,3,4,5,6,7,8,9,10,11,12];
   for (const d1 of faces)
   for (const d2 of faces)
   for (const d3 of faces)
   for (const d4 of faces) {
-    const evens = (d1%2===0) + (d2%2===0) + (d3%2===0) + (d4%2===0);
+    const dice = [d1, d2, d3, d4];
+    const evens = dice.filter(d => d % 2 === 0).length;
     let net;
-    if (crits && evens === 4)
-      net = (d1 >= tn && d1 > difficulty ? 1 : 0)
-          + (d2 >= tn && d2 > difficulty ? 1 : 0)
-          + (d3 >= tn && d3 > difficulty ? 1 : 0)
-          + (d4 >= tn && d4 > difficulty ? 1 : 0) + 1;
-    else if (crits && evens === 0)
-      net = (d1 <= difficulty ? -1 : 0)
-          + (d2 <= difficulty ? -1 : 0)
-          + (d3 <= difficulty ? -1 : 0)
-          + (d4 <= difficulty ? -1 : 0) - 1;
+    if (evens === 4)
+      net = dice.filter(d => d >= tn && d > risk).length + 2;
+    else if (evens === 0)
+      net = dice.filter(d => d <= risk).length * -1 - 2;
     else
-      net = (d1 >= tn && d1 > difficulty ? 1 : d1 <= difficulty ? -1 : 0)
-          + (d2 >= tn && d2 > difficulty ? 1 : d2 <= difficulty ? -1 : 0)
-          + (d3 >= tn && d3 > difficulty ? 1 : d3 <= difficulty ? -1 : 0)
-          + (d4 >= tn && d4 > difficulty ? 1 : d4 <= difficulty ? -1 : 0);
-    dist[net] = (dist[net] || 0) + 1;
+      net = dice.reduce((sum, d) => sum + dieResult(d, tn, risk), 0);
+    netDist[net] = (netDist[net] || 0) + 1;
+
+    const canApply = (evens === 4) || (evens !== 0 && net >= 0);
+    if (expertise > 0 && canApply) {
+      let mag = dice.slice(0, expertise).reduce((a, b) => a + b, 0);
+      if (net > 0) mag += net * successesMagnitude;
+      magDist[mag] = (magDist[mag] || 0) + 1;
+    }
   }
-  const total = DIE_SIDES ** POOL;
-  for (const k in dist) dist[k] /= total;
-  return dist;
+  const total = Math.pow(12, 4);
+  for (const k in netDist) netDist[k] /= total;
+  for (const k in magDist) magDist[k] /= total;
+  return { netDist, magDist };
 }
 
 function fmt(p) {
@@ -569,16 +998,17 @@ function fmt(p) {
 
 function updateOdds() {
   const tn = getTN();
-  const difficulty = getDifficulty();
-  const crits = criticalsEnabled();
+  const risk = getRisk();
+  const expertise = getExpertise();
+  const successesMagnitude = getSuccessesMagnitude();
 
-  const dist = calcDist(tn, difficulty, crits);
+  const { netDist, magDist } = calcDist(tn, risk, expertise, successesMagnitude);
 
   document.getElementById('odds-sf-body').innerHTML = [
     { name: 'Success', lo: 1, hi: Infinity, cls: 'triumph' },
     { name: 'Failure', lo: -Infinity, hi: 0, cls: 'mishap' },
   ].map(t => {
-    const prob = Object.entries(dist)
+    const prob = Object.entries(netDist)
       .filter(([k]) => t.lo <= +k && +k <= t.hi)
       .reduce((s, [,v]) => s + v, 0);
     const color = t.cls === 'triumph' ? '#2b7a4b' : '#c94f4f';
@@ -586,25 +1016,62 @@ function updateOdds() {
   }).join('');
 
   document.getElementById('odds-tier-body').innerHTML = TIERS.map(t => {
-    const prob = Object.entries(dist)
+    const prob = Object.entries(netDist)
       .filter(([k]) => t.lo <= +k && +k <= t.hi)
       .reduce((s, [,v]) => s + v, 0);
-    return `<div class="tier-card"><div class="tier-card-name">${t.name}</div><div class="tier-card-pct" style="color:${t.cls === 'bar-decisive' ? '#2b7a4b' : t.cls === 'bar-setback' ? '#d4893b' : '#c94f4f'}">${fmt(prob)}</div></div>`;
+    return `<div class="tier-card"><div class="tier-card-name">${t.name}</div><div class="tier-card-pct" style="color:${t.cls === 'bar-decisive' ? '#2b7a4b' : t.cls === 'bar-setback' ? '#777' : '#c94f4f'}">${fmt(prob)}</div></div>`;
   }).join('');
 
-  const nets = Object.keys(dist).map(Number).sort((a,b) => b-a);
+  const nets = Object.keys(netDist).map(Number).sort((a,b) => b-a);
   document.getElementById('odds-net-body').innerHTML = nets.map(k => {
-    const color = k <= -1 ? '#c94f4f' : k === 0 ? '#d4893b' : '#2b7a4b';
-    return `<div class="net-card"><div class="net-card-val" style="color:${color}">${k >= 0 ? '+' : ''}${k}</div><div class="net-card-pct">${fmt(dist[k])}</div></div>`;
+    const color = k <= -1 ? '#c94f4f' : k === 0 ? '#777' : '#2b7a4b';
+    return `<div class="net-card"><div class="net-card-val" style="color:${color}">${k >= 0 ? '+' : ''}${k}</div><div class="net-card-pct">${fmt(netDist[k])}</div></div>`;
   }).join('');
+
+  // Effect Magnitude stats
+  const magStats = document.getElementById('odds-mag-stats');
+  if (magStats) {
+    const mags = Object.keys(magDist).map(Number);
+    const min = Math.min(...mags);
+    const max = Math.max(...mags);
+    const avg = Object.entries(magDist).reduce((s, [k, v]) => s + +k * v, 0) / Math.max(Object.values(magDist).reduce((s, v) => s + v, 0), 1e-10);
+    magStats.innerHTML = `
+      <div class="tier-card"><div class="tier-card-name">Min Magnitude</div><div class="tier-card-pct" style="color:#c94f4f">${min}</div></div>
+      <div class="tier-card"><div class="tier-card-name">Avg Magnitude</div><div class="tier-card-pct" style="color:#d4893b">${avg % 1 === 0 ? avg : avg.toFixed(1)}</div></div>
+      <div class="tier-card"><div class="tier-card-name">Max Magnitude</div><div class="tier-card-pct" style="color:#2b7a4b">${max}</div></div>
+    `;
+  }
 }
 
 document.getElementById('tn').addEventListener('input', updateOdds);
-document.getElementById('difficulty').addEventListener('input', updateOdds);
-document.getElementById('criticals').addEventListener('input', () => {
-  if (dice.some(d => d > 0)) { updateDiceDisplay(); calculate(); }
-  updateOdds();
+document.getElementById('risk').addEventListener('input', updateOdds);
+document.getElementById('expertise').addEventListener('input', updateOdds);
+document.getElementById('successes-mag').addEventListener('input', updateOdds);
+
+document.getElementById('odds-toggle').addEventListener('click', () => {
+  const body = document.getElementById('odds-body');
+  const toggle = document.getElementById('odds-toggle');
+  body.classList.toggle('collapsed');
+  toggle.classList.toggle('collapsed');
+  localStorage.setItem('oddsCollapsed', body.classList.contains('collapsed') ? '1' : '0');
 });
+document.getElementById('results-toggle').addEventListener('click', () => {
+  const body = document.getElementById('results');
+  const toggle = document.getElementById('results-toggle');
+  body.classList.toggle('collapsed');
+  toggle.classList.toggle('collapsed');
+  localStorage.setItem('resultsCollapsed', body.classList.contains('collapsed') ? '1' : '0');
+});
+(function() {
+  if (localStorage.getItem('oddsCollapsed') === '1') {
+    document.getElementById('odds-body').classList.add('collapsed');
+    document.getElementById('odds-toggle').classList.add('collapsed');
+  }
+  if (localStorage.getItem('resultsCollapsed') === '1') {
+    document.getElementById('results').classList.add('collapsed');
+    document.getElementById('results-toggle').classList.add('collapsed');
+  }
+})();
 updateOdds();
 </script>
 </body>

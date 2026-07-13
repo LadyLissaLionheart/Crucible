@@ -17,14 +17,14 @@ Alternatively, use the Python script:
 
 Usage:
 ```
-python3 scripts/calc.py <TN> <Difficulty>
+python3 scripts/calc.py <TN> <Risk>
 ```
 
 Outputs the full net success distribution and tier probabilities.
 
 ## What to report
 
-Report the tier probabilities (Misfortune, Setback, Meager, Decisive) and, if relevant, specific net success probabilities. Always show the TN and Difficulty you used so the user can verify.
+Report the tier probabilities (Misfortune, Setback, Meager, Decisive) and, if relevant, specific net success probabilities. Always show the TN and Risk you used so the user can verify.
 
 ## What not to do
 

@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dice Check — Crucible</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #eceef2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif;
+    padding: 2rem;
+  }
+
+  .card {
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 2rem 2.25rem;
+    max-width: 560px;
+    width: 100%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 6px 24px rgba(0,0,0,0.06);
+    position: relative;
+  }
+
+  /* --- Header --- */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .title {
+    font-size: 1.8rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #1a1a2e;
+  }
+
+  /* --- Body --- */
+  .section { margin-bottom: 1.5rem; }
+
+  .section-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #1e40af;
+    margin-bottom: 0.3rem;
+  }
+
+  .roll-line {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .dice-pool {
+    font-size: 1.3rem;
+    font-weight: 700;
+    background: #1a1a2e;
+    color: #ffffff;
+    padding: 0.3rem 1rem;
+    border-radius: 10px;
+    white-space: nowrap;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+  }
+
+  .vs-target {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #6b7280;
+  }
+
+  .dice-icon {
+    display: inline-block;
+    width: 1.8rem;
+    height: 1.8rem;
+    vertical-align: middle;
+    margin-right: 0.25rem;
+  }
+  .dice-icon svg {
+    display: block;
+  }
+
+  p, li { font-size: 0.9rem; line-height: 1.5; color: #374151; }
+  strong { color: #1a1a2e; }
+
+  ul { list-style: none; padding-left: 0; }
+  ul li::before { content: "• "; color: #d4a54a; font-weight: 700; }
+
+  /* --- Tables --- */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    margin-top: 0.3rem;
+  }
+
+  th {
+    text-align: left;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #4b5563;
+    padding: 0.25rem 0.4rem;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  td {
+    padding: 0.25rem 0.4rem;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  .outcome-col { font-weight: 700; white-space: nowrap; }
+  .net-col { text-align: center; font-weight: 600; }
+  .desc-col { color: #6b7280; }
+
+  .outcome-0 { color: #dc2626; }
+  .outcome-1 { color: #ca8a04; }
+  .outcome-2 { color: #65a30d; }
+
+  /* --- Resource Gen --- */
+  .resource-row {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.6rem;
+  }
+
+  .resource-box {
+    flex: 1;
+    padding: 0.5rem 0.5rem;
+    border-radius: 10px;
+    text-align: center;
+  }
+
+  .resource-box.inspiration {
+    background: #fffbeb;
+    border: 1px solid #fcd34d;
+  }
+
+  .resource-box.tension {
+    background: #fef2f2;
+    border: 1px solid #fca5a5;
+  }
+
+  .resource-box.clash {
+    background: #f9fafb;
+    border: 1px solid #d1d5db;
+  }
+
+  .resource-label {
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.15rem;
+    color: #1a1a2e;
+  }
+
+  .resource-desc {
+    font-size: 0.75rem;
+    color: #374151;
+  }
+
+  /* --- Footer --- */
+  .footer {
+    margin-top: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #e5e7eb;
+    font-size: 0.7rem;
+    color: #9ca3af;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+
+  <!-- Header -->
+  <div class="header">
+    <span class="title">Dice Check</span>
+  </div>
+
+  <!-- Roll -->
+  <div class="section">
+    <div class="section-title">The Roll</div>
+    <div class="roll-line">
+      <span class="dice-pool"><span class="dice-icon"><svg viewBox="0 0 22 22" fill="#d4a54a"><polygon points="11,1 19.5,8.5 16,19 6,19 2.5,8.5" /></svg></span> 4d12</span>
+      <span class="vs-target">vs <strong>Attribute Target Number (TN)</strong></span>
+    </div>
+    <p style="margin-top:0.4rem;">
+      Roll four d12s. Each die that meets or beats your <strong>Attribute Target Number (TN)</strong>
+      is a <strong>success</strong>. Each die that falls within the GM&rsquo;s <strong>Risk</strong>
+      zone (at or below the Risk number) is a <strong>penalty</strong>.
+      Subtract penalties from successes to determine your result.
+    </p>
+  </div>
+
+  <!-- Even & Odd -->
+  <div class="section">
+    <div class="section-title">Even &amp; Odd</div>
+    <p style="margin-bottom:0.4rem;">Even dice favor you, odd dice favor the GM. The balance of even and odd dice determines both critical effects and resource generation.</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Roll</th>
+          <th>Effect</th>
+          <th>Resources</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="desc-col" style="font-weight:700;color:#ca8a04;">4 even</td>
+          <td class="desc-col" style="font-weight:600;color:#ca8a04;">Critical Success</td>
+          <td class="desc-col">Ignore penalties, +1 success; +2 Inspiration</td>
+        </tr>
+        <tr>
+          <td class="desc-col" style="font-weight:700;color:#ca8a04;">3 even</td>
+          <td class="desc-col" style="font-weight:600;color:#ca8a04;">Critical Success</td>
+          <td class="desc-col">+1 Inspiration</td>
+        </tr>
+        <tr>
+          <td class="desc-col" style="font-weight:700;color:#6b7280;">2 even / 2 odd</td>
+          <td class="desc-col" style="font-weight:600;color:#6b7280;">Clash</td>
+          <td class="desc-col">No resource gain</td>
+        </tr>
+        <tr>
+          <td class="desc-col" style="font-weight:700;color:#dc2626;">3 odd</td>
+          <td class="desc-col" style="font-weight:600;color:#dc2626;">Critical Failure</td>
+          <td class="desc-col">+1 Tension</td>
+        </tr>
+        <tr>
+          <td class="desc-col" style="font-weight:700;color:#dc2626;">4 odd</td>
+          <td class="desc-col" style="font-weight:600;color:#dc2626;">Critical Failure</td>
+          <td class="desc-col">Ignore successes, &minus;1 success; +2 Tension</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="resource-row" style="margin-top:0.6rem;">
+      <div class="resource-box inspiration">
+        <div class="resource-label" style="font-size:0.7rem;">Inspiration</div>
+        <div class="resource-desc" style="font-size:0.85rem;">Gained from even dice</div>
+      </div>
+      <div class="resource-box clash">
+        <div class="resource-label" style="font-size:0.7rem;">Clash</div>
+        <div class="resource-desc" style="font-size:0.85rem;">2 even / 2 odd &mdash; no gain</div>
+      </div>
+      <div class="resource-box tension">
+        <div class="resource-label" style="font-size:0.7rem;">Tension</div>
+        <div class="resource-desc" style="font-size:0.85rem;">Gained from odd dice</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Outcome -->
+  <div class="section">
+    <div class="section-title">Outcome</div>
+    <p style="margin-bottom:0.4rem;">Your net successes (after subtracting penalties) determine the Success Ladder tier.</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Net Successes</th>
+          <th>Tier</th>
+          <th>What Happens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="net-col outcome-0">&minus;1 or less</td>
+          <td class="outcome-col outcome-0">Misfortune</td>
+          <td class="desc-col">Failure &mdash; things get complicated.</td>
+        </tr>
+        <tr>
+          <td class="net-col outcome-1">0</td>
+          <td class="outcome-col outcome-1">Setback</td>
+          <td class="desc-col">Failure.</td>
+        </tr>
+        <tr>
+          <td class="net-col outcome-2">1 or more</td>
+          <td class="outcome-col outcome-2">Triumph</td>
+          <td class="desc-col">Clean success and beyond.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Timing -->
+  <div class="section">
+    <div class="section-title">Timing</div>
+    <ul>
+      <li>When you perform a <strong>core action</strong> or are asked to make a <strong>reaction</strong>.</li>
+    </ul>
+  </div>
+
+  <!-- Reminders -->
+  <div class="section">
+    <div class="section-title">Reminders</div>
+    <ul>
+      <li>Spend <strong>Edges</strong> after the roll to shift one die up by 2 (one shift per Edge, die can only be shifted once).</li>
+      <li>Check <strong>parity</strong> after spending Edges to determine critical effects and resources.</li>
+      <li>On a <strong>Triumph</strong>, your <strong>Effect Magnitude</strong> equals the sum of your expertise dice (plus bonus successes if spent).</li>
+      <li>On a <strong>Setback</strong>, you may negotiate with the GM to apply magnitude at a cost.</li>
+      <li>Collect any <strong>Inspiration</strong> the roll generated &mdash; the GM collects <strong>Tension</strong>.</li>
+    </ul>
+  </div>
+
+  <div class="footer">
+    Crucible &mdash; Dice Check &mdash; v0.1 prototype
+  </div>
+
+</div>
+
+</body>
+</html>
