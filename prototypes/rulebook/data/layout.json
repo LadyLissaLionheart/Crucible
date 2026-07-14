@@ -1,0 +1,35 @@
+{
+  "title": "Crucible",
+  "subtitle": "Core Rulebook",
+  "version": "0.1",
+  "entries": [
+    {
+      "id": "chapter-title",
+      "kind": "chapter",
+      "sidebarTitle": "",
+      "title": "",
+      "page": 1,
+      "col": 4,
+      "row": 4,
+      "w": 40,
+      "h": 8
+    },
+    {
+      "id": "title",
+      "kind": "section",
+      "sidebarTitle": "Introduction",
+      "page": 1,
+      "col": 26,
+      "row": 30,
+      "w": 18,
+      "h": 7
+    }
+  ],
+  "appendix": {
+    "title": "Appendix"
+  },
+  "grid": {
+    "cols": 48,
+    "rows": 64
+  }
+}

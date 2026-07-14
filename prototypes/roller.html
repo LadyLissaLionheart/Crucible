@@ -178,6 +178,11 @@
     position: relative;
   }
 
+  .dice-area.pool-5 .die-shell { width: 76px; height: 76px; }
+  .dice-area.pool-5 .die { width: 66px; height: 66px; font-size: 1.65rem; }
+  .dice-area.pool-5 .edge-btn { width: 90px; font-size: 0.75rem; padding: 0.35rem 0.4rem; }
+  .dice-area.pool-5 .dice-row { gap: 0.5rem; }
+
   .die.edged { }
   .die-label {
     font-size: 2rem; font-weight: 700;
@@ -353,8 +358,12 @@
       <input id="risk" type="number" min="0" max="12" value="3">
     </div>
     <div class="control-group">
+      <label for="dice">Dice</label>
+      <input id="dice" type="number" min="1" max="5" value="4">
+    </div>
+    <div class="control-group">
       <label for="expertise">Expertise</label>
-      <input id="expertise" type="number" min="1" max="4" value="1">
+      <input id="expertise" type="number" min="1" max="5" value="1">
     </div>
     <div class="control-group">
       <label for="successes-mag">Successes Magnitude</label>
@@ -436,7 +445,7 @@
 
 <script>
 const DIE_SIDES = 12;
-const POOL = 4;
+let POOL = 4;
 
 let dice = [0, 0, 0, 0];
 let baseDice = [0, 0, 0, 0];
@@ -458,7 +467,22 @@ function getRisk() {
   return Math.min(raw, tn - 1);
 }
 function getExpertise() {
-  return Math.min(4, Math.max(1, parseInt(document.getElementById('expertise').value) || 1));
+  return Math.min(5, Math.max(1, parseInt(document.getElementById('expertise').value) || 1));
+}
+function getDiceCount() {
+  return Math.min(5, Math.max(1, parseInt(document.getElementById('dice').value) || 4));
+}
+function applyPoolSize() {
+  const newPool = getDiceCount();
+  POOL = newPool;
+  dice = new Array(POOL).fill(0);
+  baseDice = new Array(POOL).fill(0);
+  edgesUsed = new Array(POOL).fill(false);
+  successesSpent = 0;
+  successesUses = 0;
+  freshRoll = false;
+  costPaid = false;
+  document.getElementById('dice-area').classList.toggle('pool-5', POOL === 5);
 }
 function getSuccessesMagnitude() {
   return Math.min(20, Math.max(0, parseInt(document.getElementById('successes-mag').value) ?? 2));
@@ -485,7 +509,14 @@ function updateOutcomeStack(expertise) {
     back.className = 'outcome-d12-back';
     if (dice.some(d => d > 0)) back.classList.add('active');
     back.innerHTML = '<div class="outcome-d12-back-inner"></div>';
-    if (i === 3) {
+    if (expertise === 5) {
+      if (i <= 2) {
+        back.style.left = (i === 1 ? 22 : -22) + 'px';
+      } else {
+        back.style.left = (i === 3 ? -44 : 44) + 'px';
+      }
+      back.style.top = '0px';
+    } else if (i === 3) {
       back.style.left = '0px';
       back.style.top = '-23px';
     } else {
@@ -497,17 +528,18 @@ function updateOutcomeStack(expertise) {
     back.style.zIndex = 1 - i;
     stack.insertBefore(back, shell);
   }
-  stack.style.transform = expertise >= 4 ? 'translateY(11px)' : '';
+  stack.style.transform = expertise === 4 ? 'translateY(11px)' : '';
 }
 
 function saveState() {
   localStorage.setItem('diceRollerTN', document.getElementById('tn').value);
   localStorage.setItem('diceRollerRisk', document.getElementById('risk').value);
+  localStorage.setItem('diceRollerDice', document.getElementById('dice').value);
   localStorage.setItem('diceRollerExpertise', document.getElementById('expertise').value);
   localStorage.setItem('diceRollerSuccessesMag', document.getElementById('successes-mag').value);
 }
 function restoreState() {
-  const keys = { tn: 'diceRollerTN', risk: 'diceRollerRisk', expertise: 'diceRollerExpertise', 'successes-mag': 'diceRollerSuccessesMag' };
+  const keys = { tn: 'diceRollerTN', risk: 'diceRollerRisk', dice: 'diceRollerDice', expertise: 'diceRollerExpertise', 'successes-mag': 'diceRollerSuccessesMag' };
   for (const [id, key] of Object.entries(keys)) {
     const val = localStorage.getItem(key);
     if (val !== null) document.getElementById(id).value = val;
@@ -515,8 +547,15 @@ function restoreState() {
 }
 
 function init() {
+  applyPoolSize();
+  rebuildSlots();
+}
+
+function rebuildSlots() {
   const diceRow = document.getElementById('dice-row');
   diceRow.innerHTML = '';
+  dieEls.length = 0;
+  edgeBtns.length = 0;
 
   for (let i = 0; i < POOL; i++) {
     const slot = document.createElement('div');
@@ -543,8 +582,8 @@ function init() {
     slot.appendChild(btn);
 
     diceRow.appendChild(slot);
-    dieEls[i] = die;
-    edgeBtns[i] = btn;
+    dieEls.push(die);
+    edgeBtns.push(btn);
   }
   updateDiceDisplay();
   updateOutcomeStack(parseInt(document.getElementById('expertise').value) || 0);
@@ -553,7 +592,7 @@ function init() {
 function roll() {
   dice = dice.map(() => Math.floor(Math.random() * DIE_SIDES) + 1);
   baseDice = [...dice];
-  edgesUsed = [false, false, false, false];
+  edgesUsed = new Array(POOL).fill(false);
   successesSpent = 0;
   successesUses = 0;
   freshRoll = true;
@@ -566,7 +605,7 @@ function rollCritSuccess() {
   dice = dice.map(() => Math.floor(Math.random() * DIE_SIDES) + 1);
   dice = dice.map(d => d % 2 !== 0 ? Math.min(DIE_SIDES, d + 1) : d);
   baseDice = [...dice];
-  edgesUsed = [false, false, false, false];
+  edgesUsed = new Array(POOL).fill(false);
   successesSpent = 0;
   successesUses = 0;
   freshRoll = true;
@@ -579,7 +618,7 @@ function rollCritFailure() {
   dice = dice.map(() => Math.floor(Math.random() * DIE_SIDES) + 1);
   dice = dice.map(d => d % 2 === 0 ? d - 1 : d);
   baseDice = [...dice];
-  edgesUsed = [false, false, false, false];
+  edgesUsed = new Array(POOL).fill(false);
   successesSpent = 0;
   successesUses = 0;
   freshRoll = true;
@@ -634,7 +673,7 @@ function updateDiceDisplay() {
 
       let label, cls;
       if (d <= risk) {
-        cls = evens === 4 ? 'ignored' : 'penalty-label';
+        cls = evens === POOL ? 'ignored' : 'penalty-label';
         label = xSvg;
       } else if (d >= tn && d > risk) {
         cls = evens === 0 ? 'ignored' : 'success-label';
@@ -693,7 +732,7 @@ function calculate() {
 
   // Apply parity overrides
   let finalResults;
-  if (evens === 4) {
+  if (evens === POOL) {
     finalResults = rawResults.map(r => r === 1 ? 1 : 0);
     finalResults.push(1, 1);
   } else if (evens === 0) {
@@ -716,7 +755,7 @@ function calculate() {
 
   // Tier
   let tier, tierCls, tierDesc;
-  if (evens === 4) {
+  if (evens === POOL) {
     tier = 'Critical Success';
     tierCls = 'inspired2';
     tierDesc = 'Exceptional success';
@@ -741,7 +780,7 @@ function calculate() {
   // Effect Magnitude
   const expertiseDice = dice.slice(0, expertise);
   let magnitude = expertiseDice.reduce((a, b) => a + b, 0);
-  const isCrit = evens === 4;
+  const isCrit = evens === POOL;
   const baseMagnitude = magnitude;
   if (net > 0) magnitude += net * successesMagnitude;
   const canApplyMagnitude = tier === 'Triumph' || (tier === 'Setback' && costPaid) || tier === 'Critical Success';
@@ -775,7 +814,7 @@ function calculate() {
   const failCount = rawResults.filter(r => r === -1).length;
   let detail = successCount + ' success' + (successCount !== 1 ? 'es' : '');
   if (failCount > 0) detail += ', ' + failCount + ' penalt' + (failCount !== 1 ? 'ies' : 'y');
-  if (evens === 4) detail += ' (penalties ignored, +2 successes — Critical Success)';
+  if (evens === POOL) detail += ' (penalties ignored, +2 successes — Critical Success)';
   if (evens === 0) detail += ' (successes ignored, −2 successes — Critical Failure)';
   detailEl.textContent = detail;
   detailEl.className = 'result-sub ' + (isSuccess ? 'positive' : 'negative');
@@ -851,41 +890,41 @@ function calculate() {
   const resourceEl = document.getElementById('resource-value');
   const resourceDetailEl = document.getElementById('resource-detail');
   const outcomeResource = document.getElementById('outcome-resource');
-  const odds = 4 - evens;
+  const odds = POOL - evens;
   const parityStr = evens + ' even, ' + odds + ' odd';
-  if (evens === 4) {
+  if (evens === POOL) {
     resourceEl.textContent = '2 Inspiration';
     resourceEl.className = 'result-value inspired2';
     outcomeResource.textContent = 'You gain 2 inspiration';
     outcomeResource.className = 'outcome-resource inspired2';
     resourceDetailEl.textContent = parityStr;
     resourceDetailEl.className = 'result-sub neutral-sub';
-  } else if (evens === 3) {
+  } else if (evens > POOL / 2) {
     resourceEl.textContent = '1 Inspiration';
     resourceEl.className = 'result-value inspired1';
     outcomeResource.textContent = 'You gain 1 inspiration';
     outcomeResource.className = 'outcome-resource inspired1';
     resourceDetailEl.textContent = parityStr;
     resourceDetailEl.className = 'result-sub neutral-sub';
-  } else if (evens === 2) {
+  } else if (evens === POOL / 2) {
     resourceEl.textContent = '—';
     resourceEl.className = 'result-value clash';
     outcomeResource.textContent = '';
     outcomeResource.className = 'outcome-resource clash';
     resourceDetailEl.textContent = parityStr;
     resourceDetailEl.className = 'result-sub neutral-sub';
-  } else if (evens === 1) {
-    resourceEl.textContent = '1 Tension';
-    resourceEl.className = 'result-value threat1';
-    outcomeResource.textContent = 'GM gains 1 tension';
-    outcomeResource.className = 'outcome-resource threat1';
-    resourceDetailEl.textContent = parityStr;
-    resourceDetailEl.className = 'result-sub neutral-sub';
-  } else {
+  } else if (evens === 0) {
     resourceEl.textContent = '2 Tension';
     resourceEl.className = 'result-value threat2';
     outcomeResource.textContent = 'GM gains 2 tension';
     outcomeResource.className = 'outcome-resource threat2';
+    resourceDetailEl.textContent = parityStr;
+    resourceDetailEl.className = 'result-sub neutral-sub';
+  } else {
+    resourceEl.textContent = '1 Tension';
+    resourceEl.className = 'result-value threat1';
+    outcomeResource.textContent = 'GM gains 1 tension';
+    outcomeResource.className = 'outcome-resource threat1';
     resourceDetailEl.textContent = parityStr;
     resourceDetailEl.className = 'result-sub neutral-sub';
   }
@@ -939,6 +978,13 @@ document.getElementById('risk').addEventListener('input', () => {
   saveState();
   if (dice.some(d => d > 0)) { updateDiceDisplay(); calculate(); }
 });
+document.getElementById('dice').addEventListener('input', () => {
+  saveState();
+  applyPoolSize();
+  rebuildSlots();
+  updateOdds();
+  if (dice.some(d => d > 0)) { calculate(); }
+});
 document.getElementById('expertise').addEventListener('input', () => {
   saveState();
   updateDiceDisplay();
@@ -960,33 +1006,38 @@ const TIERS = [
   { lo: -Infinity, hi: -1, name: 'Misfortune',   desc: 'Failure, things get complicated', cls: 'bar-mishap' },
 ];
 
-function calcDist(tn, risk, expertise, successesMagnitude) {
+function calcDist(tn, risk, expertise, successesMagnitude, poolSize) {
   const netDist = {};
   const magDist = {};
   const faces = [1,2,3,4,5,6,7,8,9,10,11,12];
-  for (const d1 of faces)
-  for (const d2 of faces)
-  for (const d3 of faces)
-  for (const d4 of faces) {
-    const dice = [d1, d2, d3, d4];
-    const evens = dice.filter(d => d % 2 === 0).length;
-    let net;
-    if (evens === 4)
-      net = dice.filter(d => d >= tn && d > risk).length + 2;
-    else if (evens === 0)
-      net = dice.filter(d => d <= risk).length * -1 - 2;
-    else
-      net = dice.reduce((sum, d) => sum + dieResult(d, tn, risk), 0);
-    netDist[net] = (netDist[net] || 0) + 1;
+  const dice = new Array(poolSize);
+  function recurse(idx) {
+    if (idx === poolSize) {
+      const evens = dice.filter(d => d % 2 === 0).length;
+      let net;
+      if (evens === poolSize)
+        net = dice.filter(d => d >= tn && d > risk).length + 2;
+      else if (evens === 0)
+        net = dice.filter(d => d <= risk).length * -1 - 2;
+      else
+        net = dice.reduce((sum, d) => sum + dieResult(d, tn, risk), 0);
+      netDist[net] = (netDist[net] || 0) + 1;
 
-    const canApply = (evens === 4) || (evens !== 0 && net >= 0);
-    if (expertise > 0 && canApply) {
-      let mag = dice.slice(0, expertise).reduce((a, b) => a + b, 0);
-      if (net > 0) mag += net * successesMagnitude;
-      magDist[mag] = (magDist[mag] || 0) + 1;
+      const canApply = (evens === poolSize) || (evens !== 0 && net >= 0);
+      if (expertise > 0 && canApply) {
+        let mag = dice.slice(0, expertise).reduce((a, b) => a + b, 0);
+        if (net > 0) mag += net * successesMagnitude;
+        magDist[mag] = (magDist[mag] || 0) + 1;
+      }
+      return;
+    }
+    for (const f of faces) {
+      dice[idx] = f;
+      recurse(idx + 1);
     }
   }
-  const total = Math.pow(12, 4);
+  recurse(0);
+  const total = Math.pow(12, poolSize);
   for (const k in netDist) netDist[k] /= total;
   for (const k in magDist) magDist[k] /= total;
   return { netDist, magDist };
@@ -1001,8 +1052,9 @@ function updateOdds() {
   const risk = getRisk();
   const expertise = getExpertise();
   const successesMagnitude = getSuccessesMagnitude();
+  const poolSize = getDiceCount();
 
-  const { netDist, magDist } = calcDist(tn, risk, expertise, successesMagnitude);
+  const { netDist, magDist } = calcDist(tn, risk, expertise, successesMagnitude, poolSize);
 
   document.getElementById('odds-sf-body').innerHTML = [
     { name: 'Success', lo: 1, hi: Infinity, cls: 'triumph' },

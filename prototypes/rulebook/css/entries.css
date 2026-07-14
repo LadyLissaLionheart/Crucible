@@ -1,0 +1,222 @@
+/* ── Entry Content Styles ───────────────── */
+.entry {
+  font-family: var(--font-body);
+  font-size: 10pt;
+  line-height: 1.6;
+  padding-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  min-height: 2rem;
+  position: relative;
+}
+.entry.loading {
+  color: var(--text-muted);
+  font-style: italic;
+}
+.entry.loading::after {
+  content: '';
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  margin-left: 0.5em;
+  vertical-align: middle;
+}
+
+.entry h2 {
+  font-family: var(--font-display);
+  font-size: 18pt;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  color: var(--text);
+  margin: 0 0 0.75rem;
+}
+.entry h3 {
+  font-family: var(--font-body);
+  font-size: 11pt;
+  font-weight: 700;
+  color: var(--text);
+  margin: 1.5rem 0 0.5rem;
+}
+.entry h4 {
+  font-family: var(--font-ui);
+  font-size: 7pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  margin: 1rem 0 0.35rem;
+}
+.entry p { margin: 0 0 0.5rem; }
+.entry ul, .entry ol { margin: 0 0 0.5rem; padding-left: 1.5rem; }
+.entry li { margin-bottom: 0.3rem; }
+.entry strong { color: var(--text); font-weight: 700; }
+.entry em { color: var(--text); font-style: italic; }
+
+.entry table {
+  font-family: var(--font-ui);
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.75rem 0;
+  font-size: 9pt;
+}
+.entry th {
+  text-align: left;
+  font-size: 6.5pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1.5pt solid var(--text);
+}
+.entry td {
+  padding: 0.4rem 0.6rem;
+  border-bottom: 0.5pt solid var(--border-line);
+  vertical-align: top;
+}
+.entry tr:last-child td { border-bottom: none; }
+.entry .positive { color: var(--positive); font-weight: 600; }
+.entry .negative { color: var(--negative); font-weight: 600; }
+.entry .neutral { color: var(--neutral); }
+.entry .net { font-weight: 600; text-align: center; }
+.entry .tier { font-weight: 700; }
+
+.entry .mechanic-box {
+  background: var(--accent-light);
+  border: 1px solid #c3d9ca;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin: 0.75rem 0;
+}
+.entry .mechanic-label {
+  font-family: var(--font-ui);
+  font-size: 7pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  margin-bottom: 0.35rem;
+}
+.entry .mechanic-note {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-style: italic;
+  margin-top: 0.5rem;
+  margin-bottom: 0;
+}
+
+.entry .callout {
+  background: #ffffff;
+  border-left: 3px solid #d4a017;
+  padding: 0.75rem 1rem;
+  margin: 0.75rem 0;
+  font-size: 0.9rem;
+  border-radius: 0 6px 6px 0;
+}
+.entry .callout strong { color: #8a6d13; }
+
+.entry .two-column {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  margin: 0.75rem 0;
+}
+
+.entry dl { margin: 0.5rem 0; }
+.entry dt {
+  font-family: var(--font-ui);
+  font-size: 7pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  margin-top: 0.75rem;
+}
+.entry dd {
+  font-family: var(--font-body);
+  margin: 0.15rem 0 0 1rem;
+  color: var(--text);
+}
+
+.entry .concept-list,
+.entry .resolution-steps {
+  padding-left: 1.25rem;
+}
+.entry .concept-list li { margin-bottom: 0.5rem; }
+.entry .resolution-steps li { margin-bottom: 0.4rem; }
+
+.entry ol { list-style: decimal; }
+.entry ol li { list-style: decimal; }
+
+/* ── Appendix ───────────────────────────── */
+.appendix {
+  margin-top: 0;
+  padding-top: 1rem;
+  border-top: none;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.appendix-title {
+  font-family: var(--font-display);
+  font-size: 24pt;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  margin-bottom: 1.5rem;
+  flex: 0 0 auto;
+}
+.appendix-index {
+  column-count: 3;
+  column-gap: 2rem;
+  column-fill: auto;
+  flex: 1 1 0;
+  min-height: 0;
+}
+@media (max-width: 1100px) { .appendix-index { column-count: 2; } }
+@media (max-width: 700px) { .appendix-index { column-count: 1; } }
+.appendix-letter {
+  break-inside: avoid;
+  font-family: var(--font-display);
+  font-size: 14pt;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  margin: 1rem 0 0.25rem;
+  padding-bottom: 0.2rem;
+  border-bottom: 1px solid var(--border);
+}
+.appendix-entry {
+  break-inside: avoid;
+  padding: 0.15rem 0;
+  font-family: var(--font-ui);
+  font-size: 8.5pt;
+  line-height: 1.4;
+  display: flex;
+  gap: 0.35rem;
+}
+.appendix-entry .term {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 8pt;
+  white-space: nowrap;
+}
+.appendix-entry .refs {
+  color: var(--text-muted);
+}
+.appendix-entry .refs a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 8pt;
+}
+.appendix-entry .refs a:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+/* ── Screen page footers are now per-card (see .page::after in chrome.css) ── */
+/* Legacy flat-flow markers are hidden if any linger in the DOM. */
+.page-footer { display: none !important; }

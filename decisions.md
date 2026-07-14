@@ -2,7 +2,7 @@
 
 ## Core Philosophy
 
-**Simple core mechanics** — easy to learn, fast at the table. The player's ritual is always identical: roll 4d12, count successes, spend edges if desired, check parity. No lookups, no conditional math. All risk is handled by the GM through a single number.
+**Simple core mechanics** — easy to learn, fast at the table. The player's ritual is always identical: roll 5d12, count successes, spend edges if desired, check parity. No lookups, no conditional math. All risk is handled by the GM through a single number.
 
 **Allow cinematic moments** — mechanics create drama, not just pass/fail. The parity-based critical system ensures that even impossible rolls have a chance of breakthrough, and sure things can unravel. The Success Ladder (Misfortune, Setback, Triumph) provides narrative texture beyond binary outcomes.
 
@@ -19,7 +19,7 @@ The Core must stand alone as a complete game. The Advanced book is additive, not
 
 ## Core Mechanic: d12 Success-Counting
 
-**Resolution**: Roll 4d12. Count successes against your Target Number (TN). The GM applies Risk as a penalty zone.
+**Resolution**: Roll 5d12. Count successes against your Target Number (TN). The GM applies Risk as a penalty zone.
 
 **The three-zone die** (per die):
 | Condition | Result |
@@ -41,31 +41,33 @@ The Core must stand alone as a complete game. The Advanced book is additive, not
 **Resolution flow**:
 1. Player says what they want to do and what attribute they're using.
 2. GM decides if it's automatic (no roll), impossible (no roll), or Risk N.
-3. Player rolls 4d12, counts successes ≥ TN, subtracts dice ≤ Risk.
+3. Player rolls 5d12, counts successes ≥ TN, subtracts dice ≤ Risk.
 4. **Spend edges** (optional): each edge shifts one die up by 2 (max 12). A die can only be shifted once per roll. Recalculate successes/penalties after shifts.
 5. Check die parity:
-   - **4 evens**: **Critical Success** — ignore penalties, +1 success. Player gains +2 Inspiration.
-   - **3 evens**: **Critical Success** — player gains +1 Inspiration.
-   - **2 evens, 2 odds**: **Clash** — no resource gain.
-    - **3 odds**: **Critical Failure** — GM gains +1 Tension.
-    - **4 odds**: **Critical Failure** — ignore successes, −1 success. GM gains +2 Tension.
+   - **5 evens**: **Critical Success** — ignore penalties, +1 success. Player gains +2 Inspiration.
+   - **4 evens**: Player gains +1 Inspiration.
+   - **3 evens**: Player gains +1 Inspiration.
+   - **2 evens**: GM gains +1 Tension.
+   - **1 even**: GM gains +1 Tension.
+   - **5 odds**: **Critical Failure** — ignore successes, −1 success. GM gains +2 Tension.
 6. GM narrates the result using the Success Ladder.
 
 **Turn trivially possible → don't roll. Turn trivially impossible → don't roll.** Risk is only for the grey zone where a roll matters.
 
 ## Resources
 
-Every roll generates resources based on die parity. Each d12 has 6 even faces (2,4,6,8,10,12) and 6 odd faces (1,3,5,7,9,11), giving fixed binomial odds regardless of TN or Risk:
+Every roll generates resources based on die parity. Each d12 has 6 even faces (2,4,6,8,10,12) and 6 odd faces (1,3,5,7,9,11), giving fixed binomial odds regardless of TN or Risk. With an odd pool size, there is no tie — one side always outnumbers the other:
 
 | Name | Dice | Gain | Probability |
 |---|---|---|---|---|
-| Critical Success | 4e | +2 Inspiration | 1/16 = 6.25% |
-| — | 3e / 1o | +1 Inspiration | 4/16 = 25% |
-| Clash | 2e / 2o | — | 6/16 = 37.5% |
-| — | 1e / 3o | +1 Tension | 4/16 = 25% |
-| Critical Failure | 4o | +2 Tension | 1/16 = 6.25% |
+| Critical Success | 5e | +2 Inspiration | 1/32 = 3.125% |
+| — | 4e / 1o | +1 Inspiration | 5/32 = 15.625% |
+| — | 3e / 2o | +1 Inspiration | 10/32 = 31.25% |
+| — | 2e / 3o | +1 Tension | 10/32 = 31.25% |
+| — | 1e / 4o | +1 Tension | 5/32 = 15.625% |
+| Critical Failure | 5o | +2 Tension | 1/32 = 3.125% |
 
-On a **Critical Success** (4 evens), ignore the penalty zone and gain +1 success — only successes and neutral dice count, plus a bonus success. On a **Critical Failure** (4 odds), ignore the success zone and suffer −1 success — only penalties and neutral dice count, plus an extra penalty. This means a desperate roll can break through risk, and a sure thing can unravel despite high skill.
+On a **Critical Success** (5 evens), ignore the penalty zone and gain +1 success — only successes and neutral dice count, plus a bonus success. On a **Critical Failure** (5 odds), ignore the success zone and suffer −1 success — only penalties and neutral dice count, plus an extra penalty. This means a desperate roll can break through risk, and a sure thing can unravel despite high skill. Because the pool is odd-sized, every roll always generates either Inspiration or Tension — there is no dead zone.
 
 ## Edges
 
@@ -73,7 +75,7 @@ Edges represent training, talent, circumstance, or equipment that lets a charact
 
 **Spending an edge**: after rolling but before checking parity, spend one edge to shift one die's face value up by 2 (to a maximum of 12). Recalculate successes and penalties based on the new value. A given die can only be shifted once per roll. Multiple edges can be spent on different dice in the same roll.
 
-Edges preserve parity (even+2 stays even, odd+2 stays odd), so the resource economy is unaffected by edge use. Edges also never cause a reroll, keeping the 4d12 resolution consistent.
+Edges preserve parity (even+2 stays even, odd+2 stays odd), so the resource economy is unaffected by edge use. Edges also never cause a reroll, keeping the 5d12 resolution consistent.
 
 **Per-session budget**: each edge source defines how many uses the player gets per session. Specializations typically grant 1–3 uses; other sources may vary.
 
@@ -84,30 +86,31 @@ Risk is 0–12. The GM picks a number based on the situation. No table lookup �
 **What different Risk values mean** (at TN 8, the human average):
 | Risk | Penalty zone | Expected net successes | Feel |
 |---|---|---|---|
-| 0 | None | 1.67 | Routine |
-| 2 | 1–2 | 1.33 | Slightly risky |
-| 4 | 1–4 | 1.0 | Risky |
-| 6 | 1–6 | 0.67 | High risk |
-| 8 | 1–8 | 0.33 | Desperate |
-| 10 | 1–10 | 0.13 | Near-impossible |
-| 12 | 1–12 | 0 | Impossible (max net = 0) |
+| 0 | None | 2.03 | Routine |
+| 2 | 1–2 | 1.22 | Slightly risky |
+| 4 | 1–4 | 0.42 | Risky |
+| 6 | 1–6 | -0.39 | High risk |
+| 8 | 1–8 | -1.61 | Desperate |
+| 10 | 1–10 | -3.23 | Near-impossible |
+| 12 | 1–12 | -4.84 | Impossible |
 
-At Risk 12 every die is a penalty — the normal calculation can never exceed Setback. A Critical Success (4 evens) ignores penalties, making success possible against impossible odds. The GM may let the roll happen for dramatic effect, knowing a breakout is always possible.
+At Risk 12 every die is a penalty — the normal calculation always results in Misfortune. A Critical Success (5 evens) ignores penalties, making success possible against impossible odds. The GM may let the roll happen for dramatic effect, knowing a breakout is always possible.
 
 **Risk caps at TN−1 internally.** Risk can never equal or exceed TN — a die that beats the TN is always a success, never a penalty. This avoids contradictory outcomes where the same die scores and loses a success. The input field is freely editable; the cap is enforced in resolution and odds calculations only.
 
 ## Expertise Dice
 
-Players always roll 4d12, but the composition changes with tier. Expertise dice are mechanically identical to standard dice (same three-zone system, TN, Risk) but determine **Effect Magnitude** and can trigger special abilities.
+Players always roll 5d12, but the composition changes with tier. Expertise dice are mechanically identical to standard dice (same three-zone system, TN, Risk) but determine **Effect Magnitude** and can trigger special abilities.
 
 **Tier by Level:**
 
 | Tier | Level | Expertise Dice | Standard Dice |
 |------|-------|----------------|---------------|
-| Heroic | 1-5 | 1d12 | 3d12 |
-| Paragon | 6-10 | 2d12 | 2d12 |
-| Epic | 11-15 | 3d12 | 1d12 |
-| Legendary | 16-20 | 4d12 | 0d12 |
+| Heroic | 1-4 | 1d12 | 4d12 |
+| Paragon | 5-8 | 2d12 | 3d12 |
+| Ascendant | 9-12 | 3d12 | 2d12 |
+| Legendary | 13-16 | 4d12 | 1d12 |
+| Mythic | 17+ | 5d12 | 0d12 |
 
 **Effect Magnitude** = sum of expertise dice. Only calculated when the check requires it (damage, progress, etc.). Not every check needs magnitude.
 
@@ -125,11 +128,11 @@ Players always roll 4d12, but the composition changes with tier. Expertise dice 
 **Key Design Notes:**
 - NPCs never roll — expertise dice are player-exclusive
 - Visual distinction via dice color teaches the system naturally
-- Effect Magnitude scales linearly with tier: ~6.5 (Heroic) to ~26 (Legendary)
+- Effect Magnitude scales linearly with tier: ~6.5 (Heroic) to ~32.5 (Mythic)
 
 ## Rationale for d12
 
-The d12 is the most underused die in the hobby. It gives 12 discrete outcomes and a clean 8.3% step per pip, which is finer granularity than a d10 (10%) or d20 (5%). Four dice keeps the probability curve tightly clustered while leaving room for modifiers to matter.
+The d12 is the most underused die in the hobby. It gives 12 discrete outcomes and a clean 8.3% step per pip, which is finer granularity than a d10 (10%) or d20 (5%). Five dice creates a strong central tendency while leaving room for modifiers to matter. The odd pool size ensures every roll always generates resources — no dead zone.
 
 ## Attributes
 
@@ -154,24 +157,24 @@ Seven attributes, each with two TN values:
 **TN floor**: TNs can go as low as 2. At TN 2, dice succeed on 2–12 (91.7% per die) but Risk can still create tension.
 
 **Probability benchmarks** (single die ≥ TN):
-| TN | P(success per die) | P(≥1 on 4d12) | P(≥2 on 4d12) |
+| TN | P(success per die) | P(≥1 on 5d12) | P(≥2 on 5d12) |
 |----|----|----|----|
-| 12 | 8.3% | 29.4% | 4.4% |
-| 10 | 25% | 68.4% | 26.2% |
-| 8 | 41.7% | 88.3% | 58.4% |
-| 6 | 58.3% | 97.0% | 83.6% |
-| 4 | 75% | 99.6% | 96.1% |
-| 2 | 91.7% | ~100% | 99.9% |
+| 12 | 8.3% | 35.3% | 5.8% |
+| 10 | 25% | 76.3% | 36.7% |
+| 8 | 41.7% | 93.2% | 69.1% |
+| 6 | 58.3% | 98.7% | 90.0% |
+| 4 | 75% | 99.9% | 98.4% |
+| 2 | 91.7% | ~100% | ~100% |
 
 **Net expected successes** across different TN/Risk combinations:
 | TN ↓ Risk → | 0 | 3 | 6 | 9 |
 |---|---|---|---|---|
-| 12 | 0.33 | 0.0 | — | — |
-| 10 | 1.0 | 0.67 | 0.33 | — |
-| 8 | 1.67 | 1.33 | 0.67 | 0.33 |
-| 6 | 2.33 | 1.67 | 1.33 | 0.67 |
-| 4 | 3.0 | 2.33 | 2.0 | 1.0 |
-| 2 | 3.67 | 3.0 | 2.33 | 1.67 |
+| 12 | 0.42 | -0.81 | — | — |
+| 10 | 1.22 | 0.00 | -1.20 | — |
+| 8 | 2.03 | 0.81 | — | — |
+| 6 | 2.84 | 1.61 | — | — |
+| 4 | 3.65 | 2.42 | — | — |
+| 2 | 4.45 | — | — | — |
 
 ## Open Decisions
 
@@ -204,4 +207,3 @@ Seven attributes, each with two TN values:
 
 ### Meta
 - Genre/setting? The attributes are setting-agnostic by design — universal toolkit, or a specific world?
-- What happens to the 4d12 pool size? Always fixed, or can it change?

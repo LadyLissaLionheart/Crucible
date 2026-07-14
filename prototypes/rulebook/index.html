@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crucible — Core Rulebook</title>
+
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="preload" href="fonts/bebas-neue-v16-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/inter-v20-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/libre-baskerville-v24-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/libre-baskerville-v24-italic.woff2" as="font" type="font/woff2" crossorigin>
+
+<link rel="stylesheet" href="css/root.css">
+<link rel="stylesheet" href="css/chrome.css">
+<link rel="stylesheet" href="css/entries.css">
+<link rel="stylesheet" href="css/edit-mode.css">
+<link rel="stylesheet" href="css/editor.css">
+<link rel="stylesheet" href="css/grid.css">
+<link rel="stylesheet" href="css/print.css" media="print">
+<link rel="stylesheet" href="css/pagination.css">
+<link rel="stylesheet" href="css/popup.css">
+</head>
+<body>
+
+<!-- Header -->
+<header class="header">
+  <span class="header-title">Crucible</span>
+
+  <div class="header-spacer"></div>
+  <div class="search-box">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" id="search-input" placeholder="Search the rulebook..." autocomplete="off">
+    <button class="search-clear" id="search-clear" aria-label="Clear search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+    </button>
+    <div class="search-results" id="search-results"></div>
+  </div>
+</header>
+
+<!-- Sidebar / TOC -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-toc" id="sidebar-toc"></div>
+  <div class="sidebar-footer">
+    <button class="edit-toggle" id="edit-toggle">Edit Mode</button>
+    <button class="page-num-btn" id="page-num-btn" style="display:none">Page Numbers</button>
+  </div>
+</nav>
+
+<!-- Main Content -->
+<div class="main-wrapper">
+<main class="main" id="main-content">
+  <div id="chapters-container"></div>
+  <div class="appendix" id="appendix" style="display:none">
+    <h2 class="appendix-title" id="appendix-title"></h2>
+    <div id="appendix-index" class="appendix-index"></div>
+  </div>
+</main>
+</div>
+
+<!-- Edit Bar -->
+<div class="edit-bar" id="edit-bar">
+  <span>Edit Mode</span>
+  <div class="edit-bar-spacer"></div>
+  <button id="rebuild-btn">Rebuild Index</button>
+  <button class="save-btn" id="save-layout-btn">Save Layout</button>
+  <button class="cancel-btn" id="cancel-edit-btn">Save &amp; Close</button>
+</div>
+
+<!-- Editor Overlay -->
+<div class="editor-overlay" id="editor-overlay"></div>
+
+<!-- Editor Modal -->
+<div class="editor-modal" id="editor-modal">
+  <!-- Header -->
+  <div class="editor-header">
+    <span class="entry-label" id="entry-label">entry.html</span>
+    <button class="cm-preview-toggle" id="cm-preview-toggle">Preview</button>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="editor-toolbar">
+    <button data-cmd="bold" title="Bold"><strong>B</strong></button>
+    <button data-cmd="italic" title="Italic"><em>I</em></button>
+    <div class="sep"></div>
+    <button data-cmd="h3" title="Heading 3">H3</button>
+    <button data-cmd="h4" title="Heading 4">H4</button>
+    <div class="sep"></div>
+    <button data-cmd="ul" title="Unordered list">UL</button>
+    <button data-cmd="ol" title="Ordered list">OL</button>
+    <button data-cmd="table" title="Table">Table</button>
+    <button data-cmd="link" title="Insert link">Link</button>
+    <div class="sep"></div>
+    <button data-cmd="mechanic" title="Mechanic box">Box</button>
+    <button data-cmd="callout" title="Callout">Note</button>
+    <button data-cmd="img" title="Insert image">Img</button>
+  </div>
+
+  <!-- Body -->
+  <div class="editor-body">
+    <div id="cm-host" style="height:100%;width:100%;overflow:auto;"></div>
+    <div class="editor-preview" id="editor-preview"></div>
+  </div>
+
+  <!-- Footer -->
+  <div class="editor-footer">
+    <span class="status" id="editor-status">Ready</span>
+    <button class="delete-btn" id="editor-delete-btn">Delete Entry</button>
+    <button class="cancel-btn" id="editor-cancel-btn">Cancel</button>
+    <button class="save-btn" id="editor-save-btn">Save</button>
+  </div>
+</div>
+
+<!-- CodeMirror via ES module imports from node_modules -->
+<script type="importmap">
+{
+  "imports": {
+    "codemirror": "/node_modules/codemirror/dist/index.js",
+    "@codemirror/state": "/node_modules/@codemirror/state/dist/index.js",
+    "@codemirror/view": "/node_modules/@codemirror/view/dist/index.js",
+    "@codemirror/commands": "/node_modules/@codemirror/commands/dist/index.js",
+    "@codemirror/language": "/node_modules/@codemirror/language/dist/index.js",
+    "@codemirror/lang-html": "/node_modules/@codemirror/lang-html/dist/index.js",
+    "@codemirror/lang-css": "/node_modules/@codemirror/lang-css/dist/index.js",
+    "@codemirror/lang-javascript": "/node_modules/@codemirror/lang-javascript/dist/index.js",
+    "@codemirror/theme-one-dark": "/node_modules/@codemirror/theme-one-dark/dist/index.js",
+    "@codemirror/autocomplete": "/node_modules/@codemirror/autocomplete/dist/index.js",
+    "@codemirror/lint": "/node_modules/@codemirror/lint/dist/index.js",
+    "@codemirror/search": "/node_modules/@codemirror/search/dist/index.js",
+    "@lezer/common": "/node_modules/@lezer/common/dist/index.js",
+    "@lezer/highlight": "/node_modules/@lezer/highlight/dist/index.js",
+    "@lezer/html": "/node_modules/@lezer/html/dist/index.js",
+    "@lezer/css": "/node_modules/@lezer/css/dist/index.js",
+    "@lezer/javascript": "/node_modules/@lezer/javascript/dist/index.js",
+    "@lezer/lr": "/node_modules/@lezer/lr/dist/index.js",
+    "@marijn/find-cluster-break": "/node_modules/@marijn/find-cluster-break/src/index.js",
+    "style-mod": "/node_modules/style-mod/src/style-mod.js",
+    "crelt": "/node_modules/crelt/index.js"
+  }
+}
+</script>
+
+<!-- Zoom Controls -->
+<div class="zoom-controls" id="zoom-controls">
+  <button class="zoom-btn" id="zoom-out" title="Zoom out">&minus;</button>
+  <span class="zoom-label" id="zoom-label">100%</span>
+  <button class="zoom-btn" id="zoom-in" title="Zoom in">+</button>
+</div>
+
+<!-- Application scripts (deferred, order matters) -->
+<script src="js/api.js" defer></script>
+<script src="js/renderer.js" defer></script>
+<script src="js/search.js" defer></script>
+<script src="js/editor/grid.js" defer></script>
+<script src="js/popup.js" defer></script>
+<script src="js/editor/edit-mode.js" defer></script>
+<script src="js/editor/structure.js" defer></script>
+<script src="js/editor/index.js" defer></script>
+<script src="js/editor/pagination.js" defer></script>
+<script type="module" src="js/editor/content.js"></script>
+<script type="module" src="js/rulebook.js"></script>
+
+</body>
+</html>

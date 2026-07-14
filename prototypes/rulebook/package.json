@@ -1,0 +1,23 @@
+{
+  "name": "crucible-rulebook",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Crucible Core Rulebook — editor server",
+  "scripts": {
+    "start": "node server.js",
+    "postinstall": "node -e \"try{require('fs').mkdirSync('data/images',{recursive:true})}catch(e){}\""
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "multer": "^1.4.5-lts.1",
+    "codemirror": "^6.0.1",
+    "@codemirror/lang-html": "^6.4.9",
+    "@codemirror/lang-javascript": "^6.2.2",
+    "@codemirror/theme-one-dark": "^6.1.2",
+    "@codemirror/view": "^6.35.3",
+    "@codemirror/state": "^6.5.2",
+    "@codemirror/commands": "^6.8.1",
+    "@codemirror/language": "^6.11.0",
+    "@codemirror/autocomplete": "^6.18.6"
+  }
+}

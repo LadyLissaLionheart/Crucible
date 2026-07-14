@@ -1,0 +1,406 @@
+/* ── Header ─────────────────────────────── */
+.header {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: var(--header-h);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 1.5rem;
+  z-index: 100;
+  gap: 1rem;
+}
+.header-title {
+  font-family: var(--font-display);
+  letter-spacing: 0.08em;
+  font-size: 1.6rem;
+  font-weight: 400;
+  color: var(--accent);
+  white-space: nowrap;
+}
+.header-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.header-spacer { flex: 1; }
+
+/* ── Search ─────────────────────────────── */
+.search-box {
+  position: relative;
+  width: 360px;
+}
+.search-box input {
+  width: 100%;
+  padding: 0.4rem 0.75rem 0.4rem 2rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  background: var(--bg);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.search-box input:focus {
+  border-color: var(--accent);
+}
+.search-box > svg {
+  position: absolute;
+  left: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+.search-clear {
+  position: absolute;
+  right: 0.4rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  border-radius: 50%;
+  transition: color 0.15s, background 0.15s;
+}
+.search-clear:hover { color: var(--text); background: rgba(0,0,0,0.06); }
+.search-clear.visible { display: flex; }
+.search-results {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0 0 6px 6px;
+  max-height: 400px;
+  overflow-y: auto;
+  z-index: 200;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.search-results.active { display: block; }
+
+.search-result-item {
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
+}
+.search-result-item:hover { background: var(--accent-light); }
+.search-result-item:last-child { border-bottom: none; }
+.search-result-chapter {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.search-result-text {
+  margin-top: 0.15rem;
+  color: var(--text);
+}
+mark { background: var(--highlight); color: inherit; padding: 0 2px; border-radius: 2px; }
+
+/* ── Edit Toggle ────────────────────────── */
+.edit-toggle {
+  padding: 0.35rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.edit-toggle:hover { border-color: var(--accent); color: var(--accent); }
+.edit-toggle.active {
+  background: #c0392b;
+  color: #fff;
+  border-color: #c0392b;
+}
+.edit-toggle.active:hover { background: #a93226; color: #fff; border-color: #a93226; }
+
+/* ── Sidebar (TOC) ──────────────────────── */
+.sidebar {
+  position: fixed;
+  top: var(--header-h);
+  left: 0;
+  bottom: 0;
+  width: var(--sidebar-w);
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 50;
+}
+.sidebar-toc {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 1.25rem 0;
+  scrollbar-width: thin;
+}
+.sidebar-toc::-webkit-scrollbar { width: 5px; }
+.sidebar-toc::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+
+.sidebar-footer {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid var(--border);
+}
+.sidebar-footer .edit-toggle,
+.sidebar-footer .page-num-btn { flex: 1 1 0; }
+
+.toc-chapter { margin-bottom: 0.25rem; }
+.toc-chapter-title {
+  padding: 0.3rem 1.25rem;
+  font-family: var(--font-ui);
+  font-size: 7.5pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.toc-chapter-title::before {
+  content: '▸';
+  font-size: 0.65rem;
+  transition: transform 0.15s;
+}
+.toc-chapter.open .toc-chapter-title::before { transform: rotate(90deg); }
+.toc-chapter-title:hover { background: var(--accent-light); }
+
+.toc-sections { display: none; }
+.toc-chapter.open .toc-sections { display: block; }
+
+.toc-section { margin-bottom: 0.1rem; }
+.toc-section-title {
+  padding: 0.25rem 1.25rem;
+  font-family: var(--font-body);
+  font-size: 9pt;
+  color: var(--text);
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.toc-section-title::before {
+  content: '·';
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  line-height: 1;
+}
+/* Sections / headers / subheaders carry no bullet — only plain entries do. */
+.toc-kind-section::before,
+.toc-kind-header::before,
+.toc-kind-subheader::before {
+  content: none;
+}
+.toc-section-title:hover { background: var(--accent-light); }
+.toc-section-title.active {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* Indentation by entry kind: section = 1, header = 2, subheader = 3.
+   Chapter titles begin at ~1.25rem + the ▸ marker + gap, so the steps
+   below are offset well past that to read as a clear nested hierarchy. */
+.toc-kind-section,
+.toc-kind-entry { padding-left: 3rem; }
+.toc-kind-header { padding-left: 4.5rem; font-weight: 500; }
+.toc-kind-subheader { padding-left: 6rem; font-weight: 400; font-size: 0.9rem; }
+
+/* Appendix is a chapter-level entry. Hide the ▸ marker (it has no children to
+   expand) but keep its box so the title still aligns on the chapter X axis,
+   and use the muted colour it had before. */
+.toc-appendix-title { color: var(--text-muted); }
+.toc-appendix-title::before { visibility: hidden; }
+
+/* ── Main Content (PDF-viewer style) ──── */
+.main-wrapper {
+  margin-left: var(--sidebar-w);
+  background: var(--gutter-bg);
+  background-image: radial-gradient(circle at 50% 0%, var(--gutter-bg-2), var(--gutter-bg) 70%);
+  min-height: 100vh;
+  padding: calc(var(--header-h) + 1.5rem) 0 4rem;
+  display: flex;
+  justify-content: center;
+}
+
+.main {
+  width: var(--page-w);
+  max-width: 100%;
+  padding: 0;
+  position: relative;
+}
+
+/* Stack of page cards */
+.pages {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+/* One page = one letter-sized card. Using zoom (setupZoom) scales this. */
+.page {
+  width: var(--page-w);
+  height: var(--page-h);
+  background: var(--surface);
+  box-shadow: var(--page-shadow);
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  page-break-after: always;
+  break-after: page;
+}
+.page:last-child {
+  page-break-after: auto;
+  break-after: auto;
+}
+
+.page-content {
+  flex: 1 1 auto;
+  padding: var(--page-pad-top) var(--page-pad-x) var(--page-pad-bottom);
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Per-card footer (page number badge) */
+.page::after {
+  content: counter(cardnum);
+  counter-increment: cardnum;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 10px;
+  text-align: center;
+  font-family: var(--font-ui);
+  font-size: 8pt;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+}
+.pages { counter-reset: cardnum 0; }
+
+.book-title {
+  font-family: var(--font-display);
+  font-size: 48pt;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  margin: 0;
+  line-height: 1.1;
+}
+.book-subtitle {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 13pt;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+ .chapter-title {
+  font-family: var(--font-display);
+  font-size: 28pt;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  margin: 0 0 0.75rem;
+  padding-bottom: 0.5rem;
+}
+.section-title {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 13pt;
+  color: var(--text);
+  margin: 1.5rem 0 0.5rem;
+  padding-bottom: 0.25rem;
+}
+
+/* Empty flat-flow container is invisible when paginated */
+#chapters-container[hidden-flat] { display: none !important; }
+
+/* ── Zoom Controls ─────────────────────── */
+.zoom-controls {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.zoom-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.1s;
+}
+
+.zoom-btn:hover { background: var(--border); }
+.zoom-btn:active { background: var(--border-line); }
+
+.zoom-label {
+  width: 48px;
+  text-align: center;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  line-height: 32px;
+}
+
+/* ── Mobile ─────────────────────────────── */
+@media (max-width: 900px) {
+  .sidebar { display: flex; }
+  .sidebar-toc { display: none; }
+  .sidebar-footer {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    width: 100%;
+    background: var(--surface);
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.08);
+  }
+  .main-wrapper { margin-left: 0; padding-bottom: 5rem; }
+  .main { width: 100%; }
+  .header-subtitle { display: none; }
+  .search-box { width: 240px; }
+}

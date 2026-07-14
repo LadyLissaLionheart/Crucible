@@ -1,0 +1,93 @@
+/* ── Popup Component ──────────────────────── */
+/* Reusable confirm / alert popup. Matches the tooltip aesthetic
+   (white card, soft shadow, rounded corners, Inter font). */
+
+.popup-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: transparent;
+}
+
+.popup {
+  position: fixed;
+  z-index: 1201;
+  min-width: 220px;
+  max-width: 340px;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  background: #fff;
+  color: #333;
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.45;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18), 0 1px 3px rgba(0,0,0,0.10);
+  pointer-events: auto;
+}
+
+.popup::after {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: var(--arrow-x, 50%);
+  transform: translateX(-50%) rotate(45deg);
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  box-shadow: -1px -1px 3px rgba(0,0,0,0.06);
+}
+
+/* Arrow at bottom when popup is above the click */
+.popup.popup--above::after {
+  top: auto;
+  bottom: -6px;
+  box-shadow: 2px 2px 4px rgba(0,0,0,0.08);
+}
+
+.popup-message {
+  margin: 0 0 0.65rem;
+}
+
+.popup-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.popup-actions button {
+  padding: 0.3rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.popup-actions button:hover {
+  background: #f5f5f5;
+}
+
+.popup-actions .popup-confirm {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.popup-actions .popup-confirm:hover {
+  background: #234d30;
+}
+
+.popup-actions .popup-danger {
+  background: var(--negative);
+  color: #fff;
+  border-color: var(--negative);
+}
+
+.popup-actions .popup-danger:hover {
+  background: #a93226;
+}

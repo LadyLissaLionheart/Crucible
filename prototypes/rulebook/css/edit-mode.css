@@ -1,0 +1,353 @@
+/* ── Edit Mode Overrides ────────────────── */
+
+/* In edit mode the SAME .page / .page-content card stack that display
+   mode uses is rendered (paginate() runs in both modes). The only thing
+   that changes is the addition of edit affordances: dashed entry boxes,
+   drag handles, edit/delete buttons, & inline structure buttons. */
+
+/* Don't clip affordances (entry borders/padding add a few px; ContentEditor
+   saves may grow an entry past its measured size until next re-paginate).
+   On Save & Exit, paginate() re-runs cleanly with display-mode metrics. */
+body.edit-mode .page { overflow: visible; }
+
+/* Hide appendix pages from the on-screen editing UI (kept for print). */
+body.edit-mode .appendix-page { display: none; }
+body.edit-mode .toc-appendix { display: none; }
+
+/* Entries: dashed border box + hover highlight signals "click to edit".
+   Chapters are just entries of kind 'chapter', so they get this box too —
+   there is no separate title styling. */
+body.edit-mode .entry {
+  border: 1px dashed var(--edit-border);
+  background: var(--edit-bg);
+  border-radius: 4px;
+  padding: 0.75rem;
+  padding-bottom: 1rem;
+  transition: background 0.15s, border-color 0.15s;
+}
+body.edit-mode .entry:hover {
+  border-color: var(--accent);
+}
+/* Inline-edit mode: solid accent border + text cursor signal the card is
+   being edited in place (contenteditable), not dragged. */
+body.edit-mode .entry.editing {
+  border: 1px solid var(--accent);
+  border-style: solid;
+  cursor: text;
+}
+body.edit-mode .entry.editing .entry-actions {
+  border-color: var(--accent);
+}
+body.edit-mode .entry .entry-drag-handle {
+  display: flex;
+}
+body.edit-mode .entry-line {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.25rem 0;
+}
+body.edit-mode .entry-line .entry-drag-handle {
+  display: flex;
+}
+
+/* ── Drag Handles ───────────────────────── */
+.entry-drag-handle {
+  display: none;
+  align-items: center;
+  gap: 0.3rem;
+  margin-bottom: 0.5rem;
+  cursor: grab;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  user-select: none;
+}
+.entry-drag-handle:active { cursor: grabbing; }
+.entry-drag-handle svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* ── SortableJS ─────────────────────────── */
+.sortable-ghost {
+  opacity: 0.4;
+  background: #e8f0ff !important;
+  border: 2px dashed var(--edit-border) !important;
+}
+.sortable-chosen {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+/* ── Edit Bar ───────────────────────────── */
+.edit-bar {
+  display: none;
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  color: var(--text);
+  padding: 0.6rem 1.25rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  z-index: 1100;
+  gap: 0.75rem;
+  align-items: center;
+}
+body.edit-mode .edit-bar { display: flex; }
+
+.edit-bar button {
+  padding: 0.3rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.edit-bar button:hover { background: #e8f0eb; }
+.edit-bar .save-btn {
+  background: #fff;
+  color: var(--accent);
+  border-color: var(--border);
+}
+.edit-bar .save-btn:hover { background: #e8f0eb; }
+.edit-bar #rebuild-btn {
+  background: #fff;
+  color: var(--accent);
+  border-color: var(--border);
+}
+.edit-bar #rebuild-btn:hover { background: #e8f0eb; }
+.edit-bar-spacer { flex: 1; }
+.edit-bar .cancel-btn {
+  background: #27ae60;
+  color: #fff;
+  border-color: var(--border);
+}
+.edit-bar .cancel-btn:hover { background: #1e8449; }
+
+/* ── Struct edit buttons ────────────────── */
+.struct-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  border: 1px solid var(--edit-border);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--edit-border);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.12s;
+}
+.struct-btn:hover {
+  background: var(--edit-border);
+  color: #fff;
+}
+.struct-btn.danger {
+  border-color: var(--negative);
+  color: var(--negative);
+}
+.struct-btn.danger:hover {
+  background: var(--negative);
+  color: #fff;
+}
+
+/* Kind selector on entry cards (entry / section / header / subheader). */
+.struct-kind-select {
+  padding: 0.15rem 0.3rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  font-family: var(--font-ui);
+  border: 1px solid var(--edit-border);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--edit-border);
+  cursor: pointer;
+  max-width: 5.5rem;
+}
+
+/* Inline TOC-title input on entry cards (to the right of the kind dropdown). */
+.struct-title-input {
+  padding: 0.15rem 0.35rem;
+  font-size: 0.7rem;
+  font-family: var(--font-ui);
+  font-weight: 600;
+  border: 1px solid var(--edit-border);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
+  width: 9rem;
+}
+.struct-title-input::placeholder {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+/* ── Floating card controls ──
+   The Kind▾ + TOC-title bar floats ABOVE the card box, left-aligned, with
+   the title input growing to fill the entry width. Positioned with
+   bottom:100% (not transform) so the bar stays crisp inside the zoomed
+   #main-content — transformed descendants of a zoomed element render
+   blurry in Chrome/Safari. */
+body.edit-mode .entry-actions {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  margin-bottom: 6px;
+  z-index: 30;
+}
+
+/* Edit / Delete run DOWN the left edge of the entry as a vertical icon
+   stack (Edit on top), sitting just OUTSIDE the card's left border. Uses
+   right:100% (not transform) so it stays crisp inside the zoomed content. */
+body.edit-mode .entry-edge-actions {
+  position: absolute;
+  top: 0;
+  right: 100%;
+  margin-right: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  z-index: 30;
+}
+/* Lift a hovered card (and its floating controls) above neighbours. */
+body.edit-mode .grid-card:hover { z-index: 50; }
+
+/* Icon-only variant of struct-btn. */
+.struct-btn.icon-btn {
+  padding: 0.2rem 0.3rem;
+  line-height: 0;
+}
+.struct-btn.icon-btn svg {
+  display: block;
+}
+
+/* ── Resize handles ─────────────────────── */
+/* Eight handles (4 edges + 4 corners) stay hidden until the card is
+   hovered (when you can drag them), then they appear. They remain in the
+   hit-test (opacity, not display:none) so their enlarged ::before grab
+   area is active even while invisible — you can grab a few px outside the
+   box edge without first landing on it. Hidden (pointer-events:none) while
+   a card is edited inline so they don't block text selection. */
+body.edit-mode .resize-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: var(--accent);
+  border: 1px solid var(--surface);
+  border-radius: 2px;
+  z-index: 40;
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+/* Enlarge the grab area ~10px beyond the visible dot on every side, so
+   handles are easy to catch without pixel-perfect aim (and a few px
+   outside the card's box). */
+body.edit-mode .resize-handle::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  bottom: -10px;
+  left: -10px;
+}
+body.edit-mode .grid-card:hover .resize-handle { opacity: 1; }
+body.edit-mode .entry.editing .resize-handle { opacity: 0; pointer-events: none; }
+
+.resize-handle.e  { right: -5px;  top: 50%;    transform: translateY(-50%); cursor: ew-resize; }
+.resize-handle.w  { left: -5px;   top: 50%;    transform: translateY(-50%); cursor: ew-resize; }
+.resize-handle.s  { bottom: -5px; left: 50%;   transform: translateX(-50%); cursor: ns-resize; }
+.resize-handle.n  { top: -5px;    left: 50%;   transform: translateX(-50%); cursor: ns-resize; }
+.resize-handle.se { right: -5px;  bottom: -5px; cursor: nwse-resize; }
+.resize-handle.sw { left: -5px;   bottom: -5px; cursor: nesw-resize; }
+.resize-handle.ne { right: -5px;  top: -5px;    cursor: nesw-resize; }
+.resize-handle.nw { left: -5px;   top: -5px;    cursor: nwse-resize; }
+
+body.edit-mode .grid-card.resizing {
+  user-select: none;
+}
+
+/* ── Page Dividers ───────────────────────── */
+/* Zero-height element sitting in the gap between page cards.
+   A ::before pseudo fills the full gap so hovering anywhere between
+   two pages highlights the line + circle. The circle is the click target. */
+.page-divider {
+  position: relative;
+  width: var(--page-w);
+  height: 0;
+  margin: -0.625rem 0;
+  z-index: 5;
+}
+/* Invisible hit-area that fills the 1.25rem gap above and below. */
+.page-divider::before {
+  content: '';
+  position: absolute;
+  top: -0.625rem;
+  bottom: -0.625rem;
+  left: 0;
+  right: 0;
+}
+.page-divider-line {
+  position: absolute;
+  top: 0;
+  left: 5%;
+  right: 5%;
+  height: 2px;
+  background: #999;
+  transition: background 0.15s;
+}
+.page-divider-btn {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 50%;
+  border: 1px solid #999;
+  background: var(--surface);
+  color: #555;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s;
+  padding: 0;
+  line-height: 1;
+  z-index: 1;
+}
+.page-divider:hover .page-divider-line { background: var(--edit-border); }
+.page-divider:hover .page-divider-btn {
+  color: var(--edit-border);
+  border-color: var(--edit-border);
+}
+.page-divider-btn:hover {
+  border-color: var(--edit-border);
+  color: var(--edit-border);
+}
+
+/* ── Page Divider Tooltip ────────────────── */
+.page-divider-tip {
+  position: fixed;
+  display: none;
+  z-index: 9999;
+  padding: 0.35rem 0.65rem;
+  border-radius: 5px;
+  background: #fff;
+  color: #333;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18), 0 1px 3px rgba(0,0,0,0.10);
+}

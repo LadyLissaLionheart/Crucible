@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crucible — Font Proposal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  @page {
+    size: letter;
+    margin: 0.75in;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: unset;
+    text-rendering: optimizeSpeed;
+  }
+
+  body {
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: unset;
+    text-rendering: optimizeSpeed;
+    font-family: 'Inter', Helvetica, Arial, sans-serif;
+    background: #ffffff;
+    color: #000000;
+    line-height: 1.5;
+    font-size: 10pt;
+  }
+
+  .page {
+    max-width: 7in;
+    margin: 0 auto;
+    zoom: 1.3;
+  }
+
+  h1 {
+    font-family: 'Inter', sans-serif;
+    font-size: 7pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #000000;
+    margin-bottom: 0.15in;
+  }
+
+  .page-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22pt;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    color: #000000;
+    margin-bottom: 0.05in;
+  }
+
+  .page-subtitle {
+    font-family: 'Libre Baskerville', Georgia, serif;
+    font-style: italic;
+    font-size: 10pt;
+    color: #444444;
+    margin-bottom: 0.3in;
+  }
+
+  hr {
+    border: none;
+    border-top: 1.5pt solid #000000;
+    margin: 0.25in 0;
+  }
+
+  .section-num {
+    font-family: 'Inter', sans-serif;
+    font-size: 6.5pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #444444;
+    margin-bottom: 0.05in;
+  }
+
+  h2 {
+    font-family: 'Inter', sans-serif;
+    font-size: 12pt;
+    font-weight: 700;
+    color: #000000;
+    margin-bottom: 0.1in;
+  }
+
+  p {
+    font-family: 'Inter', sans-serif;
+    font-size: 9.5pt;
+    margin-bottom: 0.08in;
+    color: #000000;
+    line-height: 1.5;
+  }
+
+  p.muted {
+    color: #444444;
+  }
+
+  /* Font showcase cards */
+  .font-card {
+    border: 0.5pt solid #cccccc;
+    padding: 0.15in;
+    margin: 0.12in 0;
+    page-break-inside: avoid;
+  }
+
+  .font-card-header {
+    display: flex;
+    align-items: baseline;
+    gap: 0.1in;
+    margin-bottom: 0.08in;
+  }
+
+  .font-name {
+    font-size: 10pt;
+    font-weight: 700;
+    color: #000000;
+  }
+
+  .font-role {
+    font-family: 'Inter', sans-serif;
+    font-size: 6.5pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #444444;
+    border: 0.5pt solid #cccccc;
+    padding: 0.01in 0.06in;
+  }
+
+  .font-specimen {
+    padding: 0.1in 0;
+    border-top: 0.5pt solid #cccccc;
+    border-bottom: 0.5pt solid #cccccc;
+    margin-bottom: 0.08in;
+  }
+
+  .font-specimen-body {
+    font-family: 'Libre Baskerville', Georgia, serif;
+    font-size: 10.5pt;
+    line-height: 1.65;
+    color: #000000;
+  }
+
+  .font-specimen-display {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20pt;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    line-height: 1.2;
+    color: #000000;
+  }
+
+  .font-specimen-ui {
+    font-family: 'Inter', sans-serif;
+    font-size: 9pt;
+    line-height: 1.4;
+    color: #000000;
+  }
+
+  .font-reason {
+    font-size: 8.5pt;
+    color: #333333;
+    line-height: 1.45;
+  }
+
+  .font-reason strong {
+    color: #000000;
+  }
+
+  .font-meta {
+    display: flex;
+    gap: 0.08in;
+    margin-top: 0.06in;
+    flex-wrap: wrap;
+  }
+
+  .font-tag {
+    font-size: 6.5pt;
+    font-weight: 600;
+    color: #444444;
+    border: 0.5pt solid #cccccc;
+    padding: 0.01in 0.06in;
+  }
+
+  .font-tag.green {
+    border-color: #000000;
+    color: #000000;
+    background: #f0f0f0;
+  }
+
+  /* Pairing demo */
+  .pairing-demo {
+    border: 0.5pt solid #cccccc;
+    padding: 0.15in;
+    margin: 0.12in 0;
+    page-break-inside: avoid;
+  }
+
+  .pairing-chapter-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16pt;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    color: #000000;
+    margin-bottom: 0.05in;
+  }
+
+  .pairing-section-title {
+    font-family: 'Libre Baskerville', Georgia, serif;
+    font-size: 10.5pt;
+    font-weight: 700;
+    color: #000000;
+    margin: 0.12in 0 0.04in;
+    padding-bottom: 0.02in;
+    border-bottom: 0.5pt solid #cccccc;
+  }
+
+  .pairing-body {
+    font-family: 'Libre Baskerville', Georgia, serif;
+    font-size: 9.5pt;
+    line-height: 1.6;
+    margin-bottom: 0.06in;
+  }
+
+  .pairing-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 6.5pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #000000;
+    margin-bottom: 0.04in;
+  }
+
+  .pairing-table {
+    font-family: 'Inter', sans-serif;
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8.5pt;
+    margin: 0.06in 0;
+  }
+
+  .pairing-table th {
+    text-align: left;
+    font-size: 6.5pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #444444;
+    padding: 0.03in 0.05in;
+    border-bottom: 1.5pt solid #000000;
+  }
+
+  .pairing-table td {
+    padding: 0.03in 0.05in;
+    border-bottom: 0.5pt solid #cccccc;
+  }
+
+  .pairing-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .positive { font-weight: 700; }
+  .negative { font-weight: 700; }
+
+  /* Comparison table */
+  .compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.1in;
+    margin: 0.12in 0;
+  }
+
+  .compare-cell {
+    border: 0.5pt solid #cccccc;
+    padding: 0.1in;
+    text-align: center;
+    page-break-inside: avoid;
+  }
+
+  .compare-sample {
+    margin-bottom: 0.04in;
+    line-height: 1.3;
+    color: #000000;
+  }
+
+  .compare-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 6.5pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #444444;
+  }
+
+  .alphabet {
+    font-size: 9.5pt;
+    line-height: 1.7;
+    color: #000000;
+  }
+
+  .alphabet-row {
+    margin-bottom: 0.02in;
+  }
+
+  .footer {
+    font-family: 'Inter', sans-serif;
+    font-size: 7pt;
+    color: #444444;
+    text-align: center;
+    margin-top: 0.3in;
+    padding-top: 0.1in;
+    border-top: 0.5pt solid #cccccc;
+  }
+
+  /* Zoom controls */
+  .zoom-controls {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    background: #ffffff;
+    border: 1px solid #cccccc;
+    border-radius: 6px;
+    overflow: hidden;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+
+  .zoom-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: #ffffff;
+    color: #000000;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.1s;
+  }
+
+  .zoom-btn:hover {
+    background: #f0f0f0;
+  }
+
+  .zoom-btn:active {
+    background: #e0e0e0;
+  }
+
+  .zoom-label {
+    width: 48px;
+    text-align: center;
+    font-weight: 600;
+    color: #444444;
+    border-left: 1px solid #cccccc;
+    border-right: 1px solid #cccccc;
+    line-height: 32px;
+  }
+
+  /* Print */
+  @media print {
+    body { background: #ffffff; }
+    .page { max-width: none; padding: 0; zoom: none; }
+    .font-card, .pairing-demo, .compare-cell { page-break-inside: avoid; }
+    .zoom-controls { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1>Crucible — Core Rulebook</h1>
+<div class="page-title">Font Proposal</div>
+<p class="page-subtitle">Three fonts, three roles. All free, all open-source.</p>
+
+<hr>
+
+<!-- SECTION 1: Overview -->
+<div class="section-num">01 — The System</div>
+<h2>One font per job</h2>
+
+<p>Rulebooks live or die on readability. Players reference them mid-session, under time pressure, sometimes in bad lighting. The font system needs to handle three distinct jobs without visual clutter.</p>
+
+<div class="compare-grid">
+  <div class="compare-cell">
+    <div class="compare-sample" style="font-family:'Bebas Neue',sans-serif; font-size:14pt; letter-spacing:0.08em;">Crucible</div>
+    <div class="compare-label">Bebas Neue — Display</div>
+  </div>
+  <div class="compare-cell">
+    <div class="compare-sample" style="font-family:'Libre Baskerville',serif; font-size:9.5pt;">The quick brown fox jumps over the lazy dog</div>
+    <div class="compare-label">Libre Baskerville — Body</div>
+  </div>
+  <div class="compare-cell">
+    <div class="compare-sample" style="font-family:'Inter',sans-serif; font-size:9pt;">Might 5 &bull; Finesse 8 &bull; TN 10</div>
+    <div class="compare-label">Inter — UI &amp; Data</div>
+  </div>
+</div>
+
+<hr>
+
+<!-- SECTION 2: Bebas Neue -->
+<div class="section-num">02 — Display / Headings</div>
+<h2>Bebas Neue</h2>
+
+<div class="font-card">
+  <div class="font-card-header">
+    <span class="font-name">Bebas Neue</span>
+    <span class="font-role">Chapter Titles &amp; Display</span>
+  </div>
+  <div class="font-specimen">
+    <div class="font-specimen-display">The Core Mechanic</div>
+  </div>
+  <div class="font-reason">
+    <strong>Why this font:</strong> Bebas Neue is a clean, geometric all-caps display face with uniform letterforms — every letter carries the same weight and presence. No letter dominates or looks different from the rest. The condensed proportions pack tightly into headings without wasting space. It signals "this is important" with clarity and precision, without the decorative baggage of serif display fonts. The generous letter-spacing keeps it breathable at all sizes.
+  </div>
+  <div class="font-meta">
+    <span class="font-tag green">Google Fonts</span>
+    <span class="font-tag green">OFL License</span>
+    <span class="font-tag">1 weight: Regular (400)</span>
+    <span class="font-tag">All-caps display, uniform letterforms</span>
+  </div>
+</div>
+
+<div class="font-card">
+  <div class="font-card-header">
+    <span class="font-name">Bebas Neue</span>
+    <span class="font-role">Alphabet Specimen</span>
+  </div>
+  <div class="font-specimen">
+    <div class="alphabet" style="font-family:'Bebas Neue',sans-serif; letter-spacing:0.08em;">
+      <div class="alphabet-row">ABCDEFGHIJKLMNOPQRSTUVWXYZ</div>
+      <div class="alphabet-row">abcdefghijklmnopqrstuvwxyz</div>
+      <div class="alphabet-row">0123456789 &amp; ! ? : ; &mdash; &ndash; &ldquo; &rdquo;</div>
+    </div>
+  </div>
+  <div class="font-reason">
+    <strong>Usage constraints:</strong> Display only. Never use for body text — it's all-caps with no lowercase. Optimized for 18pt and above. Use at full size for chapter titles, slightly smaller for subtitles. The letter-spacing (0.08em) keeps it readable at all sizes.
+  </div>
+</div>
+
+<hr>
+
+<!-- SECTION 3: Libre Baskerville -->
+<div class="section-num">03 — Body Text</div>
+<h2>Libre Baskerville</h2>
+
+<div class="font-card">
+  <div class="font-card-header">
+    <span class="font-name">Libre Baskerville</span>
+    <span class="font-role">Body / Long-Form Reading</span>
+  </div>
+  <div class="font-specimen">
+    <div class="font-specimen-body">
+      Every meaningful action in Crucible is resolved with a single roll of 4d12. The player counts successes against a Target Number, while the GM applies Risk as a penalty zone. No lookups, no conditional math — just the dice and a single number. This simplicity is intentional: the resolution mechanic should become invisible within a session, so players focus on the fiction, not the arithmetic.
+    </div>
+  </div>
+  <div class="font-reason">
+    <strong>Why this font:</strong> Libre Baskerville is a digital revival of the classic Baskerville typeface, optimized for screen reading with a tall x-height and open letterforms. It's the most readable free serif at body text sizes. The generous spacing between letters and lines means players can scan quickly during play. It has the gravitas of a traditional rulebook without the stuffiness of Times New Roman. Italics are clean and distinct — critical for calling out game terms and emphasis.
+  </div>
+  <div class="font-meta">
+    <span class="font-tag green">Google Fonts</span>
+    <span class="font-tag green">OFL License</span>
+    <span class="font-tag">3 styles: Regular, Bold, Italic</span>
+    <span class="font-tag">Designed for 11pt+ body text</span>
+  </div>
+</div>
+
+<div class="font-card">
+  <div class="font-card-header">
+    <span class="font-name">Libre Baskerville</span>
+    <span class="font-role">Alphabet Specimen</span>
+  </div>
+  <div class="font-specimen">
+    <div class="alphabet" style="font-family:'Libre Baskerville',serif;">
+      <div class="alphabet-row">ABCDEFGHIJKLMNOPQRSTUVWXYZ</div>
+      <div class="alphabet-row">abcdefghijklmnopqrstuvwxyz</div>
+      <div class="alphabet-row">0123456789 &amp; ! ? : ; &mdash; &ndash; &ldquo; &rdquo;</div>
+    </div>
+  </div>
+  <div class="font-reason">
+    <strong>Usage constraints:</strong> Body text, section headings, and any prose longer than a sentence. Set at 11pt with 1.6–1.7 line height. Bold for emphasis within body. Never use below 9pt — the serifs start to blur.
+  </div>
+</div>
+
+<hr>
+
+<!-- SECTION 4: Inter -->
+<div class="section-num">04 — UI / Data / Labels</div>
+<h2>Inter</h2>
+
+<div class="font-card">
+  <div class="font-card-header">
+    <span class="font-name">Inter</span>
+    <span class="font-role">Tables, Stat Blocks, Labels, UI</span>
+  </div>
+  <div class="font-specimen">
+    <div class="font-specimen-ui">
+      <div style="display:flex; justify-content:space-between; border-bottom:0.5pt solid #cccccc; padding:0.03in 0; margin-bottom:0.02in;">
+        <span style="font-weight:600; color:#444444;">Might</span>
+        <span style="font-weight:700;">5</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; border-bottom:0.5pt solid #cccccc; padding:0.03in 0; margin-bottom:0.02in;">
+        <span style="font-weight:600; color:#444444;">Finesse</span>
+        <span style="font-weight:700;">8</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; border-bottom:0.5pt solid #cccccc; padding:0.03in 0; margin-bottom:0.02in;">
+        <span style="font-weight:600; color:#444444;">Instinct</span>
+        <span style="font-weight:700;">6</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; padding:0.03in 0;">
+        <span style="font-weight:600; color:#444444;">Cunning</span>
+        <span style="font-weight:700;">9</span>
+      </div>
+    </div>
+  </div>
+  <div class="font-reason">
+    <strong>Why this font:</strong> Inter was built for computer interfaces at small sizes — exactly the problem tables and stat blocks have. Its tabular figures align numbers in columns perfectly. The tight letter spacing and large x-height mean you can pack data into dense tables without sacrificing readability. It's the most-used free sans-serif for a reason. When a player glances at a stat block mid-combat, Inter gets out of the way.
+  </div>
+  <div class="font-meta">
+    <span class="font-tag green">Google Fonts</span>
+    <span class="font-tag green">OFL License</span>
+    <span class="font-tag">9 weights: Thin to Black</span>
+    <span class="font-tag">Variable font (weight + optical size)</span>
+  </div>
+</div>
+
+<div class="font-card">
+  <div class="font-card-header">
+    <span class="font-name">Inter</span>
+    <span class="font-role">Alphabet Specimen</span>
+  </div>
+  <div class="font-specimen">
+    <div class="alphabet" style="font-family:'Inter',sans-serif;">
+      <div class="alphabet-row">ABCDEFGHIJKLMNOPQRSTUVWXYZ</div>
+      <div class="alphabet-row">abcdefghijklmnopqrstuvwxyz</div>
+      <div class="alphabet-row">0123456789 &amp; ! ? : ; &mdash; &ndash; &ldquo; &rdquo;</div>
+    </div>
+  </div>
+  <div class="font-reason">
+    <strong>Usage constraints:</strong> Tables, stat blocks, sidebar labels, section numbers, table headers, any data-dense element. Use Semibold (600) for labels, Bold (700) for values, Regular (400) for table body. Set at 8–9pt for tables, 10pt for sidebar text.
+  </div>
+</div>
+
+<hr>
+
+<!-- SECTION 5: Pairing Demo -->
+<div class="section-num">05 — How They Work Together</div>
+<h2>The Pairing in Context</h2>
+
+<p class="muted">This is what a finished page looks like. All three fonts working together on a sample rulebook spread.</p>
+
+<div class="pairing-demo">
+  <div class="pairing-chapter-title">The Core Mechanic</div>
+
+  <div class="pairing-section-title">Resolution</div>
+
+  <div class="pairing-body">
+    Every meaningful action in <strong>Crucible</strong> is resolved with a single roll of <strong>4d12</strong>. The player counts successes against a Target Number (TN), while the GM applies Risk as a penalty zone. No lookups, no conditional math.
+  </div>
+
+  <div class="pairing-label">The Three-Zone Die</div>
+
+  <table class="pairing-table">
+    <thead>
+      <tr>
+        <th>Condition</th>
+        <th>Result</th>
+        <th>Meaning</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Die &le; Risk</strong></td>
+        <td class="negative">&minus;1 success</td>
+        <td>The danger claimed this die</td>
+      </tr>
+      <tr>
+        <td><strong>Risk &lt; die &lt; TN</strong></td>
+        <td>0</td>
+        <td>Neutral</td>
+      </tr>
+      <tr>
+        <td><strong>Die &ge; TN</strong></td>
+        <td class="positive">+1 success</td>
+        <td>The character's skill prevailed</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pairing-section-title">The Success Ladder</div>
+
+  <div class="pairing-body">
+    Net successes map to a three-tier ladder. This isn't just pass/fail — it gives the GM narrative texture for every outcome, from catastrophic failure to triumphant breakthrough.
+  </div>
+
+  <table class="pairing-table">
+    <thead>
+      <tr>
+        <th>Net</th>
+        <th>Tier</th>
+        <th>Meaning</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="negative">&minus;1 or less</td>
+        <td><strong>Misfortune</strong></td>
+        <td>Failure, and things get worse</td>
+      </tr>
+      <tr>
+        <td>0</td>
+        <td><strong>Setback</strong></td>
+        <td>Failure, no additional harm</td>
+      </tr>
+      <tr>
+        <td class="positive">1+</td>
+        <td><strong>Triumph</strong></td>
+        <td>Clean success, and beyond</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<hr>
+
+<!-- SECTION 6: Why Not... -->
+<div class="section-num">06 — What We're Not Using</div>
+<h2>Rejected Alternatives</h2>
+
+<p class="muted">Other fonts that were considered and why they didn't make the cut.</p>
+
+<div class="font-card">
+  <div class="font-reason">
+    <strong>EB Garamond</strong> — Beautiful, but too delicate at small sizes. The thin strokes blur on cheaper prints and low-res PDFs. Libre Baskerville is more robust.
+  </div>
+</div>
+
+<div class="font-card">
+  <div class="font-reason">
+    <strong>Crimson Text</strong> — Great personality, but the x-height is smaller than Baskerville's. At 10–11pt body text, it feels slightly cramped. Libre Baskerville wins on pure readability.
+  </div>
+</div>
+
+<div class="font-card">
+  <div class="font-reason">
+    <strong>Source Serif 4</strong> — Excellent modern serif, but it feels clinical. Crucible needs warmth — a hint of the old-world without being dusty. Baskerville splits the difference.
+  </div>
+</div>
+
+<div class="font-card">
+  <div class="font-reason">
+    <strong>Gentium Book Plus</strong> — Designed for books, gorgeous italics, but the character set is large and the file size reflects it. For a PDF/rulebook, Libre Baskerville is lighter and more universally available.
+  </div>
+</div>
+
+<div class="font-card">
+  <div class="font-reason">
+    <strong>IM Fell English</strong> — Gorgeous old-print aesthetic, but too rough for body text. The irregular edges that look charming at 24pt become noise at 11pt. Reserved for decorative moments only.
+  </div>
+</div>
+
+<hr>
+
+<!-- SECTION 7: Quick Reference -->
+<div class="section-num">07 — Quick Reference</div>
+<h2>Usage Cheat Sheet</h2>
+
+<table class="pairing-table">
+  <thead>
+    <tr>
+      <th>Element</th>
+      <th>Font</th>
+      <th>Size</th>
+      <th>Weight</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Chapter titles</td>
+      <td style="font-family:'Bebas Neue',sans-serif; letter-spacing:0.08em;">Bebas Neue</td>
+      <td>28–36pt</td>
+      <td>Regular (400)</td>
+    </tr>
+    <tr>
+      <td>Section headings</td>
+      <td style="font-family:'Libre Baskerville',serif;">Libre Baskerville</td>
+      <td>14–16pt</td>
+      <td>Bold</td>
+    </tr>
+    <tr>
+      <td>Body text</td>
+      <td style="font-family:'Libre Baskerville',serif;">Libre Baskerville</td>
+      <td>11pt</td>
+      <td>Regular</td>
+    </tr>
+    <tr>
+      <td>Body emphasis</td>
+      <td style="font-family:'Libre Baskerville',serif;">Libre Baskerville</td>
+      <td>11pt</td>
+      <td>Bold / Italic</td>
+    </tr>
+    <tr>
+      <td>Table headers</td>
+      <td style="font-family:'Inter',sans-serif;">Inter</td>
+      <td>7–8pt</td>
+      <td>Bold (700)</td>
+    </tr>
+    <tr>
+      <td>Table body</td>
+      <td style="font-family:'Inter',sans-serif;">Inter</td>
+      <td>8.5–9.5pt</td>
+      <td>Regular (400)</td>
+    </tr>
+    <tr>
+      <td>Stat block labels</td>
+      <td style="font-family:'Inter',sans-serif;">Inter</td>
+      <td>8–9pt</td>
+      <td>Semibold (600)</td>
+    </tr>
+    <tr>
+      <td>Stat block values</td>
+      <td style="font-family:'Inter',sans-serif;">Inter</td>
+      <td>8–9pt</td>
+      <td>Bold (700)</td>
+    </tr>
+    <tr>
+      <td>Sidebar / margin notes</td>
+      <td style="font-family:'Inter',sans-serif;">Inter</td>
+      <td>8–9pt</td>
+      <td>Regular (400)</td>
+    </tr>
+    <tr>
+      <td>Mechanic box labels</td>
+      <td style="font-family:'Inter',sans-serif;">Inter</td>
+      <td>7pt</td>
+      <td>Bold (700)</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="footer">
+  Crucible Core Rulebook — Font Proposal<br>
+  Bebas Neue (display) + Libre Baskerville (body) + Inter (UI) — All free, all OFL licensed
+</div>
+
+</div>
+
+<div class="zoom-controls" id="zoom-controls">
+  <button class="zoom-btn" id="zoom-out" title="Zoom out">&minus;</button>
+  <span class="zoom-label" id="zoom-label">130%</span>
+  <button class="zoom-btn" id="zoom-in" title="Zoom in">+</button>
+</div>
+
+<script>
+(function() {
+  var zoom = 1.3;
+  var step = 0.1;
+  var min = 0.5;
+  var max = 3.0;
+  var page = document.querySelector('.page');
+  var label = document.getElementById('zoom-label');
+
+  function update() {
+    page.style.zoom = zoom;
+    label.textContent = Math.round(zoom * 100) + '%';
+  }
+
+  document.getElementById('zoom-in').addEventListener('click', function() {
+    if (zoom + step <= max) { zoom += step; update(); }
+  });
+
+  document.getElementById('zoom-out').addEventListener('click', function() {
+    if (zoom - step >= min) { zoom -= step; update(); }
+  });
+})();
+</script>
+</body>
+</html>

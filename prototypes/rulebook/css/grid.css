@@ -1,0 +1,93 @@
+/* ── Grid-driven page & card positioning ── */
+
+/* .page becomes a positioning context. Cards are absolutely placed
+   within it using pixel coords computed from grid cells. The page
+   content padding is removed — cells start from the edges. */
+.page {
+  position: relative;
+  overflow: hidden;
+}
+body.edit-mode .page { overflow: visible; }
+
+/* Cell grid background (visible only in edit mode). Drawn with two
+   background-images producing vertical and horizontal lines spaced
+   every --cell-w / --cell-h. */
+.page-cells {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: none;
+  z-index: 0;
+}
+body.edit-mode .page-cells {
+  display: block;
+  background-image:
+    linear-gradient(to right, var(--cell-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--cell-line) 1px, transparent 1px);
+  background-size: var(--cell-w) var(--cell-h);
+  background-position: 0 0;
+}
+
+/* Margin-reference strips: original page-pad regions (top 56px /
+   bottom 48px / left & right 64px) drawn as colored rectangles so
+   the user can see where the print-safe zone used to be. Approximated
+   to four grid rows / four grid cols (kept at the same pixel size now
+   that cells are half their prior dimensions). */
+.page-margin {
+  position: absolute;
+  pointer-events: none;
+  display: none;
+  z-index: 1;
+  background: var(--margin-bg);
+}
+body.edit-mode .page-margin { display: block; }
+.page-margin-top    { top: 0; left: 0; right: 0; height: calc(4 * var(--cell-h)); }
+.page-margin-bottom { bottom: 0; left: 0; right: 0; height: calc(4 * var(--cell-h)); }
+.page-margin-left   { left: 0; top: calc(4 * var(--cell-h)); bottom: calc(4 * var(--cell-h)); width: calc(4 * var(--cell-w)); }
+.page-margin-right  { right: 0; top: calc(4 * var(--cell-h)); bottom: calc(4 * var(--cell-h)); width: calc(4 * var(--cell-w)); }
+/* Center gutter strip — shows where the print-safe margin between two
+   columns would sit. Same tint as the outer margins. Inset vertically so
+   it never overlaps the top/bottom strips (keeps the color uniform). */
+.page-margin-center { top: calc(4 * var(--cell-h)); bottom: calc(4 * var(--cell-h)); left: calc(50% - var(--cell-w)); width: calc(2 * var(--cell-w)); }
+
+/* ── Cards (chapter titles, section titles, entries) ───
+   All cards are positioned by JS via left/top/width/height set inline
+   from grid coords. They live INSIDE the page box and clip to it in
+   display mode. */
+.grid-card {
+  position: absolute;
+  z-index: 5;
+  box-sizing: border-box;
+  padding: 0.25rem 0;
+  overflow: hidden;
+}
+body.edit-mode .grid-card { overflow: visible; }
+
+/* The appendix isn't a positioned card; it sits inside a page as
+   ordinary content (kept atop the cell grid). */
+.grid-card .page-content { display: none !important; }
+
+/* While dragging a card: lift z-index, drop opacity a touch, tweak shadow. */
+.grid-card.dragging {
+  z-index: 1000;
+  opacity: 0.85;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.25);
+}
+
+/* In edit mode, cards announce draggability.
+   Action button clusters inside reset the cursor. */
+body.edit-mode .grid-card { cursor: move; }
+body.edit-mode .entry-actions,
+body.edit-mode .entry-actions button,
+body.edit-mode .struct-btn,
+body.edit-mode .struct-rename-input { cursor: default; }
+
+/* Notes:
+   - Existing chapter-title / section-title typography rules from
+     chrome.css still apply, but their flow margins/border borders
+     are reset here since position is absolute.
+   - Entries (.grid-card.entry) inherit .entry styling from
+     entries.css (dashed bottom border, font, etc.). The
+     margin-bottom rule is harmless but ignored (card has fixed
+     height). */
+ .grid-card.entry { margin: 0; }

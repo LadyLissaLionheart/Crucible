@@ -1,0 +1,378 @@
+@page {
+  size: Letter;
+  margin: 0;
+}
+
+@media print {
+
+  /* ── Hide non-printable elements ─── */
+  .header,
+  .sidebar,
+  .edit-toggle,
+  .edit-bar,
+  .editor-overlay,
+  .editor-modal,
+  .search-box,
+  .search-results,
+  .struct-btn,
+  .struct-add-chapter,
+  .entry-drag-handle,
+  .entry-actions,
+  .page-num-btn,
+  .zoom-controls,
+  .print-footer-bar,
+  .page-cells,
+  .page-margin,
+  .page-divider,
+  .page-divider-line,
+  .page-divider-btn,
+  .page-divider-tip,
+  .popup-overlay,
+  .popup {
+    display: none !important;
+  }
+
+  /* Each on-screen page card maps one-to-one to a printed Letter page. */
+  .page {
+    width: 8.5in !important;
+    height: 11in !important;
+    margin: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: white !important;
+    overflow: hidden !important;
+    page-break-after: always;
+    break-after: page;
+    break-inside: avoid;
+  }
+  .page:last-of-type {
+    page-break-after: auto;
+    break-after: auto;
+  }
+
+  .grid-card {
+    cursor: auto !important;
+  }
+
+  .page::after {
+    color: #444 !important;
+  }
+
+  .pages {
+    display: block !important;
+    gap: 0 !important;
+    padding: 0 !important;
+  }
+
+  .page-content {
+    padding: 0.5in 0.5in 0.4in !important;
+    width: 100% !important;
+    overflow: hidden !important;
+  }
+
+  /* If pagination hasn't run (e.g. edit mode), fall back to flow printing. */
+  .page-footer {
+    page-break-after: always;
+    margin: 0;
+    break-inside: avoid;
+    break-after: page;
+  }
+
+  body {
+    font-family: 'Inter', Helvetica, Arial, sans-serif;
+    font-size: 10pt;
+    line-height: 1.5;
+    background: white !important;
+    color: black;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: unset;
+    text-rendering: optimizeSpeed;
+  }
+
+  .main-wrapper {
+    margin-left: 0 !important;
+    background: white !important;
+    padding: 0 !important;
+    display: block !important;
+  }
+
+  .main {
+    margin-left: 0 !important;
+    padding: 0 !important;
+    max-width: none !important;
+    width: 100% !important;
+    zoom: normal !important;
+  }
+
+  .chapter-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28pt;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    color: black;
+    page-break-after: avoid;
+    margin-top: 0;
+    padding-top: 0;
+    display: block !important;
+  }
+
+  /* In edit mode the DOM is flat, so chapter-titles drive page breaks. */
+  body.edit-mode .chapter-title {
+    page-break-before: always;
+    padding-top: 0.5in;
+  }
+  body.edit-mode .chapter:first-child .chapter-title {
+    page-break-before: auto;
+  }
+
+  .section-title {
+    font-family: 'Libre Baskerville', Georgia, serif;
+    font-weight: 700;
+    font-size: 13pt;
+    color: black;
+    page-break-after: avoid;
+    margin-top: 1.5rem;
+    padding-bottom: 0.25rem;
+    display: block !important;
+  }
+
+  .entry {
+    font-family: 'Libre Baskerville', Georgia, serif;
+    font-size: 10pt;
+    line-height: 1.6;
+    page-break-inside: avoid;
+    border: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    padding: 0 0 1rem !important;
+  }
+
+  .entry h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18pt;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    page-break-after: avoid;
+    color: black;
+    margin: 0 0 0.75rem;
+  }
+
+  .entry h3 {
+    font-family: 'Libre Baskerville', Georgia, serif;
+    font-size: 11pt;
+    font-weight: 700;
+    page-break-after: avoid;
+    color: black;
+  }
+
+  .entry h4 {
+    font-family: 'Inter', sans-serif;
+    font-size: 7pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    page-break-after: avoid;
+    color: #444;
+  }
+
+  .entry p {
+    font-family: 'Libre Baskerville', Georgia, serif;
+    margin: 0 0 0.5rem;
+    color: black;
+  }
+
+  .entry strong { font-weight: 700; color: black; }
+  .entry em { font-style: italic; color: black; }
+
+  .entry table {
+    font-family: 'Inter', sans-serif;
+    font-size: 8.5pt;
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.75rem 0;
+  }
+
+  .entry table th {
+    text-align: left;
+    font-size: 6.5pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #444;
+    padding: 0.4rem 0.6rem;
+    border-bottom: 1.5pt solid black;
+  }
+
+  .entry table td {
+    padding: 0.4rem 0.6rem;
+    border-bottom: 0.5pt solid #cccccc;
+    vertical-align: top;
+    color: black;
+  }
+
+  .entry table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .entry .mechanic-box {
+    background: #ffffff;
+    border: 1px solid #999;
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin: 0.75rem 0;
+    page-break-inside: avoid;
+  }
+
+  .entry .mechanic-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 7pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #444;
+    margin-bottom: 0.35rem;
+  }
+
+  .entry .mechanic-note {
+    font-family: 'Libre Baskerville', Georgia, serif;
+    font-style: italic;
+    font-size: 8.5pt;
+    color: #444;
+    margin-top: 0.5rem;
+    margin-bottom: 0;
+  }
+
+  .zoom-controls { display: none; }
+
+  .entry .callout {
+    background: #ffffff;
+    border-left: 3px solid #b8860b;
+    padding: 0.75rem 1rem;
+    margin: 0.75rem 0;
+    font-size: 10pt;
+    border-radius: 0 6px 6px 0;
+    page-break-inside: avoid;
+  }
+
+  .entry .callout strong { color: #8a6d13; }
+
+  .entry dl { margin: 0.5rem 0; }
+  .entry dt {
+    font-family: 'Inter', sans-serif;
+    font-size: 7pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #444;
+    margin-top: 0.75rem;
+  }
+  .entry dd {
+    font-family: 'Libre Baskerville', Georgia, serif;
+    margin: 0.15rem 0 0 1rem;
+    color: black;
+  }
+
+  .entry .positive { color: #1a5e2d; font-weight: 700; }
+  .entry .negative { color: #a52a2a; font-weight: 700; }
+  .entry .neutral { color: #555; }
+  .entry .net { font-weight: 700; text-align: center; }
+  .entry .tier { font-weight: 700; }
+
+  .entry img {
+    max-width: 100% !important;
+    height: auto;
+  }
+
+  /* ── Appendix ────────────────── */
+  .appendix {
+    border-top: none;
+    margin-top: 0;
+    padding-top: 1rem;
+  }
+  /* The appendix may span several printed pages. Don't clamp it to a
+     single fixed card (its overflow was clipped in screen view and
+     spilled onto a spurious extra sheet in print). Let the page card
+     grow and break naturally across sheets. */
+  .appendix-page {
+    height: auto !important;
+    min-height: 11in;
+    overflow: visible !important;
+    break-inside: auto !important;
+    page-break-after: auto !important;
+    break-after: auto !important;
+    padding: 0.5in;
+  }
+  .appendix-page .appendix {
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
+    width: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  /* Fill columns sequentially to the page height (matching the screen's
+      single-card behaviour) so a letter and its entries stay together
+      instead of being rebalanced apart. Height/overflow/break rules that
+      fixed the blank-page bug are left untouched. */
+  .appendix-page .appendix-index {
+    flex: none !important;
+    height: auto !important;
+    min-height: 0 !important;
+    column-fill: auto !important;
+  }
+  /* Appendix pages are hidden in edit mode; always show them in print. */
+  .appendix-page,
+  body.edit-mode .appendix-page { display: block !important; }
+  .toc-appendix { display: block !important; }
+
+  .appendix-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24pt;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    text-align: left;
+    color: black;
+  }
+
+  .appendix-index {
+    column-count: 3;
+  }
+
+  .appendix-letter {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14pt;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #999;
+    color: black;
+  }
+
+  .appendix-entry {
+    font-family: 'Inter', sans-serif;
+    font-size: 8.5pt;
+    break-inside: avoid;
+  }
+
+  .appendix-entry .term {
+    font-family: 'Libre Baskerville', Georgia, serif;
+    font-weight: 700;
+    font-size: 8pt;
+    color: black;
+  }
+
+  .appendix-entry .refs a {
+    font-family: 'Inter', sans-serif;
+    color: #555;
+    font-size: 8pt;
+    text-decoration: none;
+  }
+
+  .appendix-entry .refs a:hover {
+    text-decoration: underline;
+  }
+
+  /* ── Page numbers in footer ── */
+  .page-number { display: none; }
+  .page-number-label { display: none !important; }
+}
