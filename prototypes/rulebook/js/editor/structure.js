@@ -7,6 +7,11 @@ const StructureUI = (() => {
   // and the card's starting pixel rect. null when not resizing.
   let resize = null;
 
+  // Active "add entry" placement: the freshly created card follows the
+  // mouse until the user presses the left button again to drop it. null
+  // when not placing.
+  let placement = null;
+
   // Inline edits are buffered here (id -> current HTML) and only committed
   // to the server on an explicit Save (Save & Exit / Save Layout). Cancel
   // discards them by reloading from the server, so edits are always
@@ -147,7 +152,7 @@ const StructureUI = (() => {
     leftGroup.style.cssText = 'display:flex;gap:0.25rem;align-items:center;flex:1;';
 
     // Kind + TOC-title controls for every card. `kind` is just a property
-    // on the entry (chapter / section / header / subheader / entry) that
+     // on the entry (chapter / section / header / subheader / entry) that
     // drives TOC nesting — there is no parent/child relationship.
     {
       const id = card.dataset.itemId;
@@ -200,6 +205,7 @@ const StructureUI = (() => {
     }
 
     actions.appendChild(leftGroup);
+
     card.appendChild(actions);
 
     // Vertical stack of action buttons running DOWN the left edge of the
@@ -241,7 +247,7 @@ const StructureUI = (() => {
   }
 
   // ── Inline (contenteditable) editing ──────────
-  // A chapter is just an entry; every card renders its own HTML, so the
+   // A chapter is just an entry; every card renders its own HTML, so the
   // only edit that makes sense is editing that HTML in place. We toggle
   // contenteditable on the card and keep the floating controls row
   // non-editable so the Edit/Delete buttons and Kind/Title inputs still
@@ -265,11 +271,21 @@ const StructureUI = (() => {
       card.classList.add('editing');
       if (actions) actions.setAttribute('contenteditable', 'false');
       if (btn) btn.classList.add('active');
-      // Snapshot current content to detect real changes on exit.
+      // An empty <p></p> has no line box, so the contenteditable caret has
+      // nowhere to render and typing does nothing. Seed a <br> so there's a
+      // caret position — done before the snapshot so an untouched entry
+      // still compares equal and stays clean.
+      const contentP = card.querySelector(':scope > p');
+      if (contentP && !contentP.textContent && !contentP.querySelector('br, img, table')) {
+        contentP.appendChild(document.createElement('br'));
+      }
+      // Snapshot current content to detect real changes on exit. Must strip
+      // the same affordances as bufferInlineEdit so an untouched entry
+      // still compares equal.
       const snap = card.cloneNode(true);
       const sa = snap.querySelector('.entry-actions');
       if (sa) sa.remove();
-      snap.querySelectorAll('.resize-handle').forEach(n => n.remove());
+      snap.querySelectorAll('.entry-edge-actions, .resize-handle, .struct-btn, .entry-add-actions').forEach(n => n.remove());
       editOriginals.set(eid, snap.innerHTML.trim());
       card.focus();
       card.addEventListener('blur', onInlineBlur, true);
@@ -298,9 +314,11 @@ const StructureUI = (() => {
   function bufferInlineEdit(card, eid) {
     card.removeEventListener('blur', onInlineBlur, true);
     const clone = card.cloneNode(true);
+    // Strip the edit affordances — they live in the DOM as floating
+    // controls, not in the entry's own HTML, so they must never be saved.
     const a = clone.querySelector('.entry-actions');
     if (a) a.remove();
-    clone.querySelectorAll('.resize-handle').forEach(n => n.remove());
+    clone.querySelectorAll('.entry-edge-actions, .resize-handle, .struct-btn, .entry-add-actions').forEach(n => n.remove());
     const html = clone.innerHTML.trim();
     const original = editOriginals.get(eid);
     editOriginals.delete(eid);
@@ -384,9 +402,11 @@ const StructureUI = (() => {
     EditMode.setDirty();
 
     // Make sure an HTML file exists (create-if-missing). Existing content
-    // is preserved — createEntry 409s when the file is already there.
+    // is preserved — createEntry 409s when the file is already there. A
+    // plain 'entry' gets blank (title-less) content; TOC kinds get a title.
     try {
-      await API.createEntry(id, item.sidebarTitle || id);
+      if (newKind === 'entry') await API.createEntry(id, '', { empty: true });
+      else await API.createEntry(id, item.sidebarTitle || id);
     } catch (err) {
       if (!err.message.includes('409')) {
         console.warn('changeKind: could not ensure entry HTML file', err);
@@ -467,6 +487,181 @@ const StructureUI = (() => {
     }, 100);
   }
 
+  // ── Add Entry at the mouse (drag-to-place) ─────────────────────────
+  // Clicking the toolbar "Add Entry" button drops a brand-new entry at the
+  // cursor and immediately enters placement mode: the card follows the mouse
+  // and is committed when the user presses the left button again.
+  async function startAddEntry(e) {
+    if (placement) return;
+    const layout = Renderer.getLayout();
+    if (!layout) return;
+    layout.entries = layout.entries || [];
+
+    const id = 'entry-' + Date.now();
+    // Start a new entry at a single-column width and 4 lines tall; the user
+    // can resize it afterwards.
+    const w = Math.max(1, Math.round(Grid.CONTENT_W / 2) - 1);
+    const h = 4;
+
+    // Seed the placement at the cursor (or a sane fallback if the cursor
+    // isn't over a page at click time).
+    const target = pageCellAt(e.clientX, e.clientY);
+    let page = target ? target.page : (maxPage(layout) || 1);
+    let col = target ? target.col : Grid.CONTENT_COL;
+    let row = target ? target.row : 4;
+
+    try {
+      await API.createEntry(id, '', { empty: true });
+    } catch (err) {
+      if (!err.message.includes('409')) console.warn('startAddEntry: could not create HTML file', err);
+    }
+
+    layout.entries.push({ id, kind: 'entry', page, col, row, w, h });
+    Renderer.renderTOC();
+    EditMode.setDirty();
+
+    // Rebuild the DOM so the new card exists, then begin placement.
+    await new Promise(resolve => {
+      Renderer.renderChapters();
+      Renderer.loadAllEntries().then(() => {
+        PageNumbers.paginate();
+        enable();
+        Renderer.renderTOC();
+        resolve();
+      });
+    });
+
+    const card = document.querySelector('.pages .grid-card[data-item-id="' + id + '"]');
+    if (!card) { placement = null; return; }
+
+    placement = { id, el: card, pageEl: card.closest('.page') };
+    card.classList.add('placing');
+    document.body.classList.add('placing-entry');
+
+    // Snap to the cursor immediately so it tracks from the first frame.
+    positionAtMouse(e.clientX, e.clientY);
+
+    document.addEventListener('mousemove', onPlaceMove);
+    document.addEventListener('mousedown', onPlaceDown, true);
+    document.addEventListener('keydown', onPlaceKey);
+  }
+
+  // Move the placing card so its centre sits under the cursor, recomputing
+  // the target page if the cursor crosses onto another page.
+  function onPlaceMove(e) {
+    if (!placement) return;
+    positionAtMouse(e.clientX, e.clientY);
+  }
+
+  // Finalise placement on the next left-button press: stop following the
+  // mouse, write the position back to the model, and re-sort the TOC.
+  function onPlaceDown(e) {
+    if (!placement) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const card = placement.el;
+    document.removeEventListener('mousemove', onPlaceMove);
+    document.removeEventListener('mousedown', onPlaceDown, true);
+    document.removeEventListener('keydown', onPlaceKey);
+    card.classList.remove('placing');
+    document.body.classList.remove('placing-entry');
+    syncLayoutFromCard(card);
+    Grid.sortEntriesByPosition(Renderer.getLayout());
+    Renderer.renderTOC();
+    EditMode.setDirty();
+    placement = null;
+  }
+
+  // Escape during placement aborts the add entirely: drop the entry from the
+  // model, delete its file, and rebuild.
+  function onPlaceKey(e) {
+    if (!placement) return;
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      cancelPlacement();
+    }
+  }
+
+  function cancelPlacement() {
+    const id = placement.id;
+    document.removeEventListener('mousemove', onPlaceMove);
+    document.removeEventListener('mousedown', onPlaceDown, true);
+    document.removeEventListener('keydown', onPlaceKey);
+    const card = placement.el;
+    card.classList.remove('placing');
+    document.body.classList.remove('placing-entry');
+    placement = null;
+
+    const layout = Renderer.getLayout();
+    if (layout && layout.entries) {
+      layout.entries = layout.entries.filter(en => en.id !== id);
+    }
+    API.deleteEntry(id).catch(() => {});
+    rebuild();
+  }
+
+  // Position the placing card from viewport coords. No-op when the cursor
+  // isn't over a page (so the card holds its last valid spot).
+  function positionAtMouse(clientX, clientY) {
+    if (!placement) return;
+    const card = placement.el;
+    const item = Grid.findItem(Renderer.getLayout(), 'entry', placement.id);
+    if (!item) return;
+    const target = pageCellAt(clientX, clientY);
+    if (!target) return;
+
+    const w = Number(card.dataset.gridW);
+    const h = Number(card.dataset.gridH);
+    const zoom = getZoom();
+    const pageRect = target.pageEl.getBoundingClientRect();
+    const localX = (clientX - pageRect.left) / zoom;
+    const localY = (clientY - pageRect.top) / zoom;
+
+    // Centre the card under the cursor.
+    const col = Math.round((localX - (w * Grid.CELL_W) / 2) / Grid.CELL_W);
+    const row = Math.round((localY - (h * Grid.CELL_H) / 2) / Grid.CELL_H);
+    const clamped = Grid.clampToGrid(col, row, w, h);
+
+    item.page = target.page;
+    item.col = clamped.col;
+    item.row = clamped.row;
+
+    // Move the element across pages if the cursor changed page.
+    if (placement.pageEl !== target.pageEl) {
+      target.pageEl.appendChild(card);
+      placement.pageEl = target.pageEl;
+    }
+    PageNumbers.positionCard(card, clamped.col, clamped.row, w, h);
+  }
+
+  // Resolve viewport coords to the grid cell of the page under the cursor.
+  // Returns null when the cursor is not over any page.
+  function pageCellAt(clientX, clientY) {
+    const pages = document.querySelectorAll('.pages .page');
+    let hit = null;
+    pages.forEach(p => {
+      const r = p.getBoundingClientRect();
+      if (clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom) hit = p;
+    });
+    if (!hit) return null;
+    const zoom = getZoom();
+    const r = hit.getBoundingClientRect();
+    const localX = (clientX - r.left) / zoom;
+    const localY = (clientY - r.top) / zoom;
+    return {
+      page: Number(hit.dataset.page),
+      pageEl: hit,
+      col: Math.round(localX / Grid.CELL_W),
+      row: Math.round(localY / Grid.CELL_H)
+    };
+  }
+
+  function maxPage(layout) {
+    let m = 0;
+    (layout.entries || []).forEach(it => { if (typeof it.page === 'number' && it.page > m) m = it.page; });
+    return m;
+  }
+
   // ── Drag-to-grid positioning ───────────────
   function bindDragGlobal() {
     document.addEventListener('mousedown', onCardMouseDown, true);
@@ -479,6 +674,7 @@ const StructureUI = (() => {
   const RESIZE_TOL = 17;
   function onCardMouseDown(e) {
     if (drag || resize) return;
+    if (placement) return;
     if (e.button !== 0) return;
 
     // Resolve the card we're acting on. If the pointer is over a card, use
@@ -528,6 +724,7 @@ const StructureUI = (() => {
     }
 
     e.preventDefault();
+    const zoom = getZoom();
     const rect = card.getBoundingClientRect();
     const pageRect = pageEl.getBoundingClientRect();
     drag = {
@@ -535,11 +732,11 @@ const StructureUI = (() => {
       pageEl,
       startClientX: e.clientX,
       startClientY: e.clientY,
-      origLeft: rect.left - pageRect.left,
-      origTop: rect.top - pageRect.top,
+      origLeft: (rect.left - pageRect.left) / zoom,
+      origTop: (rect.top - pageRect.top) / zoom,
       w: Number(card.dataset.gridW),
       h: Number(card.dataset.gridH),
-      zoom: getZoom()
+      zoom
     };
     card.classList.add('dragging');
   }
@@ -782,5 +979,5 @@ const StructureUI = (() => {
     return String(s).replace(/[^a-zA-Z0-9_-]/g, c => '\\' + c);
   }
 
-  return { enable, disable, syncLayoutFromDOM, rebuild, repack, flushPendingEdits, clearPendingEdits };
+  return { enable, disable, syncLayoutFromDOM, rebuild, repack, flushPendingEdits, clearPendingEdits, startAddEntry };
 })();

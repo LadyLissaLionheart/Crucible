@@ -288,7 +288,7 @@
   .appendix {
     border-top: none;
     margin-top: 0;
-    padding-top: 1rem;
+    padding-top: 0;
   }
   /* The appendix may span several printed pages. Don't clamp it to a
      single fixed card (its overflow was clipped in screen view and

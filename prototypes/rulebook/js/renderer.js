@@ -16,8 +16,8 @@ const Renderer = (() => {
   // Build a hierarchical sidebar from the flat entries list. There is no
   // parent/child nesting — structure is inferred from `kind` values and
   // array order:
-  //   chapter   → starts a new chapter group
-  //   section   → top-level item in the current chapter group
+   //   chapter   → starts a new chapter group
+   //   section   → top-level item in the current chapter group
   //   header    → nested under the current section
   //   subheader → nested under the current header (else section)
   //   entry (or no kind) → nested under the current section
@@ -46,10 +46,20 @@ const Renderer = (() => {
       if (curChapter) return;
       curChapter = document.createElement('div');
       curChapter.className = 'toc-chapter open';
-      curChapter.innerHTML = '<div class="toc-chapter-title"></div>';
-      curChapter.querySelector('.toc-chapter-title').addEventListener('click', () => {
+      const titleEl = document.createElement('div');
+      titleEl.className = 'toc-chapter-title';
+      const caret = document.createElement('span');
+      caret.className = 'toc-caret';
+      caret.textContent = '▸';
+      const labelEl = document.createElement('span');
+      labelEl.className = 'toc-label';
+      caret.addEventListener('click', (e) => {
+        e.stopPropagation();
         curChapter.classList.toggle('open');
       });
+      titleEl.appendChild(caret);
+      titleEl.appendChild(labelEl);
+      curChapter.appendChild(titleEl);
       curListWrap = document.createElement('div');
       curListWrap.className = 'toc-sections';
       curChapter.appendChild(curListWrap);
@@ -73,18 +83,32 @@ const Renderer = (() => {
       const kind = obj.kind || 'entry';
       const label = obj.sidebarTitle || obj.id.replace(/-/g, ' ');
 
-      if (kind === 'chapter') {
-        curChapter = document.createElement('div');
-        curChapter.className = 'toc-chapter open';
-        const titleEl = document.createElement('div');
-        titleEl.className = 'toc-chapter-title';
-        titleEl.textContent = label;
-        titleEl.addEventListener('click', () => curChapter.classList.toggle('open'));
-        curChapter.appendChild(titleEl);
-        curListWrap = document.createElement('div');
-        curListWrap.className = 'toc-sections';
-        curChapter.appendChild(curListWrap);
-        sidebar.appendChild(curChapter);
+if (kind === 'chapter') {
+         curChapter = document.createElement('div');
+         curChapter.className = 'toc-chapter open';
+         const titleEl = document.createElement('div');
+         titleEl.className = 'toc-chapter-title';
+         const caret = document.createElement('span');
+         caret.className = 'toc-caret';
+         caret.textContent = '▸';
+         const labelEl = document.createElement('span');
+         labelEl.className = 'toc-label';
+         labelEl.textContent = label;
+         caret.addEventListener('click', (e) => {
+           e.stopPropagation();
+           curChapter.classList.toggle('open');
+         });
+         labelEl.addEventListener('click', () => {
+           const target = document.getElementById('entry-' + obj.id);
+           if (target) scrollToEl(target);
+         });
+         titleEl.appendChild(caret);
+         titleEl.appendChild(labelEl);
+         curChapter.appendChild(titleEl);
+         curListWrap = document.createElement('div');
+         curListWrap.className = 'toc-sections';
+         curChapter.appendChild(curListWrap);
+         sidebar.appendChild(curChapter);
         currentSection = null;
         currentHeader = null;
         return;
@@ -115,11 +139,9 @@ const Renderer = (() => {
         else if (currentSection) currentSection.appendChild(subEl);
         else curListWrap.appendChild(subEl);
       } else {
-        const entryEl = document.createElement('div');
-        entryEl.className = 'toc-section';
-        entryEl.appendChild(titleEl);
-        if (currentSection) currentSection.appendChild(entryEl);
-        else curListWrap.appendChild(entryEl);
+        // Plain entries (kind 'entry' or any other) are content blocks:
+        // they carry no TOC title and never appear in the table of contents.
+        return;
       }
     });
 
@@ -129,7 +151,14 @@ const Renderer = (() => {
       appDiv.className = 'toc-chapter toc-appendix open';
       const titleEl = document.createElement('div');
       titleEl.className = 'toc-chapter-title toc-appendix-title';
-      titleEl.textContent = layout.appendix.title || 'Appendix';
+      const spacer = document.createElement('span');
+      spacer.className = 'toc-caret toc-caret-spacer';
+      spacer.textContent = '▸';
+      const labelEl = document.createElement('span');
+      labelEl.className = 'toc-label';
+      labelEl.textContent = layout.appendix.title || 'Appendix';
+      titleEl.appendChild(spacer);
+      titleEl.appendChild(labelEl);
       titleEl.addEventListener('click', () => {
         scrollToEl(document.getElementById('appendix'));
       });
@@ -139,8 +168,8 @@ const Renderer = (() => {
   }
 
   // ── Chapters (flat grid-card placeholders) ──
-  // renderChapters() emits flat title cards (chapter titles)
-  // and entry placeholders as direct children of #chapters-container.
+   // renderChapters() emits flat title cards (chapter titles)
+   // and entry placeholders as direct children of #chapters-container.
   // PageNumbers.layOut() later moves each card by id into the appropriate
   // .page and applies absolute pixel coords from its grid placement.
   function teardownPages() {
@@ -166,10 +195,10 @@ const Renderer = (() => {
     if (!container) return;
     container.innerHTML = '';
 
-    // Flat model: every item (chapter/section/header/subheader/entry) is
-    // an entry in layout.entries, rendered in array order. All of them
-    // load and display their own HTML file — a chapter is just an entry
-    // of kind 'chapter', nothing special. `kind` only drives TOC nesting.
+     // Flat model: every item (chapter/section/header/subheader/entry) is
+     // an entry in layout.entries, rendered in array order. All of them
+     // load and display their own HTML file — a chapter is just an entry
+     // of kind 'chapter', nothing special. `kind` only drives TOC nesting.
     (layout.entries || []).forEach(item => {
       const kind = item.kind || 'entry';
       const label = item.sidebarTitle || item.title || item.id.replace(/-/g, ' ');
@@ -281,7 +310,7 @@ const Renderer = (() => {
       if (!resp.ok) throw new Error(resp.status);
       populateEntry(entryEl, entryId, await resp.text());
     } catch (err) {
-      // Auto-heal missing HTML files (chapters included) so every entry
+       // Auto-heal missing HTML files (chapters included) so every entry
       // renders its own content rather than an error. createEntry is a
       // no-op (409) when the file already exists.
       try {
@@ -331,7 +360,7 @@ const Renderer = (() => {
     let current = '';
     for (const obj of (layout.entries || [])) {
       const kind = obj.kind || 'entry';
-      if (kind === 'chapter') {
+       if (kind === 'chapter') {
         current = obj.sidebarTitle || obj.title || obj.id;
       } else if (obj.id === entryId) {
         return current;

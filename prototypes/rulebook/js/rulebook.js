@@ -123,6 +123,20 @@
         animateScroll(target, 250);
       }
     }, { passive: false });
+
+    var viewToggle = document.getElementById('view-toggle');
+    var bookMode = false;
+    viewToggle.addEventListener('click', function() {
+      bookMode = !bookMode;
+      var pagesEl = document.querySelector('#main-content .pages');
+      var mainEl = document.getElementById('main-content');
+      if (pagesEl) pagesEl.classList.toggle('book-mode', bookMode);
+      if (mainEl) mainEl.classList.toggle('book-mode', bookMode);
+      viewToggle.classList.toggle('active', bookMode);
+      viewToggle.setAttribute('aria-pressed', bookMode ? 'true' : 'false');
+      viewToggle.textContent = bookMode ? '▤' : '▭';
+      viewToggle.title = bookMode ? 'Single page view' : 'Book view';
+    });
   }
 
   init();

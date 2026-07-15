@@ -18,21 +18,25 @@ body.edit-mode .toc-appendix { display: none; }
    Chapters are just entries of kind 'chapter', so they get this box too —
    there is no separate title styling. */
 body.edit-mode .entry {
-  border: 1px dashed var(--edit-border);
+  /* Use outline (not border) + match read-mode padding so the entry
+     content sits in exactly the same spot as display mode. A border +
+     extra padding would inset the text relative to read mode. */
+  border: none;
+  outline: 1px dashed var(--edit-border);
+  outline-offset: -1px;
   background: var(--edit-bg);
   border-radius: 4px;
-  padding: 0.75rem;
-  padding-bottom: 1rem;
-  transition: background 0.15s, border-color 0.15s;
+  padding: 0.25rem 0;
+  transition: background 0.15s, outline-color 0.15s;
 }
 body.edit-mode .entry:hover {
-  border-color: var(--accent);
+  outline-color: var(--accent);
 }
-/* Inline-edit mode: solid accent border + text cursor signal the card is
+/* Inline-edit mode: solid accent outline + text cursor signal the card is
    being edited in place (contenteditable), not dragged. */
 body.edit-mode .entry.editing {
-  border: 1px solid var(--accent);
-  border-style: solid;
+  outline: 1px solid var(--accent);
+  outline-offset: -1px;
   cursor: text;
 }
 body.edit-mode .entry.editing .entry-actions {
@@ -111,6 +115,18 @@ body.edit-mode .edit-bar { display: flex; }
   transition: background 0.15s;
 }
 .edit-bar button:hover { background: #e8f0eb; }
+.edit-bar .edit-bar-divider {
+  width: 1px;
+  align-self: stretch;
+  background: var(--border);
+  margin: 0.15rem 0.1rem;
+}
+.edit-bar #add-entry-btn {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.edit-bar #add-entry-btn:hover { filter: brightness(1.08); }
 .edit-bar .save-btn {
   background: #fff;
   color: var(--accent);
@@ -275,6 +291,17 @@ body.edit-mode .entry.editing .resize-handle { opacity: 0; pointer-events: none;
 body.edit-mode .grid-card.resizing {
   user-select: none;
 }
+
+/* While an entry is being placed via the Add Entry button: lift it above
+   everything and outline it so the user can see what they're dropping. */
+body.edit-mode .grid-card.placing {
+  z-index: 900;
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  cursor: grabbing;
+  user-select: none;
+}
+body.placing-entry { cursor: grabbing; }
 
 /* ── Page Dividers ───────────────────────── */
 /* Zero-height element sitting in the gap between page cards.

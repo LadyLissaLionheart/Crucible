@@ -11,7 +11,7 @@
       "page": 1,
       "col": 4,
       "row": 4,
-      "w": 40,
+      "w": 41,
       "h": 8
     },
     {
@@ -19,17 +19,26 @@
       "kind": "section",
       "sidebarTitle": "Introduction",
       "page": 1,
-      "col": 26,
-      "row": 30,
-      "w": 18,
+      "col": 4,
+      "row": 14,
+      "w": 19,
       "h": 7
+    },
+    {
+      "id": "entry-1784063206514",
+      "kind": "entry",
+      "page": 1,
+      "col": 4,
+      "row": 32,
+      "w": 19,
+      "h": 8
     }
   ],
   "appendix": {
     "title": "Appendix"
   },
   "grid": {
-    "cols": 48,
-    "rows": 64
+    "cols": 49,
+    "rows": 65
   }
 }

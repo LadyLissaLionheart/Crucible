@@ -45,10 +45,11 @@ body.edit-mode .page-margin { display: block; }
 .page-margin-bottom { bottom: 0; left: 0; right: 0; height: calc(4 * var(--cell-h)); }
 .page-margin-left   { left: 0; top: calc(4 * var(--cell-h)); bottom: calc(4 * var(--cell-h)); width: calc(4 * var(--cell-w)); }
 .page-margin-right  { right: 0; top: calc(4 * var(--cell-h)); bottom: calc(4 * var(--cell-h)); width: calc(4 * var(--cell-w)); }
-/* Center gutter strip — shows where the print-safe margin between two
-   columns would sit. Same tint as the outer margins. Inset vertically so
-   it never overlaps the top/bottom strips (keeps the color uniform). */
-.page-margin-center { top: calc(4 * var(--cell-h)); bottom: calc(4 * var(--cell-h)); left: calc(50% - var(--cell-w)); width: calc(2 * var(--cell-w)); }
+/* Center gutter strip — the 3-cell-wide print-safe margin between the
+   two content columns, sitting exactly on the page's horizontal midpoint
+   (cols 23-25 on the 49-wide grid). Same tint as the outer margins.
+   Inset vertically so it never overlaps the top/bottom strips. */
+.page-margin-center { top: calc(4 * var(--cell-h)); bottom: calc(4 * var(--cell-h)); left: calc(50% - 1.5 * var(--cell-w)); width: calc(3 * var(--cell-w)); }
 
 /* ── Cards (chapter titles, section titles, entries) ───
    All cards are positioned by JS via left/top/width/height set inline
@@ -73,6 +74,9 @@ body.edit-mode .grid-card { overflow: visible; }
   opacity: 0.85;
   box-shadow: 0 4px 18px rgba(0,0,0,0.25);
 }
+/* While dragging, thin out the blue edit-mode fill so the cards
+   underneath stay visible. */
+body.edit-mode .entry.dragging { background: rgba(240, 246, 255, 0.6); }
 
 /* In edit mode, cards announce draggability.
    Action button clusters inside reset the cursor. */

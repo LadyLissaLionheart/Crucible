@@ -169,7 +169,7 @@ mark { background: var(--highlight); color: inherit; padding: 0 2px; border-radi
 .toc-chapter-title {
   padding: 0.3rem 1.25rem;
   font-family: var(--font-ui);
-  font-size: 7.5pt;
+  font-size: 9pt;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.12em;
@@ -180,12 +180,17 @@ mark { background: var(--highlight); color: inherit; padding: 0 2px; border-radi
   align-items: center;
   gap: 0.4rem;
 }
-.toc-chapter-title::before {
-  content: '▸';
-  font-size: 0.65rem;
+.toc-caret {
+  flex: 0 0 auto;
+  display: inline-block;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
   transition: transform 0.15s;
+  transform-origin: center;
 }
-.toc-chapter.open .toc-chapter-title::before { transform: rotate(90deg); }
+.toc-chapter.open .toc-caret { transform: rotate(90deg); }
+.toc-label { flex: 1 1 auto; cursor: pointer; }
 .toc-chapter-title:hover { background: var(--accent-light); }
 
 .toc-sections { display: none; }
@@ -195,7 +200,7 @@ mark { background: var(--highlight); color: inherit; padding: 0 2px; border-radi
 .toc-section-title {
   padding: 0.25rem 1.25rem;
   font-family: var(--font-body);
-  font-size: 9pt;
+  font-size: 10pt;
   color: var(--text);
   cursor: pointer;
   user-select: none;
@@ -204,10 +209,7 @@ mark { background: var(--highlight); color: inherit; padding: 0 2px; border-radi
   gap: 0.4rem;
 }
 .toc-section-title::before {
-  content: '·';
-  color: var(--text-muted);
-  font-size: 1.2rem;
-  line-height: 1;
+  content: none;
 }
 /* Sections / headers / subheaders carry no bullet — only plain entries do. */
 .toc-kind-section::before,
@@ -218,7 +220,6 @@ mark { background: var(--highlight); color: inherit; padding: 0 2px; border-radi
 .toc-section-title:hover { background: var(--accent-light); }
 .toc-section-title.active {
   color: var(--accent);
-  font-weight: 600;
 }
 
 /* Indentation by entry kind: section = 1, header = 2, subheader = 3.
@@ -227,13 +228,13 @@ mark { background: var(--highlight); color: inherit; padding: 0 2px; border-radi
 .toc-kind-section,
 .toc-kind-entry { padding-left: 3rem; }
 .toc-kind-header { padding-left: 4.5rem; font-weight: 500; }
-.toc-kind-subheader { padding-left: 6rem; font-weight: 400; font-size: 0.9rem; }
+.toc-kind-subheader { padding-left: 6rem; font-weight: 400;   font-size: 0.95rem; }
 
 /* Appendix is a chapter-level entry. Hide the ▸ marker (it has no children to
    expand) but keep its box so the title still aligns on the chapter X axis,
    and use the muted colour it had before. */
 .toc-appendix-title { color: var(--text-muted); }
-.toc-appendix-title::before { visibility: hidden; }
+.toc-appendix-title .toc-caret-spacer { visibility: hidden; cursor: default; }
 
 /* ── Main Content (PDF-viewer style) ──── */
 .main-wrapper {
@@ -321,8 +322,8 @@ mark { background: var(--highlight); color: inherit; padding: 0 2px; border-radi
   margin: 0;
 }
 
- .chapter-title {
-  font-family: var(--font-display);
+  .chapter-title {
+   font-family: var(--font-display);
   font-size: 28pt;
   font-weight: 400;
   letter-spacing: 0.05em;
@@ -377,6 +378,23 @@ mark { background: var(--highlight); color: inherit; padding: 0 2px; border-radi
 
 .zoom-btn:hover { background: var(--border); }
 .zoom-btn:active { background: var(--border-line); }
+.zoom-btn.active { background: var(--accent); color: #fff; }
+.zoom-btn.active:hover { background: #2b7a4b; }
+
+/* ── Book (side-by-side) View ───────────── */
+/* In book mode the .pages stack becomes a 2-column grid: odd pages fall
+   into the left column, even pages into the right, forming spreads. A
+   small column gap reads as the book spine; a larger row gap separates
+   one spread from the next. */
+.main.book-mode { width: auto; max-width: 100%; }
+
+.pages.book-mode {
+  display: grid;
+  grid-template-columns: var(--page-w) var(--page-w);
+  gap: 0.4rem 1.25rem;
+  align-items: start;
+  justify-content: center;
+}
 
 .zoom-label {
   width: 48px;

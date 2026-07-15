@@ -57,7 +57,7 @@ const API = (() => {
     getEntry: (id) => fetch('/api/entries/' + encodeURIComponent(id)).then(r => r.text()),
     saveEntry: (id, content) => putText('/api/entries/' + encodeURIComponent(id), content),
     deleteEntry: (id) => del('/api/entries/' + encodeURIComponent(id)),
-    createEntry: (id, title) => postJSON('/api/entries', { id, title }),
+    createEntry: (id, title, opts) => postJSON('/api/entries', Object.assign({ id, title }, opts || {})),
 
     // Images
     listImages: () => getJSON('/api/images'),

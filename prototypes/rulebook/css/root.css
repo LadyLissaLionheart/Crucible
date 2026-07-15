@@ -31,10 +31,10 @@
   --footer-h: 32px;           /* reserved for the in-card page footer */
 
   /* Grid geometry — full-page cell overlay (cells start from edges). */
-  --grid-cols: 48;
-  --grid-rows: 64;
-  --cell-w: 17px;             /* 816 / 48 */
-  --cell-h: 16.5px;           /* 1056 / 64 */
+  --grid-cols: 49;
+  --grid-rows: 65;
+  --cell-w: 16.653px;         /* 816 / 49 */
+  --cell-h: 16.246px;         /* 1056 / 65 */
   --cell-line: rgba(0, 0, 0, 0.08);
   --margin-bg: rgba(43, 95, 58, 0.08);   /* paler accent-tint */
   --margin-bg-edge: rgba(43, 95, 58, 0.18);

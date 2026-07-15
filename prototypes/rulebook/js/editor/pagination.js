@@ -79,9 +79,9 @@ const PageNumbers = (() => {
 
     const pageCards = Array.from(pages.children).filter(c => c.classList.contains('page'));
 
-    // Place each card into its page. Every entry (including chapters) uses
-    // the 'entry-<id>' DOM id now — chapters are just entries of kind
-    // 'chapter'.
+     // Place each card into its page. Every entry (including chapters) uses
+     // the 'entry-<id>' DOM id now — chapters are just entries of kind
+     // 'chapter'.
     Grid.walkItems(layout).forEach(({ kind, item }) => {
       const id = item.id || item;
       const el = document.getElementById('entry-' + id);

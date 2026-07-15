@@ -23,7 +23,7 @@ app.get('/api/layout', (req, res) => {
   try {
     const data = fs.readFileSync(path.join(DATA_DIR, 'layout.json'), 'utf8');
     res.json(JSON.parse(data));
-  } catch { res.json({ title: 'Untitled', chapters: [] }); }
+   } catch { res.json({ title: 'Untitled', chapters: [] }); }
 });
 
 app.put('/api/layout', (req, res) => {
@@ -87,11 +87,13 @@ app.delete('/api/entries/:id', (req, res) => {
 });
 
 app.post('/api/entries', (req, res) => {
-  const { id, title } = req.body;
+  const { id, title, empty } = req.body;
   if (!id) return res.status(400).json({ error: 'id required' });
   const filePath = path.join(ENTRIES_DIR, id + '.html');
   if (fs.existsSync(filePath)) return res.status(409).json({ error: 'Entry already exists' });
-  const content = `<h2>${escapeHtml(title || id)}</h2>\n<p>Start writing here...</p>\n`;
+  const content = empty
+    ? `<p><br></p>\n`
+    : `<h2>${escapeHtml(title || id)}</h2>\n<p>Start writing here...</p>\n`;
   try {
     fs.writeFileSync(filePath, content, 'utf8');
     res.json({ ok: true });

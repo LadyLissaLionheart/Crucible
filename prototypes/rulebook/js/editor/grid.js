@@ -1,9 +1,13 @@
 // Grid constants, migration, and helpers for the per-page cell grid.
 //
-// Each page is a 48×64 cell grid sized to a US-Letter card (816×1056px),
-// giving 17×16.5px cells (half the previous 24×32 resolution, so four
-// sub-cells fit where one used to). Margin cells (rows 0-3, 60-63; cols
-// 0-3, 44-47) flag the original print margins — purely visual reference.
+// Each page is a 49×65 cell grid sized to a US-Letter card (816×1056px),
+// giving ~16.65×16.25px cells. The ODD dimensions let a 3-wide center
+// gutter (cols 23-25) sit exactly on the page's horizontal midpoint, and
+// the odd row count puts a true center row at the vertical midpoint — so
+// titles/entries can be perfectly centered. Margin cells (rows 0-3,
+// 61-64; cols 0-3, 45-48) flag the print margins — purely visual
+// reference. Content spans cols 4-44 (41 wide): left col 4-22, 3-wide
+// gutter 23-25, right col 26-44.
 //
 // Every positioned item (chapter, section, header, subheader, entry)
 // carries { page, col, row, w, h } and a `kind`, stored in
@@ -17,19 +21,20 @@ const Grid = (() => {
 
   const PAGE_W = 816;
   const PAGE_H = 1056;
-  const COLS = 48;
-  const ROWS = 64;
-  const CELL_W = PAGE_W / COLS; // 17
-  const CELL_H = PAGE_H / ROWS; // 16.5
+  const COLS = 49;
+  const ROWS = 65;
+  const CELL_W = PAGE_W / COLS; // ~16.65
+  const CELL_H = PAGE_H / ROWS; // ~16.25
 
   const MARGIN_TOP_ROWS    = [0, 1, 2, 3];
-  const MARGIN_BOT_ROWS    = [60, 61, 62, 63];
+  const MARGIN_BOT_ROWS    = [61, 62, 63, 64];
   const MARGIN_LEFT_COLS   = [0, 1, 2, 3];
-  const MARGIN_RIGHT_COLS  = [44, 45, 46, 47];
+  const MARGIN_RIGHT_COLS  = [45, 46, 47, 48];
 
-  // Default placement zone (inside the margin frame).
+  // Default placement zone (inside the margin frame). Content spans
+  // cols 4-44 (41 wide): left col 4-22, 3-wide gutter 23-25, right 26-44.
   const CONTENT_COL = 4;
-  const CONTENT_W = COLS - 8; // 40
+  const CONTENT_W = COLS - 8; // 41
 
   function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
@@ -61,7 +66,7 @@ const Grid = (() => {
 
   // ── Iteration / lookup ──
   // The model is a single flat, ordered list: layout.entries. Every item
-  // (chapter, section, header, subheader, entry) is just an object with a
+   // (chapter, section, header, subheader, entry) is just an object with a
   // `kind`. There is no parent/child nesting — order in the array (and,
   // after a drag, visual position) drives the TOC sidebar structure.
   function walkItems(layout) {
@@ -81,8 +86,8 @@ const Grid = (() => {
   // ── Free-slot finder ──
   // Searches top-to-bottom on the page for the first row whose rectangle
   // (CONTENT_COL, row, w, h) doesn't overlap any existing placed item.
-  // Used when adding new chapters/entries so they land in the
-  // next available spot; new pages are appended as needed.
+   // Used when adding new chapters/entries so they land in the
+   // next available spot; new pages are appended as needed.
   function findFreeSlot(layout, startPage, startRow, h, w) {
     let page = startPage, row = startRow;
     for (let i = 0; i < 500; i++) {
@@ -107,7 +112,7 @@ const Grid = (() => {
   }
 
   // ── Migration ──
-  // Convert any legacy nested model (chapters→[sections→]entries) into the
+   // Convert any legacy nested model (chapters→[sections→]entries) into the
   // flat layout.entries array, preserving order and grid positions.
   // Idempotent: no-op once layout.entries exists and chapters is gone.
   function migrateLayout(layout) {
@@ -127,16 +132,16 @@ const Grid = (() => {
     };
 
     const flat = [];
-    (layout.chapters || []).forEach(ch => {
-      // Chapter becomes a single flat item of kind 'chapter'.
-      const chapterItem = {
-        id: ch.id,
-        kind: 'chapter',
-        sidebarTitle: ch.title || '',
-        title: ch.title || ''
-      };
-      copyPos(chapterItem, ch);
-      flat.push(chapterItem);
+     (layout.chapters || []).forEach(ch => {
+       // Chapter becomes a single flat item of kind 'chapter'.
+       const chapterItem = {
+         id: ch.id,
+         kind: 'chapter',
+         sidebarTitle: ch.title || '',
+         title: ch.title || ''
+       };
+       copyPos(chapterItem, ch);
+       flat.push(chapterItem);
 
       // Old format: entries nested inside sections.
       (ch.sections || []).forEach(sec => {

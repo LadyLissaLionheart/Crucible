@@ -51,6 +51,9 @@ const EditMode = (() => {
     document.getElementById('save-layout-btn').addEventListener('click', saveAll);
     document.getElementById('cancel-edit-btn').addEventListener('click', saveAndExit);
     document.getElementById('rebuild-btn').addEventListener('click', rebuildIndex);
+    document.getElementById('add-entry-btn').addEventListener('click', (e) => {
+      if (typeof StructureUI !== 'undefined' && StructureUI.startAddEntry) StructureUI.startAddEntry(e);
+    });
 
     window.addEventListener('beforeunload', (e) => {
       const contentDirty = typeof ContentEditor !== 'undefined' && ContentEditor.hasUnsavedChanges && ContentEditor.hasUnsavedChanges();
