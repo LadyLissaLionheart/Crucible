@@ -165,6 +165,9 @@ const ContentEditor = (() => {
       if (currentEntryEl) {
         currentEntryEl.innerHTML = content;
         currentEntryEl.dataset.loaded = 'true';
+        if (typeof StructureUI !== 'undefined' && StructureUI.checkOverflow) {
+          StructureUI.checkOverflow(currentEntryEl);
+        }
       }
 
       Renderer.clearSearchIndex();
@@ -205,12 +208,18 @@ const ContentEditor = (() => {
     });
     if (!confirmed) return;
     try {
-      await API.deleteEntry(currentEntryId);
+      // Defer the server file deletion (like deleteCard) so a Discard back to
+      // the backup — which still lists this entry — preserves its content
+      // instead of auto-healing to a blank placeholder. Save finalizes it.
+      if (typeof StructureUI !== 'undefined' && StructureUI.markPendingDelete) {
+        StructureUI.markPendingDelete(currentEntryId);
+      }
       const layout = Renderer.getLayout();
       layout.entries = (layout.entries || []).filter(en => en.id !== currentEntryId);
       if (currentEntryEl) currentEntryEl.remove();
       close();
       Renderer.renderTOC();
+      if (typeof EditMode !== 'undefined' && EditMode.setDirty) EditMode.setDirty();
     } catch (err) {
       await Popup.alert({ message: 'Delete failed: ' + err.message, x: e.clientX, y: e.clientY });
     }
@@ -241,7 +250,24 @@ const ContentEditor = (() => {
     editorView.focus();
   }
 
-  return { init, open, close, save, hasUnsavedChanges };
+  function insertImage(url) {
+    if (!editorView || isPreview) return;
+    const snippet = '<img src="' + url + '" alt="">\n';
+    const sel = editorView.state.selection.main;
+    editorView.dispatch({
+      changes: { from: sel.from, insert: snippet },
+      selection: { anchor: sel.from + snippet.length }
+    });
+    if (typeof EditMode !== 'undefined' && EditMode.setDirty) EditMode.setDirty();
+    editorView.focus();
+  }
+
+  function isOpen() {
+    const modal = document.getElementById('editor-modal');
+    return !!modal && modal.classList.contains('active') && !!currentEntryId && !!editorView;
+  }
+
+  return { init, open, close, save, hasUnsavedChanges, insertImage, isOpen };
 })();
 
 window.ContentEditor = ContentEditor;

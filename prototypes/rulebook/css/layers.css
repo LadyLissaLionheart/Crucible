@@ -1,0 +1,290 @@
+/* ── Layer Panel (edit mode only) ───────────────────────────────────
+   A floating dock pinned to the left edge of the viewport, visible only
+   while body.edit-mode is set. It lists the layers for the page currently
+   in view, top-of-list = highest z (paints on top), matching the GIMP /
+   Photoshop convention. Each row can be toggled hidden, renamed, raised /
+   lowered in the stack, or deleted; the active layer (highlighted) is the
+   one newly placed entries land on. */
+
+/* The layer panel now lives inside the sidebar (toggled by the bottom
+   tabs). It fills the sidebar body and only appears when the Layers tab
+   is active AND we're in edit mode. */
+.layer-panel {
+  display: none;
+  flex: 1 1 auto;
+  min-height: 0;
+  flex-direction: column;
+  width: 100%;
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  overflow: hidden;
+}
+
+body.edit-mode .sidebar[data-tab="layers"] .layer-panel { display: flex; }
+
+.layer-panel-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 10px 12px 8px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.layer-panel-actions {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.layer-add-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 8px;
+  background: var(--accent, #2b5f3a);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.layer-add-btn:hover { filter: brightness(1.06); }
+.layer-add-btn i.fa-solid { font-size: 14px; }
+
+.layer-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.layer-list::-webkit-scrollbar { width: 8px; }
+.layer-list::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+.layer-list::-webkit-scrollbar-track { background: transparent; }
+
+.layer-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 7px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.layer-row:hover { background: var(--accent-light); }
+.layer-row.active {
+  border-color: var(--edit-border);
+  background: var(--edit-bg);
+}
+.layer-row.hidden-layer { opacity: 0.5; }
+
+.layer-vis {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 5px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.layer-vis:hover { background: rgba(0, 0, 0, 0.06); color: var(--text); }
+.layer-vis i.fa-solid { font-size: 15px; }
+
+.layer-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--text);
+  font: inherit;
+  padding: 2px 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.layer-name[readonly] {
+  cursor: default;
+  /* No affordance that this is anything but a static label until edited. */
+  border-color: transparent;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  caret-color: transparent;
+}
+.layer-name[readonly]:hover { border-color: transparent; background: transparent; }
+.layer-name { cursor: default; }
+.layer-name[readonly] {
+  background: transparent;
+  cursor: default;
+  /* Firefox draws a text caret and allows selection in readonly inputs;
+     suppress both so the field reads as static text until double-click. */
+  user-select: none;
+  -moz-user-select: none;
+  caret-color: transparent;
+  -webkit-user-select: none;
+}
+.layer-name:not([readonly]) { cursor: text; }
+.layer-name:not([readonly]):focus {
+  outline: none;
+  border-color: var(--accent, #2b5f3a);
+  background: var(--surface);
+}
+
+.layer-ops {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 1px;
+}
+.layer-vis-chk {
+  flex: 0 0 auto;
+  width: 15px;
+  height: 15px;
+  margin: 0 1px 0 3px;
+  accent-color: var(--accent, #2b5f3a);
+  cursor: pointer;
+}
+.layer-op {
+  width: 19px;
+  height: 19px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--text);
+  cursor: pointer;
+}
+.layer-op:hover { background: var(--accent-light); color: var(--accent); }
+.layer-op i.fa-solid { font-size: 13px; }
+.layer-op.del { color: var(--negative, #c0392b); }
+.layer-op.del:hover { background: rgba(192, 57, 43, 0.12); }
+
+/* Layer context menu (right-click). */
+.layer-menu {
+  position: fixed;
+  z-index: 1200;
+  min-width: 150px;
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+  font-family: var(--font-ui);
+  font-size: 12px;
+}
+.layer-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  margin: 2px 0;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--text);
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+}
+.layer-menu-item:first-child { margin-top: 0; }
+.layer-menu-item:last-child { margin-bottom: 0; }
+.layer-menu-item > i {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1;
+}
+.layer-menu-item:hover { background: var(--accent-light); }
+.layer-menu-item--danger { color: var(--negative, #c0392b); }
+.layer-menu-item--danger:hover { background: rgba(192, 57, 43, 0.12); }
+.layer-op:disabled { opacity: 0.25; cursor: default; }
+
+/* Drag handle (front of each row) + drop indicators. */
+.layer-grip {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--text-muted);
+  cursor: grab;
+}
+.layer-grip:hover { color: var(--text); }
+.layer-grip:active { cursor: grabbing; }
+.layer-grip i.fa-solid { font-size: 14px; }
+
+/* The source row left behind while dragging: faded placeholder. */
+.layer-row.dragging {
+  opacity: 0.35;
+}
+.layer-row.dragging > * { visibility: hidden; }
+
+/* The floating clone that follows the cursor, tilted upward (right side up). */
+.layer-row.layer-floating {
+  position: fixed;
+  margin: 0;
+  pointer-events: none;
+  z-index: 1000;
+  opacity: 0.95;
+  transform: rotate(-4deg);
+  transform-origin: center;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+  border-color: var(--accent, #2b5f3a);
+  background: var(--surface);
+}
+
+/* Live reordering: rows animate their position as the dragged layer is
+   spliced into the list, so the layers shuffle in real time. No insertion
+   bar — the dragged row itself is the indicator (faded placeholder below). */
+.layer-row {
+  position: relative;
+  transition: transform 0.12s ease;
+}
+.layer-row.dragging {
+  transition: none;
+}
+
+.layer-empty {
+  padding: 14px 10px;
+  text-align: center;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ── Layer groups on the page ───────────────────────────────────────
+   Each layer paints in its own stacking context; the group's z-index is
+   the layer order, so cross-layer stacking follows the panel order while
+   per-entry --z still orders cards WITHIN a layer. */
+.layer-group {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.layer-group > .grid-card { pointer-events: auto; }
+.layer-group[hidden] { display: none; }

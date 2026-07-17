@@ -5,12 +5,19 @@ const IndexEditor = (() => {
 
   // ── Setup ──────────────────────────────────
   function setup() {
-    document.getElementById('rebuild-btn').addEventListener('click', EditMode.rebuildIndex);
+    const rebuildBtn = document.getElementById('rebuild-btn');
+    if (rebuildBtn) rebuildBtn.addEventListener('click', EditMode.rebuildIndex);
   }
 
   // Called by edit-mode when entering edit mode
   function enable() {
     terms = [...((Renderer.getAppendixData() || {}).terms || [])];
+    renderTerms();
+  }
+
+  // Re-render the term list from the CURRENT `terms` without resetting them
+  // (used by undo/redo, which restores `terms` externally beforehand).
+  function render() {
     renderTerms();
   }
 
@@ -68,10 +75,12 @@ const IndexEditor = (() => {
       delBtn.className = 'struct-btn danger';
       delBtn.textContent = 'X';
       delBtn.style.cssText = 'padding:0.1rem 0.3rem;font-size:0.65rem;';
-      delBtn.title = 'Delete term';
+      delBtn.setAttribute('data-tooltip', 'Delete term');
       delBtn.addEventListener('click', () => {
         terms.splice(terms.indexOf(t), 1);
         rebuildList();
+        if (typeof EditMode !== 'undefined' && EditMode.setDirty) EditMode.setDirty();
+        if (typeof History !== 'undefined' && History.commit) History.commit('delete index term');
       });
       row.appendChild(delBtn);
       list.appendChild(row);
@@ -93,6 +102,8 @@ const IndexEditor = (() => {
     document.getElementById('idx-entry-input').value = '';
     document.getElementById('idx-location-input').value = '';
     rebuildList();
+    if (typeof EditMode !== 'undefined' && EditMode.setDirty) EditMode.setDirty();
+    if (typeof History !== 'undefined' && History.commit) History.commit('add index term');
   }
 
   async function save() {
@@ -102,7 +113,11 @@ const IndexEditor = (() => {
       Renderer.setAppendixData(data);
       return true;
     } catch (err) {
-      alert('Failed to save index: ' + err.message);
+      Popup.alert({
+        message: 'Failed to save index: ' + err.message,
+        x: window.innerWidth / 2,
+        y: window.innerHeight / 2
+      });
       return false;
     }
   }
@@ -116,5 +131,5 @@ const IndexEditor = (() => {
     return div.innerHTML;
   }
 
-  return { setup, enable, disable, save, getTerms, setTerms, addTerm };
+  return { setup, enable, disable, render, save, getTerms, setTerms, addTerm };
 })();

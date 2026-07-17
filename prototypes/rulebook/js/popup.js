@@ -23,7 +23,7 @@ const Popup = (() => {
     let top = y - gap - popupH;
     let above = true;
     if (top < 0) {
-      top = y + gap;
+      top = y + gap + 11;
       above = false;
     }
 
@@ -88,17 +88,66 @@ const Popup = (() => {
       // Position after render so offsetWidth/Height are available
       requestAnimationFrame(() => position(el, opts.x, opts.y));
 
-      overlay.addEventListener('click', () => dismiss(false));
+      overlay.addEventListener('click', () => dismiss(null));
 
       const onKey = (e) => {
         if (e.key === 'Escape') {
           document.removeEventListener('keydown', onKey);
-          dismiss(false);
+          dismiss(null);
         }
       };
       document.addEventListener('keydown', onKey);
 
       confirmBtn.focus();
+    });
+  }
+
+  function createMulti(opts) {
+    return new Promise((resolve) => {
+      if (activePopup) dismiss(null);
+
+      const overlay = document.createElement('div');
+      overlay.className = 'popup-overlay';
+
+      const el = document.createElement('div');
+      el.className = 'popup';
+
+      const msg = document.createElement('p');
+      msg.className = 'popup-message';
+      msg.textContent = opts.message;
+      el.appendChild(msg);
+
+      const actions = document.createElement('div');
+      actions.className = 'popup-actions';
+
+      (opts.options || []).forEach(o => {
+        const btn = document.createElement('button');
+        btn.className = o.cls || 'popup-confirm';
+        btn.textContent = o.text;
+        btn.addEventListener('click', () => dismiss(o.value));
+        actions.appendChild(btn);
+      });
+
+      el.appendChild(actions);
+      document.body.appendChild(overlay);
+      document.body.appendChild(el);
+
+      activePopup = { overlay, el, resolve };
+
+      requestAnimationFrame(() => position(el, opts.x, opts.y));
+
+      overlay.addEventListener('click', () => dismiss(null));
+
+      const onKey = (e) => {
+        if (e.key === 'Escape') {
+          document.removeEventListener('keydown', onKey);
+          dismiss(null);
+        }
+      };
+      document.addEventListener('keydown', onKey);
+
+      const first = actions.querySelector('button');
+      if (first) first.focus();
     });
   }
 
@@ -123,7 +172,16 @@ const Popup = (() => {
     });
   }
 
-  return { confirm, alert };
+  function choice({ message, x, y, options }) {
+    return createMulti({
+      message,
+      x: x || 0,
+      y: y || 0,
+      options: (options || []).map(o => ({ text: o.text, value: o.value, cls: o.class }))
+    });
+  }
+
+  return { confirm, alert, choice };
 })();
 
 window.Popup = Popup;

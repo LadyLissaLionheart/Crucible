@@ -2,7 +2,7 @@
 .entry {
   font-family: var(--font-body);
   font-size: 10pt;
-  line-height: 1.6;
+  line-height: 1.1;
   padding-bottom: 1rem;
   margin-bottom: 1.5rem;
   min-height: 2rem;
@@ -11,6 +11,12 @@
 .entry.loading {
   color: var(--text-muted);
   font-style: italic;
+}
+/* Images render as inline by default, leaving a line-box strut above them.
+   Block removes it so an image sits flush at its bounds. */
+.entry img {
+  display: block;
+  margin: 0;
 }
 .entry.loading::after {
   content: '';

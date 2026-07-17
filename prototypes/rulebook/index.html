@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Crucible — Core Rulebook</title>
 
+<link rel="stylesheet" href="icons/css/all.min.css">
 <link rel="stylesheet" href="css/fonts.css">
 <link rel="preload" href="fonts/bebas-neue-v16-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/inter-v20-latin.woff2" as="font" type="font/woff2" crossorigin>
@@ -20,6 +21,9 @@
 <link rel="stylesheet" href="css/print.css" media="print">
 <link rel="stylesheet" href="css/pagination.css">
 <link rel="stylesheet" href="css/popup.css">
+<link rel="stylesheet" href="css/tooltip.css">
+<link rel="stylesheet" href="css/image-picker.css">
+<link rel="stylesheet" href="css/layers.css">
 </head>
 <body>
 
@@ -29,26 +33,112 @@
 
   <div class="header-spacer"></div>
   <div class="search-box">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <i class="fa-solid fa-magnifying-glass"></i>
     <input type="text" id="search-input" placeholder="Search the rulebook..." autocomplete="off">
     <button class="search-clear" id="search-clear" aria-label="Clear search">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+      <i class="fa-solid fa-xmark"></i>
     </button>
-    <div class="search-results" id="search-results"></div>
+      <div class="search-results" id="search-results"></div>
   </div>
 </header>
 
-<!-- Sidebar / TOC -->
-<nav class="sidebar" id="sidebar">
-  <div class="sidebar-toc" id="sidebar-toc"></div>
-  <div class="sidebar-footer">
-    <button class="edit-toggle" id="edit-toggle">Edit Mode</button>
-    <button class="page-num-btn" id="page-num-btn" style="display:none">Page Numbers</button>
+<!-- Sidebar: TOC + Layers (tabbed) -->
+<nav class="sidebar" id="sidebar" data-tab="nav">
+  <div class="sidebar-tabs">
+    <button class="sidebar-tab active" data-tab="nav" type="button">
+      <i class="fa-solid fa-bars"></i>
+      <span>Navigation</span>
+    </button>
+    <button class="sidebar-tab" data-tab="layers" type="button">
+      <i class="fa-solid fa-layer-group"></i>
+      <span>Layers</span>
+    </button>
+  </div>
+
+  <div class="sidebar-body">
+    <div class="sidebar-toc" id="sidebar-toc"></div>
+
+    <aside class="layer-panel" id="layer-panel" aria-label="Layers">
+      <div class="layer-panel-actions">
+        <button class="layer-add-btn" id="layer-add-btn" data-tooltip="Add layer">
+          <i class="fa-solid fa-plus"></i>
+          <span>Add Layer</span>
+        </button>
+      </div>
+      <div class="layer-list" id="layer-list"></div>
+    </aside>
   </div>
 </nav>
 
 <!-- Main Content -->
 <div class="main-wrapper">
+  <div class="action-bar" id="action-bar">
+    <div class="action-bar-row">
+      <button class="action-btn" id="menu-edit-btn" data-tooltip="Edit Mode">
+        <i class="fa-solid fa-pen-to-square"></i>
+        <span class="action-btn-label">Edit</span>
+      </button>
+      <button class="action-btn finish-btn" id="finish-edit-btn" data-tooltip="Finish editing" disabled>
+        <i class="fa-solid fa-circle-check"></i>
+        <span class="action-btn-label">Finish Editing</span>
+      </button>
+      <div class="action-bar-divider"></div>
+      <button class="action-btn save-btn" id="save-layout-btn" data-tooltip="Save Layout" disabled>
+        <i class="fa-solid fa-floppy-disk"></i>
+        <span class="action-btn-label">Save</span>
+      </button>
+      <button class="action-btn" id="discard-btn" data-tooltip="Discard changes" disabled>
+        <i class="fa-solid fa-trash"></i>
+        <span class="action-btn-label">Discard</span>
+      </button>
+      <div class="action-bar-divider edit-only" role="separator" aria-orientation="vertical"></div>
+      <button class="action-btn edit-only" id="undo-btn" data-tooltip="Undo" disabled>
+        <i class="fa-solid fa-rotate-left"></i>
+        <span class="action-btn-label">Undo</span>
+      </button>
+      <button class="action-btn edit-only" id="redo-btn" data-tooltip="Redo" disabled>
+        <i class="fa-solid fa-rotate-right"></i>
+        <span class="action-btn-label">Redo</span>
+      </button>
+      <div class="action-bar-divider edit-only" role="separator" aria-orientation="vertical"></div>
+      <div class="action-bar-group edit-only">
+        <div class="action-btn-split" id="add-entry-split">
+          <button class="action-btn add-entry-main" id="add-entry-btn" data-tooltip="Add Entry">
+            <i class="fa-solid fa-square-plus"></i>
+            <span class="action-btn-label">Add Entry</span>
+          </button>
+          <button class="action-btn add-entry-caret" id="add-entry-caret" data-tooltip="Choose entry type" aria-haspopup="true" aria-expanded="false">
+            <i class="fa-solid fa-caret-down"></i>
+          </button>
+          <div class="add-entry-menu" id="add-entry-menu" role="menu" hidden>
+            <button type="button" class="add-entry-menu-item" role="menuitem" data-kind="chapter">Chapter</button>
+            <button type="button" class="add-entry-menu-item" role="menuitem" data-kind="section">Section</button>
+            <button type="button" class="add-entry-menu-item" role="menuitem" data-kind="header">Header</button>
+            <button type="button" class="add-entry-menu-item" role="menuitem" data-kind="subheader">Subheader</button>
+            <button type="button" class="add-entry-menu-item" role="menuitem" data-kind="entry">Entry</button>
+          </div>
+        </div>
+        <button class="action-btn" id="upload-image-btn" data-tooltip="Upload Image">
+          <i class="fa-solid fa-image"></i>
+          <span class="action-btn-label">Upload</span>
+        </button>
+        <button class="action-btn" id="add-image-btn" data-tooltip="Add Image">
+          <i class="fa-solid fa-images"></i>
+          <span class="action-btn-label">Add Image</span>
+        </button>
+        <input type="file" id="image-file-input" accept="image/jpeg,image/png" hidden>
+      </div>
+      <div class="action-bar-spacer"></div>
+      <button class="action-btn edit-only" id="rebuild-btn" data-tooltip="Rebuild Index">
+        <i class="fa-solid fa-arrows-rotate"></i>
+        <span class="action-btn-label">Rebuild Index</span>
+      </button>
+      <div class="action-bar-divider"></div>
+      <button class="action-bar-toggle" id="action-bar-toggle" data-tooltip="Expand toolbar">
+        <i class="fa-solid fa-caret-down"></i>
+      </button>
+    </div>
+  </div>
 <main class="main" id="main-content">
   <div id="chapters-container"></div>
   <div class="appendix" id="appendix" style="display:none">
@@ -56,17 +146,40 @@
     <div id="appendix-index" class="appendix-index"></div>
   </div>
 </main>
-</div>
-
-<!-- Edit Bar -->
-<div class="edit-bar" id="edit-bar">
-  <span>Edit Mode</span>
-  <button id="add-entry-btn">Add Entry</button>
-  <span class="edit-bar-divider" role="separator" aria-orientation="vertical"></span>
-  <div class="edit-bar-spacer"></div>
-  <button id="rebuild-btn">Rebuild Index</button>
-  <button class="save-btn" id="save-layout-btn">Save Layout</button>
-  <button class="cancel-btn" id="cancel-edit-btn">Save &amp; Close</button>
+  <div class="action-bar action-bar-bottom" id="action-bar-bottom">
+    <div class="action-bar-row">
+      <div class="action-bar-spacer"></div>
+      <div class="action-bar-group">
+        <button class="action-btn active" id="view-single-bottom" data-tooltip="Single page view" aria-pressed="true">
+          <i class="fa-solid fa-file"></i>
+          <span class="action-btn-label">Page View</span>
+        </button>
+        <button class="action-btn" id="view-book-bottom" data-tooltip="Book view" aria-pressed="false">
+          <i class="fa-solid fa-book-open"></i>
+          <span class="action-btn-label">Book View</span>
+        </button>
+      </div>
+      <div class="action-bar-divider"></div>
+      <div class="action-bar-group">
+        <button class="action-btn" id="zoom-out-bottom" data-tooltip="Zoom out">
+          <i class="fa-solid fa-minus"></i>
+          <span class="action-btn-label">Zoom Out</span>
+        </button>
+        <div class="action-btn zoom-display" id="zoom-label-bottom">
+          <span class="zoom-value">100%</span>
+          <span class="action-btn-label">&nbsp;</span>
+        </div>
+        <button class="action-btn" id="zoom-in-bottom" data-tooltip="Zoom in">
+          <i class="fa-solid fa-plus"></i>
+          <span class="action-btn-label">Zoom In</span>
+        </button>
+      </div>
+      <div class="action-bar-divider"></div>
+      <button class="action-bar-toggle" id="action-bar-toggle-bottom" data-tooltip="Expand toolbar">
+        <i class="fa-solid fa-caret-down"></i>
+      </button>
+    </div>
+  </div>
 </div>
 
 <!-- Editor Overlay -->
@@ -82,20 +195,20 @@
 
   <!-- Toolbar -->
   <div class="editor-toolbar">
-    <button data-cmd="bold" title="Bold"><strong>B</strong></button>
-    <button data-cmd="italic" title="Italic"><em>I</em></button>
+    <button data-cmd="bold" data-tooltip="Bold"><strong>B</strong></button>
+    <button data-cmd="italic" data-tooltip="Italic"><em>I</em></button>
     <div class="sep"></div>
-    <button data-cmd="h3" title="Heading 3">H3</button>
-    <button data-cmd="h4" title="Heading 4">H4</button>
+    <button data-cmd="h3" data-tooltip="Heading 3">H3</button>
+    <button data-cmd="h4" data-tooltip="Heading 4">H4</button>
     <div class="sep"></div>
-    <button data-cmd="ul" title="Unordered list">UL</button>
-    <button data-cmd="ol" title="Ordered list">OL</button>
-    <button data-cmd="table" title="Table">Table</button>
-    <button data-cmd="link" title="Insert link">Link</button>
+    <button data-cmd="ul" data-tooltip="Unordered list">UL</button>
+    <button data-cmd="ol" data-tooltip="Ordered list">OL</button>
+    <button data-cmd="table" data-tooltip="Table">Table</button>
+    <button data-cmd="link" data-tooltip="Insert link">Link</button>
     <div class="sep"></div>
-    <button data-cmd="mechanic" title="Mechanic box">Box</button>
-    <button data-cmd="callout" title="Callout">Note</button>
-    <button data-cmd="img" title="Insert image">Img</button>
+    <button data-cmd="mechanic" data-tooltip="Mechanic box">Box</button>
+    <button data-cmd="callout" data-tooltip="Callout">Note</button>
+    <button data-cmd="img" data-tooltip="Insert image">Img</button>
   </div>
 
   <!-- Body -->
@@ -142,25 +255,44 @@
 }
 </script>
 
-<!-- Zoom Controls -->
-<div class="zoom-controls" id="zoom-controls">
-  <button class="zoom-btn" id="view-toggle" title="Book view" aria-pressed="false">&#x25ad;</button>
-  <button class="zoom-btn" id="zoom-out" title="Zoom out">&minus;</button>
-  <span class="zoom-label" id="zoom-label">100%</span>
-  <button class="zoom-btn" id="zoom-in" title="Zoom in">+</button>
-</div>
-
 <!-- Application scripts (deferred, order matters) -->
+<script src="js/tooltip.js" defer></script>
+<script src="js/banner.js" defer></script>
 <script src="js/api.js" defer></script>
 <script src="js/renderer.js" defer></script>
 <script src="js/search.js" defer></script>
 <script src="js/editor/grid.js" defer></script>
 <script src="js/popup.js" defer></script>
+<script src="js/editor/history.js" defer></script>
 <script src="js/editor/edit-mode.js" defer></script>
+<script src="js/editor/image-picker.js" defer></script>
 <script src="js/editor/structure.js" defer></script>
 <script src="js/editor/index.js" defer></script>
+<script src="js/editor/layers.js" defer></script>
 <script src="js/editor/pagination.js" defer></script>
 <script type="module" src="js/editor/content.js"></script>
+<script>
+(function() {
+  var zoom = parseFloat(localStorage.getItem('rulebook-zoom'));
+  if (zoom && zoom >= 0.5 && zoom <= 3.0) {
+    var main = document.getElementById('main-content');
+    if (main) main.style.zoom = zoom;
+    var pct = Math.round(zoom * 100) + '%';
+    var label = document.getElementById('zoom-label');
+    if (label) { var zv = label.querySelector('.zoom-value'); if (zv) zv.textContent = pct; }
+    var labelBottom = document.getElementById('zoom-label-bottom');
+    if (labelBottom) { var zvb = labelBottom.querySelector('.zoom-value'); if (zvb) zvb.textContent = pct; }
+  }
+  if (localStorage.getItem('rulebook-action-bar-expanded') === 'true') {
+    var bar = document.getElementById('action-bar');
+    if (bar) bar.classList.add('expanded');
+  }
+  if (localStorage.getItem('rulebook-action-bar-bottom-expanded') === 'true') {
+    var barBottom = document.getElementById('action-bar-bottom');
+    if (barBottom) barBottom.classList.add('expanded');
+  }
+})();
+</script>
 <script type="module" src="js/rulebook.js"></script>
 
 </body>

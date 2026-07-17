@@ -4,10 +4,10 @@
 // giving ~16.65×16.25px cells. The ODD dimensions let a 3-wide center
 // gutter (cols 23-25) sit exactly on the page's horizontal midpoint, and
 // the odd row count puts a true center row at the vertical midpoint — so
-// titles/entries can be perfectly centered. Margin cells (rows 0-3,
-// 61-64; cols 0-3, 45-48) flag the print margins — purely visual
-// reference. Content spans cols 4-44 (41 wide): left col 4-22, 3-wide
-// gutter 23-25, right col 26-44.
+// titles/entries can be perfectly centered. Margin cells (rows 0-2,
+// 62-64; cols 0-2, 46-48) flag the print margins — purely visual
+// reference. Content spans cols 3-45 (43 wide): left col 3-22, 3-wide
+// gutter 23-25, right col 26-45.
 //
 // Every positioned item (chapter, section, header, subheader, entry)
 // carries { page, col, row, w, h } and a `kind`, stored in
@@ -26,15 +26,15 @@ const Grid = (() => {
   const CELL_W = PAGE_W / COLS; // ~16.65
   const CELL_H = PAGE_H / ROWS; // ~16.25
 
-  const MARGIN_TOP_ROWS    = [0, 1, 2, 3];
-  const MARGIN_BOT_ROWS    = [61, 62, 63, 64];
-  const MARGIN_LEFT_COLS   = [0, 1, 2, 3];
-  const MARGIN_RIGHT_COLS  = [45, 46, 47, 48];
+  const MARGIN_TOP_ROWS    = [0, 1, 2];
+  const MARGIN_BOT_ROWS    = [62, 63, 64];
+  const MARGIN_LEFT_COLS   = [0, 1, 2];
+  const MARGIN_RIGHT_COLS  = [46, 47, 48];
 
   // Default placement zone (inside the margin frame). Content spans
-  // cols 4-44 (41 wide): left col 4-22, 3-wide gutter 23-25, right 26-44.
-  const CONTENT_COL = 4;
-  const CONTENT_W = COLS - 8; // 41
+  // cols 3-45 (43 wide): left col 3-22, 3-wide gutter 23-25, right 26-45.
+  const CONTENT_COL = 3;
+  const CONTENT_W = COLS - 6; // 43
 
   function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
@@ -45,10 +45,10 @@ const Grid = (() => {
            MARGIN_RIGHT_COLS.includes(c);
   }
 
-  // Convert grid placement → pixel rect (clamped to page bounds).
+  // Convert grid placement → pixel rect. Not clamped, so cards can be
+  // positioned outside the page bounds (they're clipped by the page's
+  // overflow, but their model position is preserved as placed).
   function rect(c, r, w, h) {
-    c = clamp(c, 0, Math.max(0, COLS - Math.max(1, w)));
-    r = clamp(r, 0, Math.max(0, ROWS - Math.max(1, h)));
     return {
       left:   c * CELL_W,
       top:    r * CELL_H,
@@ -169,7 +169,7 @@ const Grid = (() => {
         const d = DEFAULTS[item.kind] || DEFAULTS.entry;
         item.page = page;
         item.col = CONTENT_COL;
-        item.row = 4;
+        item.row = 3;
         item.w = item.w || d.w;
         item.h = item.h || d.h;
       } else if (item.page > page) {
@@ -181,6 +181,23 @@ const Grid = (() => {
 
   function isMigrated(layout) {
     return !!(layout && Array.isArray(layout.entries) && !Array.isArray(layout.chapters));
+  }
+
+  // ── Z-index (stacking order) ──
+  // Each entry may carry a numeric `z`; higher z paints on top of lower z
+  // within the same page's stacking context. Entries that lack `z` get one
+  // assigned in array order (later entries sit above earlier ones, matching
+  // the default DOM paint order). Existing explicit z values are preserved
+  // and never collide with assigned ones.
+  function ensureZ(layout) {
+    if (!layout || !Array.isArray(layout.entries)) return layout;
+    let max = -1;
+    layout.entries.forEach(e => { if (typeof e.z === 'number') max = Math.max(max, e.z); });
+    let next = max < 0 ? 0 : max + 1;
+    layout.entries.forEach(e => {
+      if (typeof e.z !== 'number') e.z = next++;
+    });
+    return layout;
   }
 
   // Re-order the flat list to match visual position (page → row → col).
@@ -217,6 +234,6 @@ const Grid = (() => {
     DEFAULTS,
     isMarginCell, rect, clampToGrid, clamp,
     walkItems, findItem, findFreeSlot, overlaps,
-    migrateLayout, isMigrated, sortEntriesByPosition
+    migrateLayout,     isMigrated, ensureZ, sortEntriesByPosition
   };
 })();

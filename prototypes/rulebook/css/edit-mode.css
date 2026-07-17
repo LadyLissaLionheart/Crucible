@@ -26,7 +26,7 @@ body.edit-mode .entry {
   outline-offset: -1px;
   background: var(--edit-bg);
   border-radius: 4px;
-  padding: 0.25rem 0;
+  padding: 0;
   transition: background 0.15s, outline-color 0.15s;
 }
 body.edit-mode .entry:hover {
@@ -83,70 +83,6 @@ body.edit-mode .entry-line .entry-drag-handle {
   box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
-/* ── Edit Bar ───────────────────────────── */
-.edit-bar {
-  display: none;
-  position: fixed;
-  bottom: 1.5rem;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #fff;
-  color: var(--text);
-  padding: 0.6rem 1.25rem;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-  z-index: 1100;
-  gap: 0.75rem;
-  align-items: center;
-}
-body.edit-mode .edit-bar { display: flex; }
-
-.edit-bar button {
-  padding: 0.3rem 0.85rem;
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  background: var(--surface);
-  color: var(--text);
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.edit-bar button:hover { background: #e8f0eb; }
-.edit-bar .edit-bar-divider {
-  width: 1px;
-  align-self: stretch;
-  background: var(--border);
-  margin: 0.15rem 0.1rem;
-}
-.edit-bar #add-entry-btn {
-  background: var(--accent);
-  color: #fff;
-  border-color: var(--accent);
-}
-.edit-bar #add-entry-btn:hover { filter: brightness(1.08); }
-.edit-bar .save-btn {
-  background: #fff;
-  color: var(--accent);
-  border-color: var(--border);
-}
-.edit-bar .save-btn:hover { background: #e8f0eb; }
-.edit-bar #rebuild-btn {
-  background: #fff;
-  color: var(--accent);
-  border-color: var(--border);
-}
-.edit-bar #rebuild-btn:hover { background: #e8f0eb; }
-.edit-bar-spacer { flex: 1; }
-.edit-bar .cancel-btn {
-  background: #27ae60;
-  color: #fff;
-  border-color: var(--border);
-}
-.edit-bar .cancel-btn:hover { background: #1e8449; }
-
 /* ── Struct edit buttons ────────────────── */
 .struct-btn {
   display: inline-flex;
@@ -163,6 +99,12 @@ body.edit-mode .edit-bar { display: flex; }
   white-space: nowrap;
   transition: all 0.12s;
 }
+/* Keep the Edit button level with the kind dropdown + title input in the
+   entry-actions bar (scoped here so it doesn't resize other struct buttons). */
+body.edit-mode .entry-actions .struct-btn {
+  box-sizing: border-box;
+  height: 1.6rem;
+}
 .struct-btn:hover {
   background: var(--edit-border);
   color: #fff;
@@ -175,9 +117,36 @@ body.edit-mode .edit-bar { display: flex; }
   background: var(--negative);
   color: #fff;
 }
+.struct-btn.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.struct-btn.active:hover {
+  background: #234d30;
+}
+/* Hide button uses a neutral grey border/icon in both states; the
+   background stays white (surface) except on hover, where the grey
+   fills in and the icon turns white (like the other buttons). */
+.struct-btn.hide-btn {
+  border-color: #808080;
+  color: #808080;
+}
+.struct-btn.hide-btn.active {
+  background: var(--surface);
+  border-color: #808080;
+  color: #808080;
+}
+.struct-btn.hide-btn:hover,
+.struct-btn.hide-btn.active:hover {
+  background: #808080;
+  color: #fff;
+}
 
 /* Kind selector on entry cards (entry / section / header / subheader). */
 .struct-kind-select {
+  box-sizing: border-box;
+  height: 1.6rem;
   padding: 0.15rem 0.3rem;
   font-size: 0.65rem;
   font-weight: 600;
@@ -190,8 +159,27 @@ body.edit-mode .edit-bar { display: flex; }
   max-width: 5.5rem;
 }
 
+/* Read-only z-index badge on the entry top bar, to the left of the kind
+   dropdown. Mirrors the hide-button grey so it reads as non-interactive. */
+.z-indicator {
+  padding: 0.15rem 0.3rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  font-family: var(--font-ui);
+  line-height: 1;
+  border: 1px solid #808080;
+  border-radius: 4px;
+  background: var(--surface);
+  color: #808080;
+  cursor: default;
+  user-select: none;
+  white-space: nowrap;
+}
+
 /* Inline TOC-title input on entry cards (to the right of the kind dropdown). */
 .struct-title-input {
+  box-sizing: border-box;
+  height: 1.6rem;
   padding: 0.15rem 0.35rem;
   font-size: 0.7rem;
   font-family: var(--font-ui);
@@ -218,22 +206,34 @@ body.edit-mode .entry-actions {
   bottom: 100%;
   left: 0;
   right: 0;
-  margin-bottom: 6px;
+  margin-bottom: 9px;
   z-index: 30;
 }
 
-/* Edit / Delete run DOWN the left edge of the entry as a vertical icon
-   stack (Edit on top), sitting just OUTSIDE the card's left border. Uses
-   right:100% (not transform) so it stays crisp inside the zoomed content. */
+/* Action buttons run DOWN the left edge of the entry, just OUTSIDE the
+   card's left border (right:100% keeps it crisp inside the zoomed content).
+   The rail is a vertical stack: a z-index badge on top, then a row of
+   button-columns (max two tall) that grow to the LEFT. */
 body.edit-mode .entry-edge-actions {
   position: absolute;
   top: 0;
   right: 100%;
-  margin-right: 6px;
+  margin-right: 9px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+  z-index: 30;
+}
+body.edit-mode .entry-edge-actions .edge-btn-columns {
+  display: flex;
+  flex-direction: row-reverse;
+  gap: 0.25rem;
+}
+body.edit-mode .entry-edge-actions .edge-col {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  z-index: 30;
 }
 /* Lift a hovered card (and its floating controls) above neighbours. */
 body.edit-mode .grid-card:hover { z-index: 50; }
@@ -271,13 +271,19 @@ body.edit-mode .resize-handle {
 body.edit-mode .resize-handle::before {
   content: '';
   position: absolute;
-  top: -10px;
-  right: -10px;
-  bottom: -10px;
-  left: -10px;
+  top: -5px;
+  right: -5px;
+  bottom: -5px;
+  left: -5px;
 }
 body.edit-mode .grid-card:hover .resize-handle { opacity: 1; }
 body.edit-mode .entry.editing .resize-handle { opacity: 0; pointer-events: none; }
+/* When the pointer is OUTSIDE the card's blue box (over the orange overflow),
+   hide the resize handles and show the default cursor — resize is measured by
+   the blue boundary only, never the spill. (The handles themselves, at -5px
+   outside the box, are exempt so they stay grabbable.) */
+body.edit-mode .grid-card.spill-hover .resize-handle { opacity: 1; pointer-events: auto; }
+body.edit-mode .grid-card.spill-hover { cursor: default; }
 
 .resize-handle.e  { right: -5px;  top: 50%;    transform: translateY(-50%); cursor: ew-resize; }
 .resize-handle.w  { left: -5px;   top: 50%;    transform: translateY(-50%); cursor: ew-resize; }
@@ -290,6 +296,41 @@ body.edit-mode .entry.editing .resize-handle { opacity: 0; pointer-events: none;
 
 body.edit-mode .grid-card.resizing {
   user-select: none;
+}
+
+/* Hide toggle: The card IS the .entry (renderer adds both classes), so the
+   content lives as direct children. Fade the card's own box + content but
+   leave the floating controls (entry-actions / entry-edge-actions /
+   resize-handle / overflow-frame) fully visible so it can be toggled back.
+   Keeps its grid slot. */
+body.edit-mode .grid-card.entry-hidden {
+  background: transparent;
+}
+body.edit-mode .grid-card.entry-hidden > *:not(.entry-actions):not(.entry-edge-actions):not(.resize-handle) {
+  opacity: 0.32;
+  pointer-events: none;
+}
+
+body:not(.edit-mode) .grid-card.entry-hidden { display: none; }
+
+/* Overflow frame: an orange rectangle at the UNION extent of all the entry's
+   content. Four <i> bands fill the region that spills outside the card, so
+   the overflow reads as solid orange — and it grows outward as the card
+   shrinks. Lift the card above its neighbours so the fill (rendered outside
+   the card box) isn't painted over by the card stacked below/right. */
+body.edit-mode .grid-card.overflowing {
+  z-index: 50;
+}
+body.edit-mode .grid-card .overflow-frame {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 20;
+}
+body.edit-mode .grid-card .overflow-frame i {
+  position: absolute;
+  background: rgba(230, 126, 0, 0.4);
+  pointer-events: auto;
 }
 
 /* While an entry is being placed via the Add Entry button: lift it above
@@ -360,21 +401,4 @@ body.placing-entry { cursor: grabbing; }
 .page-divider-btn:hover {
   border-color: var(--edit-border);
   color: var(--edit-border);
-}
-
-/* ── Page Divider Tooltip ────────────────── */
-.page-divider-tip {
-  position: fixed;
-  display: none;
-  z-index: 9999;
-  padding: 0.35rem 0.65rem;
-  border-radius: 5px;
-  background: #fff;
-  color: #333;
-  font-family: 'Inter', sans-serif;
-  font-size: 0.7rem;
-  font-weight: 500;
-  white-space: nowrap;
-  pointer-events: none;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.18), 0 1px 3px rgba(0,0,0,0.10);
 }

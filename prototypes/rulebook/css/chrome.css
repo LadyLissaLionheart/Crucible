@@ -111,27 +111,6 @@
 }
 mark { background: var(--highlight); color: inherit; padding: 0 2px; border-radius: 2px; }
 
-/* ── Edit Toggle ────────────────────────── */
-.edit-toggle {
-  padding: 0.35rem 0.85rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--surface);
-  cursor: pointer;
-  color: var(--text-muted);
-  transition: all 0.15s;
-  white-space: nowrap;
-}
-.edit-toggle:hover { border-color: var(--accent); color: var(--accent); }
-.edit-toggle.active {
-  background: #c0392b;
-  color: #fff;
-  border-color: #c0392b;
-}
-.edit-toggle.active:hover { background: #a93226; color: #fff; border-color: #a93226; }
-
 /* ── Sidebar (TOC) ──────────────────────── */
 .sidebar {
   position: fixed;
@@ -155,14 +134,57 @@ mark { background: var(--highlight); color: inherit; padding: 0 2px; border-radi
 .sidebar-toc::-webkit-scrollbar { width: 5px; }
 .sidebar-toc::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
 
+/* Body holds the TOC and the (tabbed) Layers panel; only one shows. */
+.sidebar-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.sidebar[data-tab="layers"] .sidebar-toc { display: none; }
+
+/* In read mode there's only Navigation, so hide the whole tab bar. */
+body:not(.edit-mode) .sidebar-tabs { display: none; }
+
+.sidebar-tabs {
+  flex: 0 0 auto;
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.sidebar-tab {
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 38px;
+  padding: 0 0.4rem;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-top: 2px solid transparent;
+}
+.sidebar-tab svg { width: 14px; height: 14px; }
+.sidebar-tab:hover { color: var(--text); background: var(--accent-light); }
+.sidebar-tab.active {
+  color: var(--accent);
+  border-top-color: var(--accent);
+}
+
 .sidebar-footer {
   flex: 0 0 auto;
   display: flex;
   gap: 0.5rem;
   padding: 0.75rem 1.25rem;
-  border-top: 1px solid var(--border);
 }
-.sidebar-footer .edit-toggle,
 .sidebar-footer .page-num-btn { flex: 1 1 0; }
 
 .toc-chapter { margin-bottom: 0.25rem; }
@@ -238,19 +260,23 @@ mark { background: var(--highlight); color: inherit; padding: 0 2px; border-radi
 
 /* ── Main Content (PDF-viewer style) ──── */
 .main-wrapper {
-  margin-left: var(--sidebar-w);
+  position: fixed;
+  top: var(--header-h);
+  left: var(--sidebar-w);
+  right: 0;
+  bottom: 0;
   background: var(--gutter-bg);
   background-image: radial-gradient(circle at 50% 0%, var(--gutter-bg-2), var(--gutter-bg) 70%);
-  min-height: 100vh;
-  padding: calc(var(--header-h) + 1.5rem) 0 4rem;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: stretch;
 }
 
 .main {
-  width: var(--page-w);
-  max-width: 100%;
-  padding: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  width: 100%;
+  padding: 1.5rem 0 4rem;
   position: relative;
 }
 
@@ -343,43 +369,265 @@ mark { background: var(--highlight); color: inherit; padding: 0 2px; border-radi
 /* Empty flat-flow container is invisible when paginated */
 #chapters-container[hidden-flat] { display: none !important; }
 
-/* ── Zoom Controls ─────────────────────── */
-.zoom-controls {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
+/* ── Action Bar (Ribbon-style) ────────── */
+.action-bar {
+  width: 100%;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-ui);
+  font-size: 11px;
+}
+
+.action-bar-row {
   display: flex;
   align-items: center;
   gap: 0;
-  font-family: var(--font-ui);
-  font-size: 11px;
+  padding: 0 0.5rem;
+  min-height: 38px;
+}
+.action-bar.expanded .action-bar-row {
+  min-height: 57px;
+}
+
+.action-bar-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* ── Action Button Component ─────────── */
+.action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 3px;
+  padding: 5px 6px 4px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: none;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.1s, border-color 0.1s;
+  width: 48px;
+}
+.action-btn svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+.action-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+.action-btn:active {
+  background: rgba(0, 0, 0, 0.1);
+}
+.action-btn.active {
+  background: #eeeeee;
+  color: var(--text);
+  border-color: #ddd;
+}
+.action-btn.active:hover {
+  background: #e5e5e5;
+}
+.action-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ── Add Entry split button (button + type caret) ── */
+.action-btn-split {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+}
+.action-btn-split .add-entry-main {
+  width: 48px;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.action-btn-split .add-entry-caret {
+  width: 20px;
+  padding: 5px 2px 4px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-left: none;
+}
+.action-btn-split .add-entry-caret svg {
+  width: 12px;
+  height: 12px;
+}
+.action-btn-split .add-entry-caret[aria-expanded="true"] {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* ── Add Entry type dropdown menu ── */
+.add-entry-menu {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  min-width: 150px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 6px;
-  overflow: hidden;
-  z-index: 100;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.16);
+  padding: 4px;
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.add-entry-menu[hidden] { display: none; }
+.add-entry-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 7px 10px;
+  border: none;
+  background: none;
+  border-radius: 4px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.add-entry-menu-item:hover { background: rgba(0, 0, 0, 0.06); }
+.add-entry-menu-item:active { background: rgba(0, 0, 0, 0.1); }
+.add-entry-menu-item .kind-mark {
+  flex: 0 0 auto;
+  width: 16px;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+}
+.add-entry-menu-item .kind-desc {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--text-muted);
 }
 
-.zoom-btn {
-  width: 32px;
-  height: 32px;
-  border: none;
-  background: var(--surface);
-  color: var(--text);
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
+.action-btn-label {
+  display: none;
+  width: 36px;
+  height: 22px;
+  padding-top: 2px;
+  font-size: 10px;
+  line-height: 10px;
+  font-weight: 400;
+  white-space: normal;
+  text-align: center;
+  overflow: hidden;
+}
+.action-bar.expanded .action-btn-label {
+  display: block;
+}
+
+/* ── Zoom Display ─────────────────────── */
+.zoom-display {
+  position: relative;
+  cursor: default;
+}
+.zoom-display:hover {
+  background: none;
+  border-color: transparent;
+}
+.zoom-value {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  transform: translateY(-50%);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.1s;
+  height: 16px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  line-height: 1;
+}
+.zoom-display .action-btn-label {
+  display: block;
+  visibility: hidden;
 }
 
-.zoom-btn:hover { background: var(--border); }
-.zoom-btn:active { background: var(--border-line); }
-.zoom-btn.active { background: var(--accent); color: #fff; }
-.zoom-btn.active:hover { background: #2b7a4b; }
+/* ── Dividers ─────────────────────────── */
+.action-bar-divider {
+  width: 1px;
+  align-self: stretch;
+  background: var(--border);
+  margin: 6px 2px;
+  flex-shrink: 0;
+}
+
+/* ── Spacer ───────────────────────────── */
+.action-bar-spacer { flex: 1; }
+
+/* ── Edit-only buttons ────────────────── */
+.edit-only { display: none; }
+body.edit-mode .edit-only { display: flex; }
+
+/* ── Bottom Action Bar (mirrored) ─────── */
+.action-bar { flex: 0 0 auto; }
+.action-bar-bottom {
+  border-bottom: none;
+  border-top: 1px solid var(--border);
+}
+.action-bar-bottom .action-bar-toggle svg { transform: rotate(0deg); }
+.action-bar-bottom.expanded .action-bar-toggle svg { transform: rotate(180deg); }
+
+/* ── Expand/Collapse Toggle ───────────── */
+.action-bar-toggle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: 24px;
+  padding: 0 6px;
+  min-height: 27px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.1s;
+  flex-shrink: 0;
+}
+/* Same total height as an action button (border-box) so the chevron stays
+   centred within a box that matches the others, with no label below it. */
+.action-bar.expanded .action-bar-toggle {
+  min-height: 52px;
+}
+.action-bar-toggle svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s ease;
+}
+.action-bar-toggle:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--text);
+}
+/* Top bar: chevron points up when collapsed, down when expanded, mirroring
+   the bottom bar's direction. */
+.action-bar:not(.action-bar-bottom) .action-bar-toggle svg {
+  transform: rotate(180deg);
+}
+.action-bar.expanded:not(.action-bar-bottom) .action-bar-toggle svg {
+  transform: rotate(0deg);
+}
 
 /* ── Book (side-by-side) View ───────────── */
 /* In book mode the .pages stack becomes a 2-column grid: odd pages fall
@@ -406,6 +654,62 @@ mark { background: var(--highlight); color: inherit; padding: 0 2px; border-radi
   line-height: 32px;
 }
 
+/* ── Banner (notifications) ───────────── */
+.banner {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 56px;
+  padding: 0.85rem 1.1rem 0.85rem 1.35rem;
+  border: 1px solid var(--border);
+  border-left: 6px solid var(--text-muted, #888);
+  border-radius: 6px;
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--text);
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  max-width: 80vw;
+  text-align: left;
+}
+.banner--error { border-left-color: var(--negative); }
+.banner--success { border-left-color: #2e9e4f; }
+.banner--progress { border-left-color: #e8830c; }
+
+.banner__msg {
+  flex: 1 1 auto;
+  align-self: center;
+}
+
+.banner__close {
+  flex: 0 0 auto;
+  align-self: center;
+  margin-left: auto;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  border-radius: 4px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+}
+.banner__close svg { display: block; }
+.banner__close:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--text);
+}
+
 /* ── Mobile ─────────────────────────────── */
 @media (max-width: 900px) {
   .sidebar { display: flex; }
@@ -417,7 +721,7 @@ mark { background: var(--highlight); color: inherit; padding: 0 2px; border-radi
     background: var(--surface);
     box-shadow: 0 -2px 8px rgba(0,0,0,0.08);
   }
-  .main-wrapper { margin-left: 0; padding-bottom: 5rem; }
+  .main-wrapper { left: 0; bottom: 0; }
   .main { width: 100%; }
   .header-subtitle { display: none; }
   .search-box { width: 240px; }

@@ -19,6 +19,7 @@ const PageNumbers = (() => {
     if (!layout) return false;
     if (!layout.grid) layout.grid = { cols: Grid.COLS, rows: Grid.ROWS };
     if (!Grid.isMigrated(layout)) Grid.migrateLayout(layout);
+    if (typeof Layers !== 'undefined' && Layers.ensureMigrated) Layers.ensureMigrated(layout);
     return true;
   }
 
@@ -29,6 +30,7 @@ const PageNumbers = (() => {
   function layOut() {
     const layout = Renderer.getLayout();
     if (!ensureMigrated(layout)) return;
+    Grid.ensureZ(layout);
 
     pageOfEntry = new Map();
 
@@ -79,6 +81,33 @@ const PageNumbers = (() => {
 
     const pageCards = Array.from(pages.children).filter(c => c.classList.contains('page'));
 
+    // Per-page map of layerId -> .layer-group element, built lazily as we
+    // place cards. Each group is its own stacking context (z-index = layer
+    // order) so cross-layer order follows the panel while per-entry --z
+    // still orders cards within a layer. Global layers appear on every page;
+    // page-local layers only on their specific page.
+    const groupCache = new Map(); // pageNumber -> Map(layerId -> el)
+    function layerGroupsFor(pageNum, pageEl) {
+      if (groupCache.has(pageNum)) return groupCache.get(pageNum);
+      const map = new Map();
+      const pageLayers = (layout.layers || [])
+        .filter(l => l.scope === 'global' || l.page === pageNum);
+      pageLayers.forEach((l, i) => {
+        const g = document.createElement('div');
+        g.className = 'layer-group';
+        g.dataset.layerId = l.id;
+        g.style.zIndex = String(2 + i); // above .page-margin (z 1)
+        const hiddenInEdit = (typeof EditMode !== 'undefined' && EditMode.isActive())
+          ? (l.editHidden === true)
+          : false;
+        if (l.visible === false || hiddenInEdit) g.setAttribute('hidden', '');
+        pageEl.appendChild(g);
+        map.set(l.id, g);
+      });
+      groupCache.set(pageNum, map);
+      return map;
+    }
+
      // Place each card into its page. Every entry (including chapters) uses
      // the 'entry-<id>' DOM id now — chapters are just entries of kind
      // 'chapter'.
@@ -87,13 +116,31 @@ const PageNumbers = (() => {
       const el = document.getElementById('entry-' + id);
       if (!el) return;
 
-      const pageIdx = (item.page || 1) - 1;
+      const pageNum = item.page || 1;
+      const pageIdx = pageNum - 1;
       const page = pageCards[pageIdx];
       if (!page) return;
 
-      page.appendChild(el);
+      const groups = layerGroupsFor(pageNum, page);
+      let group = groups.get(item.layerId);
+      if (!group) {
+        // Fallback for an entry whose layer vanished: drop it into the
+        // first group on the page, or synthesize one if the page has none.
+        const firstId = groups.size ? groups.keys().next().value : null;
+        if (firstId) {
+          group = groups.get(firstId);
+        } else {
+          group = document.createElement('div');
+          group.className = 'layer-group';
+          group.style.zIndex = '2';
+          page.appendChild(group);
+        }
+      }
+
+      group.appendChild(el);
       el.classList.add('grid-card');
       positionCard(el, item.col, item.row, item.w, item.h);
+      el.style.setProperty('--z', String(typeof item.z === 'number' ? item.z : 0));
 
       pageOfEntry.set(id, item.page);
     });
@@ -117,6 +164,10 @@ const PageNumbers = (() => {
     }
 
     totalPages = maxPage;
+
+    if (typeof Layers !== 'undefined' && Layers.updateActiveLayerGroups) {
+      Layers.updateActiveLayerGroups();
+    }
   }
 
   // Apply absolute pixel coords for a grid placement to a card element.

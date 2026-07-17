@@ -5,11 +5,16 @@
 
 @media print {
 
+  /* ── Kill browser-injected margins ─── */
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
   /* ── Hide non-printable elements ─── */
   .header,
   .sidebar,
-  .edit-toggle,
-  .edit-bar,
+  .action-bar,
   .editor-overlay,
   .editor-modal,
   .search-box,
@@ -19,16 +24,16 @@
   .entry-drag-handle,
   .entry-actions,
   .page-num-btn,
-  .zoom-controls,
   .print-footer-bar,
   .page-cells,
   .page-margin,
   .page-divider,
   .page-divider-line,
   .page-divider-btn,
-  .page-divider-tip,
+  .tooltip,
   .popup-overlay,
-  .popup {
+  .popup,
+  .grid-card.entry-hidden {
     display: none !important;
   }
 
@@ -41,7 +46,11 @@
     border-radius: 0 !important;
     box-shadow: none !important;
     background: white !important;
-    overflow: hidden !important;
+    /* overflow:visible — Chrome clips the TOP of a page-height fragment
+       when overflow:hidden + page-break-after are combined; edit mode
+       already uses visible and prints correctly. */
+    overflow: visible !important;
+    transform: none !important;
     page-break-after: always;
     break-after: page;
     break-inside: avoid;
@@ -53,6 +62,24 @@
 
   .grid-card {
     cursor: auto !important;
+    outline: none !important;
+    border: none !important;
+    background: transparent !important;
+  }
+
+  /* Clip regular cards to their resized bounds so print matches the
+     on-screen read view: content that overflows a shrunk card is hidden,
+     not spilled across the page. (The .page stays overflow:visible — only
+     the per-card clip is added — so the old Chrome top-of-fragment clip
+     bug does not return.) The appendix is allowed to grow and break across
+     sheets, so it stays visible. */
+  .grid-card:not(.appendix) { overflow: hidden !important; }
+  .grid-card.appendix,
+  #appendix { overflow: visible !important; }
+
+  /* Overflow indicator is an on-screen edit affordance — never print it. */
+  .grid-card .overflow-frame {
+    display: none !important;
   }
 
   .page::after {
@@ -63,6 +90,8 @@
     display: block !important;
     gap: 0 !important;
     padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
   }
 
   .page-content {
@@ -82,7 +111,7 @@
   body {
     font-family: 'Inter', Helvetica, Arial, sans-serif;
     font-size: 10pt;
-    line-height: 1.5;
+    line-height: 0.6;
     background: white !important;
     color: black;
     -webkit-font-smoothing: none;
@@ -91,18 +120,28 @@
   }
 
   .main-wrapper {
-    margin-left: 0 !important;
+    position: static !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: auto !important;
+    bottom: auto !important;
+    margin: 0 !important;
     background: white !important;
     padding: 0 !important;
     display: block !important;
+    height: auto !important;
+    overflow: visible !important;
   }
 
   .main {
-    margin-left: 0 !important;
+    margin: 0 !important;
     padding: 0 !important;
     max-width: none !important;
     width: 100% !important;
-    zoom: normal !important;
+    zoom: 1 !important;
+    height: auto !important;
+    overflow: visible !important;
+    transform: none !important;
   }
 
   .chapter-title {
@@ -140,13 +179,21 @@
   .entry {
     font-family: 'Libre Baskerville', Georgia, serif;
     font-size: 10pt;
-    line-height: 1.6;
+    line-height: 0.6;
     page-break-inside: avoid;
     border: none !important;
     border-radius: 0 !important;
     background: transparent !important;
+    outline: none !important;
     padding: 0 0 1rem !important;
   }
+
+  /* In paginated (display) print the entry is a positioned grid-card and is
+     clipped to its grid height, so its padding must match the on-screen
+     .grid-card box (0.25rem) — NOT the 1rem used for flat flow printing.
+     The 1rem override above made every entry ~12px taller than on screen,
+     pushing titles past the card edge where overflow:hidden clips them. */
+  .grid-card.entry { padding: 0.25rem 0 !important; }
 
   .entry h2 {
     font-family: 'Bebas Neue', sans-serif;
@@ -243,8 +290,6 @@
     margin-bottom: 0;
   }
 
-  .zoom-controls { display: none; }
-
   .entry .callout {
     background: #ffffff;
     border-left: 3px solid #b8860b;
@@ -280,8 +325,8 @@
   .entry .tier { font-weight: 700; }
 
   .entry img {
-    max-width: 100% !important;
-    height: auto;
+    display: block;
+    margin: 0;
   }
 
   /* ── Appendix ────────────────── */

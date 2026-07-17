@@ -55,11 +55,11 @@ body.edit-mode .page-margin { display: block; }
    All cards are positioned by JS via left/top/width/height set inline
    from grid coords. They live INSIDE the page box and clip to it in
    display mode. */
-.grid-card {
-  position: absolute;
-  z-index: 5;
-  box-sizing: border-box;
-  padding: 0.25rem 0;
+ .grid-card {
+   position: absolute;
+   z-index: var(--z, 5);
+   box-sizing: border-box;
+  padding: 0;
   overflow: hidden;
 }
 body.edit-mode .grid-card { overflow: visible; }

@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -102,18 +103,109 @@ app.post('/api/entries', (req, res) => {
 
 // ── Images API ────────────────────────────────────────────
 
-const upload = multer({ dest: IMAGES_DIR });
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png'];
+
+const imageStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, IMAGES_DIR),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const base = (file.originalname.replace(/\.[^.]+$/, '') || 'image')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
+    const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, (base ? base + '-' : '') + unique + ext);
+  }
+});
+
+const upload = multer({
+  storage: imageStorage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Only JPEG and PNG files are allowed.'));
+  }
+});
 
 app.get('/api/images', (req, res) => {
   try {
-    const files = fs.readdirSync(IMAGES_DIR).filter(f => /\.(png|jpg|jpeg|gif|svg|webp)$/i.test(f));
+    const files = fs.readdirSync(IMAGES_DIR).filter(f => /\.(png|jpe?g)$/i.test(f));
     res.json(files.map(f => ({ filename: f, url: '/data/images/' + f })));
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+function hashBuffer(buf) {
+  return crypto.createHash('sha256').update(buf).digest('hex');
+}
+
+function findDuplicate(hash, excludeName) {
+  for (const f of fs.readdirSync(IMAGES_DIR)) {
+    if (f === excludeName) continue;
+    if (!/\.(png|jpe?g)$/i.test(f)) continue;
+    try {
+      if (hashBuffer(fs.readFileSync(path.join(IMAGES_DIR, f))) === hash) return f;
+    } catch { /* skip unreadable file */ }
+  }
+  return null;
+}
+
+function desiredName(originalname) {
+  const ext = path.extname(originalname).toLowerCase();
+  let base = (originalname.replace(/\.[^.]+$/, '') || 'image')
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+  if (!base) base = 'image';
+  return base + ext;
+}
+
+function resolveName(desired, excludeName) {
+  const target = path.join(IMAGES_DIR, desired);
+  if (desired === excludeName || !fs.existsSync(target)) return desired;
+  const ext = path.extname(desired);
+  const stem = desired.slice(0, -ext.length);
+  let i = 2, cand;
+  do { cand = stem + '-' + i + ext; i++; }
+  while (fs.existsSync(path.join(IMAGES_DIR, cand)));
+  return cand;
+}
+
 app.post('/api/images', upload.single('image'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-  res.json({ filename: req.file.filename, url: '/data/images/' + req.file.filename });
+  try {
+    const buf = fs.readFileSync(req.file.path);
+    const hash = hashBuffer(buf);
+    const duplicate = findDuplicate(hash, req.file.filename);
+
+    if (duplicate) {
+      // Same image already exists — discard the re-upload and rename the
+      // existing copy to the name the user supplied.
+      fs.unlinkSync(req.file.path);
+      const finalName = resolveName(desiredName(req.file.originalname), duplicate);
+      if (finalName !== duplicate) {
+        fs.renameSync(path.join(IMAGES_DIR, duplicate), path.join(IMAGES_DIR, finalName));
+      }
+      return res.json({
+        filename: finalName,
+        url: '/data/images/' + finalName,
+        duplicate: true,
+        previousName: duplicate
+      });
+    }
+
+    const finalName = resolveName(desiredName(req.file.originalname), null);
+    fs.renameSync(req.file.path, path.join(IMAGES_DIR, finalName));
+    return res.json({
+      filename: finalName,
+      url: '/data/images/' + finalName,
+      duplicate: false
+    });
+  } catch (e) {
+    try { if (req.file && req.file.path) fs.unlinkSync(req.file.path); } catch { /* ignore */ }
+    return res.status(500).json({ error: e.message });
+  }
 });
 
 app.delete('/api/images/:filename', (req, res) => {
@@ -127,14 +219,28 @@ app.delete('/api/images/:filename', (req, res) => {
 
 // ── Static files (after API routes) ──────────────────────
 
-app.use(express.static(__dirname));
-app.use('/node_modules', express.static(path.join(__dirname, 'node_modules')));
+// No-cache JS/CSS/HTML during development so the browser never serves a
+// stale bundle (e.g. an older edit-mode.js or entries.css that predates a
+// feature change). node_modules is left cacheable (large, stable deps).
+function noCacheAssets(res, filePath) {
+  if (/\.(js|css|html?)$/i.test(filePath)) res.setHeader('Cache-Control', 'no-cache');
+}
+
+app.use(express.static(__dirname, { setHeaders: noCacheAssets }));
+app.use('/node_modules', express.static(path.join(__dirname, 'node_modules'), { setHeaders: noCacheAssets }));
 
 // ── Helpers ───────────────────────────────────────────────
 
 function escapeHtml(str) {
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+// ── Error handler (multer rejections land here) ──────────
+
+app.use((err, req, res, next) => {
+  if (!err) return next();
+  res.status(400).json({ error: err.message || 'Upload failed' });
+});
 
 app.listen(PORT, () => {
   console.log(`Crucible rulebook server → http://localhost:${PORT}`);

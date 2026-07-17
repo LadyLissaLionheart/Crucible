@@ -1,0 +1,161 @@
+/* ── Image Picker Modal ──────────────────── */
+/* Centred modal for choosing an already-uploaded image. Shows a searchable
+   grid of thumbnails with the filename beneath each tile. */
+
+.img-picker-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.img-picker {
+  position: fixed;
+  z-index: 1301;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(880px, 92vw);
+  max-height: 82vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  font-family: var(--font-ui);
+  overflow: hidden;
+}
+
+.img-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1.1rem;
+  border-bottom: 1px solid var(--border);
+}
+.img-picker-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.img-picker-close {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: none;
+  border-radius: 5px;
+  font-size: 1.4rem;
+  line-height: 1;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+}
+.img-picker-close:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--text);
+}
+
+.img-picker-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1.1rem;
+}
+.img-picker-search > i.fa-solid {
+  position: absolute;
+  left: 1.6rem;
+  font-size: 15px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+.img-picker-search input {
+  width: 100%;
+  padding: 0.5rem 0.75rem 0.5rem 2.1rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  background: var(--bg);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.img-picker-search input:focus {
+  border-color: var(--accent);
+}
+
+.img-picker-grid {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 0.85rem;
+  padding: 0.25rem 1.1rem 1.1rem;
+  align-content: start;
+}
+
+.img-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.35rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--bg);
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.12s, box-shadow 0.12s, transform 0.06s;
+}
+.img-tile:hover {
+  border-color: var(--accent);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+.img-tile:active {
+  transform: translateY(1px);
+}
+
+.img-thumb {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: #f0f0f0;
+  overflow: hidden;
+}
+.img-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.img-name {
+  display: block;
+  padding: 0 0.4rem 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text);
+  text-align: center;
+  word-break: break-all;
+  line-height: 1.2;
+  max-height: 2.4em;
+  overflow: hidden;
+}
+
+.img-picker-empty {
+  grid-column: 1 / -1;
+  margin: 1.5rem 0;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.img-picker-status {
+  flex: 0 0 auto;
+  padding: 0.5rem 1.1rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  background: var(--bg);
+}

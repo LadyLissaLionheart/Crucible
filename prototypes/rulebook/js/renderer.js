@@ -6,6 +6,24 @@ const Renderer = (() => {
   let searchIndex = [];
 
   function setLayout(l) { layout = l; }
+
+  // ── Client-side entry content cache ──
+  // Holds the last-known HTML for each entry id, independent of the server.
+  // Undo/redo (and any in-place re-render) stamps these back into the cards
+  // so a restored entry shows its content WITHOUT a server round-trip — the
+  // editor never writes to the server until an explicit Save, so the cache
+  // is the authoritative client-side source during an edit session.
+  const contentCache = new Map();
+  function cacheContent(id, html) { if (id) contentCache.set(id, html); }
+  function getCachedContent(id) { return contentCache.get(id); }
+  function setCachedContent(id, html) { cacheContent(id, html); }
+  function clearContentCache() { contentCache.clear(); }
+  function snapshotContentCache() { return new Map(contentCache); }
+  function restoreContentCache(map) {
+    contentCache.clear();
+    if (map) map.forEach((html, id) => contentCache.set(id, html));
+  }
+
   function getLayout() { return layout; }
   function getSearchIndex() { return searchIndex; }
   function clearSearchIndex() { searchIndex = []; }
@@ -28,9 +46,10 @@ const Renderer = (() => {
   // same (zoomed) document coordinate space.
   function scrollToEl(el) {
     if (!el) return;
-    const headerH = document.querySelector('.header')?.offsetHeight || 0;
-    const top = el.getBoundingClientRect().top + window.scrollY - headerH - 8;
-    window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    var main = document.getElementById('main-content');
+    var mainTop = main.getBoundingClientRect().top;
+    var top = el.getBoundingClientRect().top - mainTop + main.scrollTop - 8;
+    main.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
   }
 
   function renderTOC() {
@@ -204,7 +223,7 @@ if (kind === 'chapter') {
       const label = item.sidebarTitle || item.title || item.id.replace(/-/g, ' ');
 
       const entryDiv = document.createElement('div');
-      entryDiv.className = 'grid-card entry loading';
+      entryDiv.className = 'grid-card entry loading' + (item.hidden ? ' entry-hidden' : '');
       entryDiv.id = 'entry-' + item.id;
       entryDiv.setAttribute('data-entry-id', item.id);
       entryDiv.dataset.itemId = item.id;
@@ -323,13 +342,22 @@ if (kind === 'chapter') {
       } catch (_) { /* fall through */ }
       entryEl.innerHTML = '<p style="color:var(--negative)">Failed to load: ' + esc(entryId) + '</p>';
       entryEl.classList.remove('loading');
+      if (typeof StructureUI !== 'undefined' && StructureUI.checkOverflow) {
+        StructureUI.checkOverflow(entryEl.closest('.grid-card') || entryEl);
+      }
     }
   }
 
   function populateEntry(entryEl, entryId, html) {
+    cacheContent(entryId, html);
     entryEl.innerHTML = html;
     entryEl.classList.remove('loading');
     entryEl.dataset.loaded = 'true';
+    // Content can arrive after edit mode's initial overflow sweep; re-check
+    // now so a card that overflows only once its HTML loads gets flagged.
+    if (typeof StructureUI !== 'undefined' && StructureUI.checkOverflow) {
+      StructureUI.checkOverflow(entryEl.closest('.grid-card') || entryEl);
+    }
 
     const temp = document.createElement('div');
     temp.innerHTML = html;
@@ -395,18 +423,43 @@ if (kind === 'chapter') {
 
   // ── Scroll Position ───────────────────────
   function restoreScrollPosition() {
+    const main = document.getElementById('main-content');
     const saved = sessionStorage.getItem('rulebook-scroll');
     if (saved) {
       requestAnimationFrame(() => {
-        window.scrollTo(0, parseInt(saved, 10));
+        main.scrollTo(0, parseInt(saved, 10));
       });
     }
     window.addEventListener('beforeunload', () => {
-      sessionStorage.setItem('rulebook-scroll', window.scrollY);
+      sessionStorage.setItem('rulebook-scroll', main.scrollTop);
     });
   }
 
   // ── Helpers ───────────────────────────────
+  // Force the zoom layer to fully re-rasterise. #main-content carries CSS
+  // `zoom`, so the browser caches a rasterised layer of the entire content
+  // subtree on that element. When a card is resized (a size change) or
+  // overflow flips during an in-place rebuild, that cached raster keeps the
+  // stale paint (e.g. overflowing content that should now be clipped) — only
+  // a full reload repaints it.
+  //
+  // Invalidating a *child* (.pages) does nothing: the cache lives on the
+  // #main-content zoom layer itself. A same-tick nudge also gets coalesced
+  // into a no-op. The reliable fix is to hide #main-content synchronously
+  // (committing the teardown), then restore it on the NEXT frame via
+  // requestAnimationFrame — that genuine frame boundary forces the zoom
+  // layer to be destroyed and re-rasterised from the corrected DOM/CSS.
+  function forceRepaint() {
+    const main = document.getElementById('main-content');
+    if (!main) return;
+    const prev = main.style.display;
+    main.style.display = 'none';
+    void main.offsetHeight;
+    requestAnimationFrame(() => {
+      main.style.display = prev;
+    });
+  }
+
   function esc(str) {
     const div = document.createElement('div');
     div.textContent = str;
@@ -430,6 +483,27 @@ if (kind === 'chapter') {
     restoreScrollPosition,
     findChapterForEntry,
     teardownPages,
-    esc
+    forceRepaint,
+    esc,
+    cacheContent,
+    getCachedContent,
+    setCachedContent,
+    clearContentCache,
+    snapshotContentCache,
+    restoreContentCache,
+    // Stamp cached HTML into the cards currently rendered from the layout
+    // model. Used by client-side undo/redo so a re-render never needs to
+    // refetch entry content from the server.
+    populateFromCache: function () {
+      document.querySelectorAll('#chapters-container .entry[data-entry-id]').forEach(el => {
+        const id = el.dataset.entryId;
+        const html = contentCache.get(id);
+        if (html != null) {
+          el.innerHTML = html;
+          el.classList.remove('loading');
+          el.dataset.loaded = 'true';
+        }
+      });
+    }
   };
 })();
