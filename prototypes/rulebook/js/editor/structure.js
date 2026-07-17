@@ -21,6 +21,11 @@ const StructureUI = (() => {
   // (edit toggled on/off without changes) doesn't mark the doc dirty.
   const editOriginals = new Map();
 
+  // Entry ids whose server HTML file should be deleted on the next explicit
+  // Save. Deletions are deferred so Undo / Discard can restore the entry
+  // (its file is still on disk) instead of hitting a 404 / blank placeholder.
+  const pendingDeletes = new Set();
+
   // ── Overflow Detection ────────────────────
   // Measures whether content extends past the card on either axis:
   //   vertical   — an element's bottom edge (incl. margin) past clientHeight
@@ -33,9 +38,11 @@ const StructureUI = (() => {
   const AFFORDANCE_SEL = '.entry-actions, .entry-edge-actions, .resize-handle, .struct-btn, .entry-add-actions';
 
   function checkOverflow(card) {
+    const entryId = card.dataset.entryId;
+    const pageElOff = card.closest('.page');
     if (!document.body.classList.contains('edit-mode')) {
       card.classList.remove('overflowing');
-      const f = card.querySelector(':scope > .overflow-frame');
+      const f = (pageElOff || card).querySelector('.overflow-frame[data-entry-id="' + entryId + '"]');
       if (f) f.remove();
       return;
     }
@@ -79,7 +86,7 @@ const StructureUI = (() => {
     const overRight = maxRight > cardW + tol;
     const any = overTop || overBottom || overLeft || overRight;
     card.classList.toggle('overflowing', any);
-    let frame = card.querySelector(':scope > .overflow-frame');
+    let frame = (pageElOff || card).querySelector('.overflow-frame[data-entry-id="' + entryId + '"]');
     if (!any) {
       if (frame) frame.remove();
       return;
@@ -87,8 +94,11 @@ const StructureUI = (() => {
     if (!frame) {
       frame = document.createElement('div');
       frame.className = 'overflow-frame';
+      frame.dataset.entryId = entryId;
       frame.innerHTML = '<i class="of-top"></i><i class="of-right"></i><i class="of-bottom"></i><i class="of-left"></i>';
-      card.appendChild(frame);
+      (pageElOff || card).appendChild(frame);
+    } else if (frame.parentElement !== (pageElOff || card)) {
+      (pageElOff || card).appendChild(frame);
     }
     const T = frame.querySelector('.of-top');
     const R = frame.querySelector('.of-right');
@@ -116,6 +126,184 @@ const StructureUI = (() => {
     document.querySelectorAll('.pages .grid-card[data-entry-id]').forEach(checkOverflow);
   }
 
+  // ── Fixed-position UI sync ────────────────
+  // Entry edit UI (actions bar, edge buttons, resize handles, overflow frame)
+  // lives on `.page` (a sibling of every `.layer-group`) as position:fixed,
+  // so it always paints ABOVE entries on higher layers. syncFixedUI positions
+  // each element from the card's getBoundingClientRect, compensated for the
+  // #main-content zoom.
+  let _syncScheduled = false;
+  function syncFixedUI(card) {
+    if (!document.body.classList.contains('edit-mode')) return;
+    const entryId = card.dataset.entryId;
+    if (!entryId) return;
+    const pageEl = card.closest('.page');
+    if (!pageEl) return;
+    const rect = card.getBoundingClientRect();
+    // #zoom-container scales position:fixed children, so divide by zoom.
+    const zoom = getZoom();
+
+    const actions = pageEl.querySelector('.entry-actions[data-entry-id="' + entryId + '"]');
+    if (actions) {
+      actions.style.left = (rect.left / zoom) + 'px';
+      actions.style.width = (rect.width / zoom) + 'px';
+      actions.style.transform = 'translateY(-100%)';
+      actions.style.top = ((rect.top / zoom) - 9) + 'px';
+    }
+
+    const edgeActions = pageEl.querySelector('.entry-edge-actions[data-entry-id="' + entryId + '"]');
+    if (edgeActions) {
+      edgeActions.style.top = (rect.top / zoom) + 'px';
+      edgeActions.style.left = ((rect.left / zoom) - 9) + 'px';
+      edgeActions.style.transform = 'translateX(-100%)';
+    }
+
+    const hw = 6;
+    pageEl.querySelectorAll('.resize-handle[data-entry-id="' + entryId + '"]').forEach(h => {
+      const edge = h.dataset.edge;
+      let top, left;
+      const rtl = rect.left / zoom, rtt = rect.top / zoom;
+      const rbr = rect.right / zoom, rbb = rect.bottom / zoom;
+      const rcx = rtl + (rect.width / zoom) / 2;
+      const rcy = rtt + (rect.height / zoom) / 2;
+      switch (edge) {
+        case 'n':  top = rtt - hw; left = rcx - hw; break;
+        case 's':  top = rbb - hw; left = rcx - hw; break;
+        case 'e':  top = rcy - hw; left = rbr - hw; break;
+        case 'w':  top = rcy - hw; left = rtl - hw; break;
+        case 'ne': top = rtt - hw; left = rbr - hw; break;
+        case 'nw': top = rtt - hw; left = rtl - hw; break;
+        case 'se': top = rbb - hw; left = rbr - hw; break;
+        case 'sw': top = rbb - hw; left = rtl - hw; break;
+      }
+      h.style.top = top + 'px';
+      h.style.left = left + 'px';
+    });
+
+    const frame = pageEl.querySelector('.overflow-frame[data-entry-id="' + entryId + '"]');
+    if (frame) {
+      frame.style.top = (rect.top / zoom) + 'px';
+      frame.style.left = (rect.left / zoom) + 'px';
+      frame.style.width = (rect.width / zoom) + 'px';
+      frame.style.height = (rect.height / zoom) + 'px';
+    }
+  }
+
+  function syncAllFixedUI() {
+    document.querySelectorAll('.pages .grid-card[data-entry-id]').forEach(syncFixedUI);
+  }
+
+  function scheduleSyncFixedUI() {
+    if (_syncScheduled) return;
+    _syncScheduled = true;
+    requestAnimationFrame(() => { _syncScheduled = false; syncAllFixedUI(); });
+  }
+
+  let _fixedSyncBound = false;
+  function _bindFixedSync() {
+    if (_fixedSyncBound) return;
+    _fixedSyncBound = true;
+    const main = document.getElementById('main-content');
+    if (main) main.addEventListener('scroll', scheduleSyncFixedUI, { passive: true });
+    window.addEventListener('resize', scheduleSyncFixedUI);
+  }
+
+  // Visibility: UI lives on .page; toggle classes to mirror card state.
+  function _uiEls(entryId, pageEl) {
+    if (!pageEl) return [];
+    return Array.from(pageEl.querySelectorAll(
+      '[data-entry-id="' + entryId + '"].entry-actions, ' +
+      '[data-entry-id="' + entryId + '"].entry-edge-actions, ' +
+      '[data-entry-id="' + entryId + '"].resize-handle, ' +
+      '[data-entry-id="' + entryId + '"].overflow-frame'
+    ));
+  }
+  function syncUIVisibility(card) {
+    const entryId = card.dataset.entryId;
+    if (!entryId) return;
+    const pageEl = card.closest('.page');
+    const els = _uiEls(entryId, pageEl);
+    const selected = card.classList.contains('selected');
+    const hidden = card.classList.contains('entry-hidden');
+    els.forEach(el => {
+      el.classList.toggle('visible', selected);
+      el.classList.toggle('entry-hidden-vis', hidden);
+    });
+  }
+  function syncUIHover(card, on) {
+    const entryId = card.dataset.entryId;
+    if (!entryId) return;
+    const pageEl = card.closest('.page');
+    const handles = pageEl
+      ? Array.from(pageEl.querySelectorAll('.resize-handle[data-entry-id="' + entryId + '"]'))
+      : [];
+    handles.forEach(h => h.classList.toggle('hovered', on));
+  }
+  function syncUISpillHover(card, on) {
+    const entryId = card.dataset.entryId;
+    if (!entryId) return;
+    const pageEl = card.closest('.page');
+    const handles = pageEl
+      ? Array.from(pageEl.querySelectorAll('.resize-handle[data-entry-id="' + entryId + '"]'))
+      : [];
+    handles.forEach(h => h.classList.toggle('spill-hover', on));
+  }
+  function syncUIEditing(card, editing) {
+    const entryId = card.dataset.entryId;
+    if (!entryId) return;
+    const pageEl = card.closest('.page');
+    const handles = pageEl
+      ? Array.from(pageEl.querySelectorAll('.resize-handle[data-entry-id="' + entryId + '"]'))
+      : [];
+    handles.forEach(h => {
+      h.style.opacity = editing ? '0' : '';
+      h.style.pointerEvents = editing ? 'none' : '';
+    });
+  }
+
+  // ── Selection (entry stays selected until another is clicked / outside) ──
+  // Selecting an entry reveals its fixed-position edit UI (actions bar, edge
+  // buttons, resize handles, overflow frame) by toggling the `.visible` class.
+  function selectCard(card) {
+    if (!card || !card.dataset.itemType) return;
+    const prev = document.querySelector('.pages .grid-card.selected');
+    if (prev && prev !== card) {
+      prev.classList.remove('selected');
+      syncUIVisibility(prev);
+    }
+    card.classList.add('selected');
+    syncUIVisibility(card);
+    syncFixedUI(card);
+    // Clicking an entry switches the active layer to the one it belongs to,
+    // so the Layers panel + non-active-layer entry colours update.
+    const eid = card.dataset.entryId;
+    const layout = Renderer.getLayout();
+    const item = layout && (layout.entries || []).find(en => en.id === eid);
+    if (item && item.layerId && typeof Layers !== 'undefined') {
+      Layers.setActiveLayerId(item.layerId);
+      if (Layers.updateActiveLayerGroups) Layers.updateActiveLayerGroups();
+    }
+  }
+
+  function clearSelection() {
+    document.querySelectorAll('.pages .grid-card.selected').forEach(c => {
+      c.classList.remove('selected');
+      syncUIVisibility(c);
+    });
+  }
+
+  // Clicking empty page chrome (not a card, not the entry UI) deselects.
+  function onDeselectOutside(e) {
+    if (drag || resize || placement) return;
+    if (e.button !== 0) return;
+    const card = e.target.closest && e.target.closest('.grid-card');
+    if (card) return;
+    // Floating entry UI lives on .page, OUTSIDE the card, so it is never inside a
+    // .grid-card. Clicking it must not deselect the entry (which would hide the UI).
+    if (e.target.closest && e.target.closest('.entry-actions, .entry-edge-actions, .resize-handle, .entry-add-actions, .struct-btn')) return;
+    clearSelection();
+  }
+
   function onInlineInput(e) {
     const card = e.currentTarget;
     const eid = card.dataset.entryId;
@@ -124,6 +312,7 @@ const StructureUI = (() => {
     // Buffer + flag dirty live on every keystroke so the Save button enables
     // immediately and a Save while still focused captures the edit too.
     applyInlineEdit(card, eid);
+    scheduleSyncFixedUI();
   }
 
   // ── Enable / Disable ──────────────────────
@@ -136,6 +325,9 @@ const StructureUI = (() => {
     addGlobalAddChapter();
     bindDragGlobal();
     checkAllOverflows();
+    syncAllFixedUI();
+    _bindFixedSync();
+    if (typeof Layers !== 'undefined' && Layers.updateActiveLayerGroups) Layers.updateActiveLayerGroups();
   }
 
   function disable() {
@@ -158,6 +350,8 @@ const StructureUI = (() => {
       const f = c.querySelector(':scope > .overflow-frame');
       if (f) f.remove();
     });
+    // Overflow frames now live on .page (sibling of cards), not inside them.
+    document.querySelectorAll('.overflow-frame').forEach(n => n.remove());
   }
 
   // Sync stored card positions from the DOM back into the layout model.
@@ -256,14 +450,19 @@ const StructureUI = (() => {
   // edge of the entry as a vertical icon stack (Edit on top).
   function addCardControls(card) {
     const type = card.dataset.itemType;
-    const existing = card.querySelector('.entry-actions');
+    const pageEl = card.closest('.page');
+    const entryId = card.dataset.entryId;
+    const existing = pageEl ? pageEl.querySelector('.entry-actions[data-entry-id="' + entryId + '"]') : null;
     if (existing) return;
 
     // Top bar: [Kind▾] [Title — full width]. Kind + Title sit on the left,
     // the title input grows to fill the rest of the entry width.
+    // NOTE: no inline display here — G7a CSS keeps .entry-actions hidden
+    // (display:none) until the card is .selected (.visible class added by
+    // syncUIVisibility), so the Edit button / kind / title stay hidden until
+    // the entry is selected.
     const actions = document.createElement('div');
     actions.className = 'entry-actions';
-    actions.style.cssText = 'display:flex;gap:0.25rem;align-items:center;';
 
     // Left group holds the kind select + TOC-title input.
     const leftGroup = document.createElement('div');
@@ -337,7 +536,8 @@ const StructureUI = (() => {
 
     actions.appendChild(leftGroup);
 
-    card.appendChild(actions);
+    actions.dataset.entryId = entryId;
+    (pageEl || card).appendChild(actions);
 
     // Vertical stack of action buttons running DOWN the left edge of the
     // entry, wrapped into columns of at most two (closest column sits
@@ -409,7 +609,8 @@ const StructureUI = (() => {
     }
     edgeActions.appendChild(btnWrap);
 
-    card.appendChild(edgeActions);
+    edgeActions.dataset.entryId = entryId;
+    (pageEl || card).appendChild(edgeActions);
 
     // Double-click the card body to jump straight into inline editing with
     // the caret placed near the pointer (bypasses the Edit button).
@@ -428,8 +629,9 @@ const StructureUI = (() => {
       const h = document.createElement('div');
       h.className = 'resize-handle ' + edge;
       h.dataset.edge = edge;
+      h.dataset.entryId = entryId;
       h.addEventListener('mousedown', onResizeDown);
-      card.appendChild(h);
+      (pageEl || card).appendChild(h);
     });
   }
 
@@ -441,10 +643,12 @@ const StructureUI = (() => {
   function toggleHide(card, btn) {
     const eid = card.dataset.entryId;
     const hidden = card.classList.toggle('entry-hidden');
+    syncUIVisibility(card);
     const item = Grid.findItem(Renderer.getLayout(), 'entry', eid);
     if (item) {
       item.hidden = hidden;
       EditMode.setDirty();
+      History.commit('hide');
     }
     btn.classList.toggle('active', hidden);
     btn.innerHTML = '';
@@ -488,6 +692,7 @@ const StructureUI = (() => {
     }
 
     EditMode.setDirty();
+    History.commit('z-order');
   }
 
   // Write the just-swapped z values onto the two cards' DOM so the change is
@@ -533,12 +738,14 @@ const StructureUI = (() => {
     const eid = card.dataset.entryId;
     if (!eid) return;
 
-    const actions = card.querySelector('.entry-actions');
+    const pageElA = card.closest('.page');
+    const actions = pageElA ? pageElA.querySelector('.entry-actions[data-entry-id="' + eid + '"]') : null;
     const editing = card.getAttribute('contenteditable') === 'true';
 
     if (editing) {
       card.removeAttribute('contenteditable');
       card.classList.remove('editing');
+      syncUIEditing(card, false);
       if (actions) actions.setAttribute('contenteditable', 'false');
       if (btn) btn.classList.remove('active');
       card.removeEventListener('input', onInlineInput);
@@ -547,6 +754,7 @@ const StructureUI = (() => {
       card.setAttribute('contenteditable', 'true');
       card.classList.add('editing');
       if (actions) actions.setAttribute('contenteditable', 'false');
+      syncUIEditing(card, true);
       if (btn) btn.classList.add('active');
       card.addEventListener('input', onInlineInput);
       // An empty <p></p> has no line box, so the contenteditable caret has
@@ -628,19 +836,30 @@ const StructureUI = (() => {
   // blur). Buffers the final HTML and tears down the live-edit session.
   function bufferInlineEdit(card, eid) {
     card.removeEventListener('blur', onInlineBlur, true);
-    applyInlineEdit(card, eid);
+    const changed = applyInlineEdit(card, eid);
     editOriginals.delete(eid);
+    if (changed && typeof History !== 'undefined' && History.commit) {
+      History.commit('edit content');
+    }
   }
 
   // Commit all buffered inline edits to the server. Called by Save & Exit /
   // Save Layout before the view is rebuilt from the (now-updated) files.
   async function flushPendingEdits() {
-    for (const [id, html] of pendingEdits) {
-      try {
-        await API.saveEntry(id, html);
-      } catch (err) {
-        console.warn('flushPendingEdits: failed to save ' + id, err);
-      }
+    const layout = Renderer.getLayout();
+    const entries = (layout && layout.entries) || [];
+    const ids = new Set();
+    for (const [id, html] of pendingEdits) {          // pending edits win
+      ids.add(id);
+      try { await API.saveEntry(id, html); }
+      catch (err) { console.warn('flushPendingEdits: failed to save ' + id, err); }
+    }
+    for (const item of entries) {                      // re-persist cached content
+      if (ids.has(item.id)) continue;
+      const cached = Renderer.getCachedContent(item.id);
+      if (cached === undefined) continue;
+      try { await API.saveEntry(item.id, cached); }
+      catch (err) { console.warn('flushPendingEdits: failed to restore ' + item.id, err); }
     }
     pendingEdits.clear();
   }
@@ -649,6 +868,52 @@ const StructureUI = (() => {
   function clearPendingEdits() {
     pendingEdits.clear();
     editOriginals.clear();
+  }
+
+  // Entries scheduled for server deletion on the next explicit Save. The file
+  // is only removed once finalizeDeletes runs (so Undo/Discard can restore).
+  async function finalizeDeletes() {
+    const layout = Renderer.getLayout();
+    const kept = new Set((layout && layout.entries || []).map(e => e.id));
+    for (const id of pendingDeletes) {
+      if (kept.has(id)) continue; // still referenced — don't delete
+      try { await API.deleteEntry(id); }
+      catch (err) { /* 404 tolerated — already gone */ }
+    }
+    pendingDeletes.clear();
+  }
+
+  // Discard / Cancel: drop pending deletions WITHOUT touching the server, so
+  // still-referenced files survive a revert to the backup.
+  function clearPendingDeletes() {
+    pendingDeletes.clear();
+  }
+
+  // Used by the modal CodeMirror editor's delete (not routed through
+  // deleteCard) — schedules the server file for deletion on Save.
+  function markPendingDelete(id) {
+    if (id) pendingDeletes.add(id);
+  }
+
+  // Snapshot / restore hooks for the undo/redo history. pendingEdits is the
+  // source of truth for inline content edits, so it is included in every
+  // history snapshot.
+  function getPendingEdits() { return pendingEdits; }
+  function setPendingEdits(map) {
+    pendingEdits.clear();
+    if (map) map.forEach((html, id) => pendingEdits.set(id, html));
+  }
+
+  // Write buffered HTML into the live card DOM (used when re-applying a
+  // history snapshot so cards reflect the restored pending edits).
+  function applyPendingEditsToDOM() {
+    pendingEdits.forEach((html, id) => {
+      const el = document.getElementById('entry-' + id);
+      if (!el) return;
+      el.innerHTML = html;
+      el.dataset.loaded = 'true';
+      checkOverflow(el);
+    });
   }
 
   // Keep the sidebar search index in sync with the edited HTML without a
@@ -714,6 +979,7 @@ const StructureUI = (() => {
     }
 
     rebuild();
+    History.commit('change kind');
   }
 
   // ── Deletes ──────────────────────────────
@@ -741,11 +1007,14 @@ const StructureUI = (() => {
     if (!confirmed) return;
 
     layout.entries = entries.filter(en => en.id !== id);
-    API.deleteEntry(id).catch(() => {});
+    // Defer the server file delete: the entry stays on disk until an explicit
+    // Save (finalizeDeletes) so an Undo / Discard can restore it cleanly.
+    pendingDeletes.add(id);
 
     Renderer.renderTOC();
     EditMode.setDirty();
     rebuild();
+    History.commit('delete');
   }
 
   // ── Add Operations ─────────────────────────
@@ -783,6 +1052,7 @@ const StructureUI = (() => {
     Renderer.renderTOC();
     EditMode.setDirty();
     rebuild();
+    History.commit('add chapter');
     setTimeout(() => {
       const t = document.querySelector('.pages .grid-card[data-item-id="' + id + '"]');
       if (t) t.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -833,6 +1103,7 @@ const StructureUI = (() => {
     layout.entries.push(item);
     Renderer.renderTOC();
     EditMode.setDirty();
+    History.commit('add entry');
 
     // Rebuild the DOM so the new card exists, then begin placement.
     await new Promise(resolve => {
@@ -895,6 +1166,7 @@ const StructureUI = (() => {
     layout.entries.push({ id, kind: 'entry', page, col, row, w, h, layerId: activeLayer });
     Renderer.renderTOC();
     EditMode.setDirty();
+    History.commit('add image entry');
 
     await new Promise(resolve => {
       Renderer.renderChapters();
@@ -1011,6 +1283,7 @@ const StructureUI = (() => {
       placement.pageEl = target.pageEl;
     }
     PageNumbers.positionCard(card, col, row, w, h);
+    scheduleSyncFixedUI();
   }
 
   // Resolve viewport coords to the grid cell of the page under the cursor.
@@ -1055,6 +1328,7 @@ const StructureUI = (() => {
   // ── Drag-to-grid positioning ───────────────
   function bindDragGlobal() {
     document.addEventListener('mousedown', onCardMouseDown, true);
+    document.addEventListener('mousedown', onDeselectOutside, true);
     document.addEventListener('mousemove', onHoverMove);
   }
 
@@ -1109,6 +1383,9 @@ const StructureUI = (() => {
     const pageEl = card.closest('.page');
     if (!pageEl) return;
     if (!card.dataset.itemType) return;
+    // Selecting the entry reveals its fixed-position edit UI and keeps it
+    // selected until another card is clicked or the user clicks outside.
+    selectCard(card);
     // While a card is being edited inline (contenteditable), let the user
     // click into the text instead of dragging the card around.
     if (card.getAttribute('contenteditable') === 'true') return;
@@ -1176,6 +1453,8 @@ const StructureUI = (() => {
     if (drag || resize || placement) return;
     const card = e.target.closest ? e.target.closest('.grid-card') : null;
     if (_lastHoverCard && _lastHoverCard !== card) {
+      syncUISpillHover(_lastHoverCard, false);
+      syncUIHover(_lastHoverCard, false);
       _lastHoverCard.classList.remove('spill-hover');
       _lastHoverCard = null;
     }
@@ -1186,6 +1465,8 @@ const StructureUI = (() => {
     const insideBox = e.clientX >= br.left && e.clientX <= br.right &&
                       e.clientY >= br.top  && e.clientY <= br.bottom;
     card.classList.toggle('spill-hover', !insideBox);
+    syncUISpillHover(card, !insideBox);
+    syncUIHover(card, true);
     _lastHoverCard = card;
   }
 
@@ -1220,6 +1501,7 @@ const StructureUI = (() => {
       drag.pageEl = pageEl;
     }
     PageNumbers.positionCard(drag.el, col, row, drag.w, drag.h);
+    scheduleSyncFixedUI();
   }
 
   function onDragEnd(e) {
@@ -1241,6 +1523,7 @@ const StructureUI = (() => {
     Grid.sortEntriesByPosition(Renderer.getLayout());
     Renderer.renderTOC();
     EditMode.setDirty();
+    History.commit('move');
     drag = null;
   }
 
@@ -1256,7 +1539,9 @@ const StructureUI = (() => {
     e.stopPropagation();
     e.preventDefault();
     const handle = e.currentTarget;
-    const card = handle.closest('.grid-card');
+    // The handle lives on `.page` (not inside the card), so resolve the card
+    // via its data-entry-id.
+    const card = handle.dataset.entryId ? document.getElementById('entry-' + handle.dataset.entryId) : null;
     if (!card) return;
     if (card.getAttribute('contenteditable') === 'true') return;
     startResize(card, handle.dataset.edge, e);
@@ -1346,6 +1631,7 @@ const StructureUI = (() => {
     resize.el.style.width = w + 'px';
     resize.el.style.height = h + 'px';
     checkOverflow(resize.el);
+    scheduleSyncFixedUI();
   }
 
   function onResizeEnd() {
@@ -1379,6 +1665,7 @@ const StructureUI = (() => {
     Grid.sortEntriesByPosition(layout);
     Renderer.renderTOC();
     EditMode.setDirty();
+    History.commit('resize');
     resize = null;
 
     document.removeEventListener('mousemove', onResizeMove);
@@ -1402,76 +1689,26 @@ const StructureUI = (() => {
     return btn;
   }
 
-  // Inline SVG icon factory (stroke uses currentColor so danger styling applies).
-  function svgIcon(paths, opts) {
-    opts = opts || {};
-    const ns = 'http://www.w3.org/2000/svg';
-    const svg = document.createElementNS(ns, 'svg');
-    svg.setAttribute('viewBox', opts.viewBox || '0 0 24 24');
-    svg.setAttribute('width', opts.size || '14');
-    svg.setAttribute('height', opts.size || '14');
-    svg.setAttribute('fill', 'none');
-    svg.setAttribute('stroke', 'currentColor');
-    svg.setAttribute('stroke-width', opts.sw || '2');
-    svg.setAttribute('stroke-linecap', 'round');
-    svg.setAttribute('stroke-linejoin', 'round');
-    (Array.isArray(paths) ? paths : [paths]).forEach(d => {
-      const p = document.createElementNS(ns, 'path');
-      p.setAttribute('d', d);
-      svg.appendChild(p);
-    });
-    return svg;
+  // Font Awesome icon helper — returns an <i class="fa-solid fa-..."> element.
+  // Self-hosted locally (see icons/); never hotlinked. Replaces the old inline
+  // SVG factory so all entry UI glyphs use FA.
+  function faIcon(name) {
+    const i = document.createElement('i');
+    i.className = 'fa-solid fa-' + name;
+    return i;
   }
 
-  function pencilIcon() {
-    return svgIcon([
-      'M12 20h9',
-      'M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z'
-    ]);
-  }
-
-  function trashIcon() {
-    return svgIcon([
-      'M3 6h18',
-      'M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2',
-      'M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6',
-      'M10 11v6',
-      'M14 11v6'
-    ]);
-  }
-
-  function eyeIcon() {
-    return svgIcon([
-      'M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z',
-      'M12 9a3 3 0 1 0 0.0001 0z'
-    ]);
-  }
-
-  function eyeOffIcon() {
-    return svgIcon([
-      'M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24',
-      'M1 1l22 22'
-    ]);
-  }
-
-  function zUpIcon() {
-    return svgIcon([
-      'M12 19V5',
-      'M5 12l7-7 7 7'
-    ], { viewBox: '0 0 24 24' });
-  }
-
-  function zDownIcon() {
-    return svgIcon([
-      'M12 5v14',
-      'M5 12l7 7 7-7'
-    ], { viewBox: '0 0 24 24' });
-  }
+  function pencilIcon() { return faIcon('pencil'); }
+  function trashIcon() { return faIcon('trash'); }
+  function eyeIcon() { return faIcon('eye'); }
+  function eyeOffIcon() { return faIcon('eye-slash'); }
+  function zUpIcon() { return faIcon('arrow-up'); }
+  function zDownIcon() { return faIcon('arrow-down'); }
 
   function cssEscape(s) {
     if (window.CSS && CSS.escape) return CSS.escape(s);
     return String(s).replace(/[^a-zA-Z0-9_-]/g, c => '\\' + c);
   }
 
-  return { enable, disable, syncLayoutFromDOM, rebuild, repack, flushPendingEdits, clearPendingEdits, startAddEntry, startAddImageEntry, checkOverflow, checkAllOverflows };
+  return { enable, disable, syncLayoutFromDOM, rebuild, repack, flushPendingEdits, clearPendingEdits, finalizeDeletes, clearPendingDeletes, markPendingDelete, getPendingEdits, setPendingEdits, applyPendingEditsToDOM, startAddEntry, startAddImageEntry, checkOverflow, checkAllOverflows, syncAllFixedUI, scheduleSyncFixedUI };
 })();

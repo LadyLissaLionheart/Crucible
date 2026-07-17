@@ -41,15 +41,15 @@ body.edit-mode .page-cells {
   background: var(--margin-bg);
 }
 body.edit-mode .page-margin { display: block; }
-.page-margin-top    { top: 0; left: 0; right: 0; height: calc(4 * var(--cell-h)); }
-.page-margin-bottom { bottom: 0; left: 0; right: 0; height: calc(4 * var(--cell-h)); }
-.page-margin-left   { left: 0; top: calc(4 * var(--cell-h)); bottom: calc(4 * var(--cell-h)); width: calc(4 * var(--cell-w)); }
-.page-margin-right  { right: 0; top: calc(4 * var(--cell-h)); bottom: calc(4 * var(--cell-h)); width: calc(4 * var(--cell-w)); }
+.page-margin-top    { top: 0; left: 0; right: 0; height: calc(3 * var(--cell-h)); }
+.page-margin-bottom { bottom: 0; left: 0; right: 0; height: calc(3 * var(--cell-h)); }
+.page-margin-left   { left: 0; top: calc(3 * var(--cell-h)); bottom: calc(3 * var(--cell-h)); width: calc(3 * var(--cell-w)); }
+.page-margin-right  { right: 0; top: calc(3 * var(--cell-h)); bottom: calc(3 * var(--cell-h)); width: calc(3 * var(--cell-w)); }
 /* Center gutter strip — the 3-cell-wide print-safe margin between the
    two content columns, sitting exactly on the page's horizontal midpoint
    (cols 23-25 on the 49-wide grid). Same tint as the outer margins.
    Inset vertically so it never overlaps the top/bottom strips. */
-.page-margin-center { top: calc(4 * var(--cell-h)); bottom: calc(4 * var(--cell-h)); left: calc(50% - 1.5 * var(--cell-w)); width: calc(3 * var(--cell-w)); }
+.page-margin-center { top: calc(3 * var(--cell-h)); bottom: calc(3 * var(--cell-h)); left: calc(50% - 1.5 * var(--cell-w)); width: calc(3 * var(--cell-w)); }
 
 /* ── Cards (chapter titles, section titles, entries) ───
    All cards are positioned by JS via left/top/width/height set inline

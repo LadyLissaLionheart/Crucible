@@ -17,7 +17,7 @@ body.edit-mode .toc-appendix { display: none; }
 /* Entries: dashed border box + hover highlight signals "click to edit".
    Chapters are just entries of kind 'chapter', so they get this box too —
    there is no separate title styling. */
-body.edit-mode .entry {
+ body.edit-mode .entry {
   /* Use outline (not border) + match read-mode padding so the entry
      content sits in exactly the same spot as display mode. A border +
      extra padding would inset the text relative to read mode. */
@@ -28,6 +28,16 @@ body.edit-mode .entry {
   border-radius: 4px;
   padding: 0;
   transition: background 0.15s, outline-color 0.15s;
+}
+
+/* Entries on a NON-active layer read as near-white with a near-black
+   dashed outline, so the selected layer stands out. The active layer
+   keeps --edit-bg / --edit-border (above). Layers.updateActiveLayerGroups
+   toggles .active-layer on each .layer-group. */
+body.edit-mode .layer-group:not(.active-layer) > .grid-card.entry {
+  background: var(--inactive-bg);
+  outline: 1px dashed var(--inactive-border);
+  border: none;
 }
 body.edit-mode .entry:hover {
   outline-color: var(--accent);
@@ -202,29 +212,24 @@ body.edit-mode .entry-actions .struct-btn {
    #main-content — transformed descendants of a zoomed element render
    blurry in Chrome/Safari. */
 body.edit-mode .entry-actions {
-  position: absolute;
-  bottom: 100%;
-  left: 0;
-  right: 0;
-  margin-bottom: 9px;
-  z-index: 30;
+  position: fixed;
+  z-index: 9999;
+  display: none;
 }
+body.edit-mode .entry-actions.visible { display: flex; }
 
 /* Action buttons run DOWN the left edge of the entry, just OUTSIDE the
-   card's left border (right:100% keeps it crisp inside the zoomed content).
-   The rail is a vertical stack: a z-index badge on top, then a row of
-   button-columns (max two tall) that grow to the LEFT. */
+   card's left border. The rail is a vertical stack: a z-index badge on top,
+   then a row of button-columns (max two tall) that grow to the LEFT. */
 body.edit-mode .entry-edge-actions {
-  position: absolute;
-  top: 0;
-  right: 100%;
-  margin-right: 9px;
-  display: flex;
+  position: fixed;
+  display: none;
   flex-direction: column;
   align-items: flex-end;
   gap: 0.25rem;
-  z-index: 30;
+  z-index: 9999;
 }
+body.edit-mode .entry-edge-actions.visible { display: flex; }
 body.edit-mode .entry-edge-actions .edge-btn-columns {
   display: flex;
   flex-direction: row-reverse;
@@ -243,8 +248,13 @@ body.edit-mode .grid-card:hover { z-index: 50; }
   padding: 0.2rem 0.3rem;
   line-height: 0;
 }
-.struct-btn.icon-btn svg {
+.struct-btn.icon-btn svg,
+.struct-btn.icon-btn i.fa-solid {
   display: block;
+  width: 14px;
+  height: 14px;
+  font-size: 14px;
+  text-align: center;
 }
 
 /* ── Resize handles ─────────────────────── */
@@ -255,13 +265,13 @@ body.edit-mode .grid-card:hover { z-index: 50; }
    box edge without first landing on it. Hidden (pointer-events:none) while
    a card is edited inline so they don't block text selection. */
 body.edit-mode .resize-handle {
-  position: absolute;
+  position: fixed;
   width: 12px;
   height: 12px;
   background: var(--accent);
   border: 1px solid var(--surface);
   border-radius: 2px;
-  z-index: 40;
+  z-index: 9999;
   opacity: 0;
   transition: opacity 0.1s;
 }
@@ -276,23 +286,24 @@ body.edit-mode .resize-handle::before {
   bottom: -5px;
   left: -5px;
 }
-body.edit-mode .grid-card:hover .resize-handle { opacity: 1; }
-body.edit-mode .entry.editing .resize-handle { opacity: 0; pointer-events: none; }
+body.edit-mode .resize-handle.hovered { opacity: 1; }
+body.edit-mode .resize-handle.visible { opacity: 1; }
+body.edit-mode .entry.editing ~ .resize-handle { opacity: 0; pointer-events: none; }
 /* When the pointer is OUTSIDE the card's blue box (over the orange overflow),
    hide the resize handles and show the default cursor — resize is measured by
    the blue boundary only, never the spill. (The handles themselves, at -5px
    outside the box, are exempt so they stay grabbable.) */
-body.edit-mode .grid-card.spill-hover .resize-handle { opacity: 1; pointer-events: auto; }
+body.edit-mode .resize-handle.spill-hover { opacity: 1; pointer-events: auto; }
 body.edit-mode .grid-card.spill-hover { cursor: default; }
 
-.resize-handle.e  { right: -5px;  top: 50%;    transform: translateY(-50%); cursor: ew-resize; }
-.resize-handle.w  { left: -5px;   top: 50%;    transform: translateY(-50%); cursor: ew-resize; }
-.resize-handle.s  { bottom: -5px; left: 50%;   transform: translateX(-50%); cursor: ns-resize; }
-.resize-handle.n  { top: -5px;    left: 50%;   transform: translateX(-50%); cursor: ns-resize; }
-.resize-handle.se { right: -5px;  bottom: -5px; cursor: nwse-resize; }
-.resize-handle.sw { left: -5px;   bottom: -5px; cursor: nesw-resize; }
-.resize-handle.ne { right: -5px;  top: -5px;    cursor: nesw-resize; }
-.resize-handle.nw { left: -5px;   top: -5px;    cursor: nwse-resize; }
+.resize-handle.e  { cursor: ew-resize; }
+.resize-handle.w  { cursor: ew-resize; }
+.resize-handle.s  { cursor: ns-resize; }
+.resize-handle.n  { cursor: ns-resize; }
+.resize-handle.se { cursor: nwse-resize; }
+.resize-handle.sw { cursor: nesw-resize; }
+.resize-handle.ne { cursor: nesw-resize; }
+.resize-handle.nw { cursor: nwse-resize; }
 
 body.edit-mode .grid-card.resizing {
   user-select: none;
@@ -304,11 +315,13 @@ body.edit-mode .grid-card.resizing {
    resize-handle / overflow-frame) fully visible so it can be toggled back.
    Keeps its grid slot. */
 body.edit-mode .grid-card.entry-hidden {
-  background: transparent;
-}
-body.edit-mode .grid-card.entry-hidden > *:not(.entry-actions):not(.entry-edge-actions):not(.resize-handle) {
   opacity: 0.32;
-  pointer-events: none;
+}
+body.edit-mode .entry-actions.entry-hidden-vis,
+body.edit-mode .entry-edge-actions.entry-hidden-vis,
+body.edit-mode .resize-handle.entry-hidden-vis,
+body.edit-mode .overflow-frame.entry-hidden-vis {
+  opacity: 1;
 }
 
 body:not(.edit-mode) .grid-card.entry-hidden { display: none; }
@@ -321,15 +334,14 @@ body:not(.edit-mode) .grid-card.entry-hidden { display: none; }
 body.edit-mode .grid-card.overflowing {
   z-index: 50;
 }
-body.edit-mode .grid-card .overflow-frame {
-  position: absolute;
-  inset: 0;
+body.edit-mode .overflow-frame {
+  position: fixed;
   pointer-events: none;
-  z-index: 20;
+  z-index: 9998;
 }
-body.edit-mode .grid-card .overflow-frame i {
+body.edit-mode .overflow-frame i {
   position: absolute;
-  background: rgba(230, 126, 0, 0.4);
+  background: rgba(220, 80, 70, 0.35);
   pointer-events: auto;
 }
 

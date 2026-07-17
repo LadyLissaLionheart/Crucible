@@ -270,6 +270,12 @@ body:not(.edit-mode) .sidebar-tabs { display: none; }
   display: flex;
   flex-direction: column;
   align-items: stretch;
+  /* Stacking boundary for the whole content area: all descendant fixed UI
+     (entry actions, edge actions, resize handles, overflow frames) is
+     contained here and CANNOT paint over the header (z-100) / sidebar (z-50),
+     which live outside .main-wrapper. The toolbars carry z-index above the
+     entry UI (see .action-bar) so they stay on top within this context. */
+  isolation: isolate;
 }
 
 .main {
@@ -376,6 +382,11 @@ body:not(.edit-mode) .sidebar-tabs { display: none; }
   border-bottom: 1px solid var(--border);
   font-family: var(--font-ui);
   font-size: 11px;
+  /* Positioned + above the entry UI (z-9999) so the toolbar always paints
+     on top of the content area, including its scrollbar. Contained within
+     .main-wrapper's isolated stacking context (below header/sidebar). */
+  position: relative;
+  z-index: 10000;
 }
 
 .action-bar-row {
@@ -396,7 +407,7 @@ body:not(.edit-mode) .sidebar-tabs { display: none; }
 }
 
 /* ── Action Button Component ─────────── */
-.action-btn {
+ .action-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -410,11 +421,14 @@ body:not(.edit-mode) .sidebar-tabs { display: none; }
   cursor: pointer;
   transition: background 0.1s, border-color 0.1s;
   width: 48px;
+  font-size: 20px;
 }
-.action-btn svg {
+.action-btn svg,
+.action-btn i.fa-solid {
   display: block;
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
+  font-size: 20px;
   flex-shrink: 0;
 }
 .action-btn:hover {
@@ -552,7 +566,7 @@ body:not(.edit-mode) .sidebar-tabs { display: none; }
   align-items: center;
   justify-content: center;
   height: 16px;
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--text-muted);
   line-height: 1;

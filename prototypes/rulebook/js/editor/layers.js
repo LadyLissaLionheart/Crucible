@@ -204,6 +204,7 @@ const Layers = (() => {
     layout.layers.push({ id, scope: 'global', page: null, name: 'Layer ' + (layout.layers.length + 1), visible: true });
     activeLayerId = id;
     EditMode.setDirty();
+    History.commit('add layer');
     relayout();
   }
 
@@ -237,6 +238,7 @@ const Layers = (() => {
     layout.layers = (layout.layers || []).filter(l => l.id !== id);
     layout.entries = (layout.entries || []).filter(e => e.layerId !== id);
     EditMode.setDirty();
+    History.commit('delete layer');
     relayout();
   }
 
@@ -244,7 +246,11 @@ const Layers = (() => {
     const layer = (getLayout().layers || []).find(l => l.id === id);
     if (!layer) return;
     layer.visible = layer.visible === false ? true : false;
-    EditMode.setDirty();
+    // View-only state: persist immediately and keep it out of undo/redo and
+    // the save-dirty flag (same treatment as the edit-mode visibility checkbox).
+    API.saveLayout(getLayout()).catch(err => {
+      console.error('[Layers] failed to persist layer visibility:', err);
+    });
     relayout();
   }
 
@@ -255,6 +261,10 @@ const Layers = (() => {
     EditMode.setDirty();
     // Label only — no DOM re-layout needed, but refresh the page badge.
   }
+
+  // NOTE: renameLayer does NOT commit here — the per-keystroke `input` handler
+  // is suppressed from committing; the `change` event handler (below) commits
+  // 'rename layer' once on blur/enter.
 
   // The panel shows layers REVERSED (top = highest z = last in the array).
   // Dragging happens in that visual space, so reordering must translate a
@@ -291,6 +301,7 @@ const Layers = (() => {
   function reorderLayer(srcId, targetId, after) {
     reorderVisual(srcId, targetId, after);
     EditMode.setDirty();
+    History.commit('reorder layer');
     relayout();
   }
 
@@ -347,6 +358,7 @@ const Layers = (() => {
       dragLayerId = null;
       clearDragMarkers();
       EditMode.setDirty();
+      if (typeof History !== 'undefined' && History.commit) History.commit('reorder layer');
     }
 
     window.addEventListener('mousemove', onMove);
@@ -491,7 +503,11 @@ const Layers = (() => {
         name.focus();
       });
       name.addEventListener('input', () => renameLayer(layer.id, name.value));
-      name.addEventListener('change', () => renderForPage(currentPage));
+      name.addEventListener('change', () => {
+        renameLayer(layer.id, name.value);
+        if (typeof History !== 'undefined' && History.commit) History.commit('rename layer');
+        renderForPage(currentPage);
+      });
       name.addEventListener('blur', () => {
         name.setAttribute('readonly', '');
         name.tabIndex = -1;
