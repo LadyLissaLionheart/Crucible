@@ -339,6 +339,12 @@ body.edit-mode .overflow-frame {
   pointer-events: none;
   z-index: 9998;
 }
+/* When NOT in edit mode the overflow frame must never paint (it is a pure
+   edit affordance). It is now a persistent element on .page, so hide it by
+   default rather than relying on JS to remove it on every teardown. */
+body:not(.edit-mode) .overflow-frame {
+  display: none !important;
+}
 body.edit-mode .overflow-frame i {
   position: absolute;
   background: rgba(220, 80, 70, 0.35);

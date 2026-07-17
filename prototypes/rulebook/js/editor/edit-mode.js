@@ -390,17 +390,18 @@ const EditMode = (() => {
     syncMenuButtons();
     const main = document.getElementById('main-content');
     const y = main.scrollTop;
+    // Same synchronous, cache-only re-render as undo/redo (no server round-trip)
+    // so discarding doesn't blank-and-refill the cards and flicker. The backup
+    // layout's content is already in the in-memory content cache.
     Renderer.renderChapters();
-    Renderer.loadAllEntries().then(() => {
-      PageNumbers.paginate();
-      PageNumbers.stampPageNumbers();
-      Renderer.setupActiveTOC();
-      if (typeof Layers !== 'undefined') Layers.sync();
-      Renderer.forceRepaint();
-      StructureUI.enable();
-      main.scrollTo(0, y);
-    });
-    Renderer.setupLazyLoading();
+    if (typeof Renderer.populateFromCache === 'function') Renderer.populateFromCache();
+    PageNumbers.paginate();
+    PageNumbers.stampPageNumbers();
+    Renderer.setupActiveTOC();
+    if (typeof Layers !== 'undefined') Layers.sync();
+    Renderer.forceRepaint();
+    StructureUI.enable();
+    main.scrollTo(0, y);
   }
 
   function cancelEdit() {

@@ -37,6 +37,13 @@ const StructureUI = (() => {
   // `.entry`, so a direct-child-only scan misses it).
   const AFFORDANCE_SEL = '.entry-actions, .entry-edge-actions, .resize-handle, .struct-btn, .entry-add-actions';
 
+  // checkOverflow measures WHERE content spills past the card edges and records
+  // the spill extents on the frame as data attributes. It deliberately does NOT
+  // position the bands — that is done entirely in syncFixedUI, in the same
+  // coordinate space as every other floating UI element (actions, handles, …).
+  // Keeping all fixed-UI positioning in one place means the overflow frame can
+  // never drift out of sync / flicker when a caller runs checkOverflow without a
+  // perfectly-timed syncFixedUI (the old split-brain bug).
   function checkOverflow(card) {
     const entryId = card.dataset.entryId;
     const pageElOff = card.closest('.page');
@@ -80,6 +87,13 @@ const StructureUI = (() => {
       }
     };
     walk(card);
+    // Spill extents, in card-local px, relative to the card box (which, inside
+    // the frame container, occupies 0,0 → cardW,cardH). Negative = content past
+    // the top/left edge; positive past the bottom/right edge.
+    const spillTop = -Math.min(0, minTop);
+    const spillLeft = -Math.min(0, minLeft);
+    const spillBottom = Math.max(0, maxBottom - cardH);
+    const spillRight = Math.max(0, maxRight - cardW);
     const overTop = minTop < -tol;
     const overBottom = maxBottom > cardH + tol;
     const overLeft = minLeft < -tol;
@@ -100,26 +114,14 @@ const StructureUI = (() => {
     } else if (frame.parentElement !== (pageElOff || card)) {
       (pageElOff || card).appendChild(frame);
     }
-    const T = frame.querySelector('.of-top');
-    const R = frame.querySelector('.of-right');
-    const B = frame.querySelector('.of-bottom');
-    const L = frame.querySelector('.of-left');
-    const w = maxRight - minLeft;
-    const h = maxBottom - minTop;
-    T.style.display = overTop ? 'block' : 'none';
-    B.style.display = overBottom ? 'block' : 'none';
-    L.style.display = overLeft ? 'block' : 'none';
-    R.style.display = overRight ? 'block' : 'none';
-    // Each band is a FILLED strip in the overflow region (outside the card),
-    // so the spilled area reads as solid orange rather than a thin line.
-    T.style.left = minLeft + 'px'; T.style.top = minTop + 'px';
-    T.style.width = w + 'px';      T.style.height = (-minTop) + 'px';
-    B.style.left = minLeft + 'px'; B.style.top = cardH + 'px';
-    B.style.width = w + 'px';      B.style.height = (maxBottom - cardH) + 'px';
-    L.style.left = minLeft + 'px'; L.style.top = '0px';
-    L.style.width = (-minLeft) + 'px'; L.style.height = cardH + 'px';
-    R.style.left = cardW + 'px';   R.style.top = '0px';
-    R.style.width = (maxRight - cardW) + 'px'; R.style.height = cardH + 'px';
+    frame.dataset.spillTop = spillTop;
+    frame.dataset.spillLeft = spillLeft;
+    frame.dataset.spillBottom = spillBottom;
+    frame.dataset.spillRight = spillRight;
+    frame.dataset.overTop = overTop ? '1' : '';
+    frame.dataset.overBottom = overBottom ? '1' : '';
+    frame.dataset.overLeft = overLeft ? '1' : '';
+    frame.dataset.overRight = overRight ? '1' : '';
   }
 
   function checkAllOverflows() {
@@ -182,10 +184,63 @@ const StructureUI = (() => {
 
     const frame = pageEl.querySelector('.overflow-frame[data-entry-id="' + entryId + '"]');
     if (frame) {
+      // During a forceRepaint the card is briefly display:none and measures
+      // zero; collapse the frame to nothing so a stale position can't flash.
+      if (rect.width === 0 || rect.height === 0) {
+        frame.style.top = '0px';
+        frame.style.left = '0px';
+        frame.style.width = '0px';
+        frame.style.height = '0px';
+        const T = frame.querySelector('.of-top');
+        const R = frame.querySelector('.of-right');
+        const B = frame.querySelector('.of-bottom');
+        const L = frame.querySelector('.of-left');
+        if (T) T.style.cssText = 'display:none;';
+        if (B) B.style.cssText = 'display:none;';
+        if (L) L.style.cssText = 'display:none;';
+        if (R) R.style.cssText = 'display:none;';
+        return;
+      }
+      // Anchor the container at the card's box. Because the container is
+      // position:fixed and the zoom layer scales fixed children, all offsets
+      // must be divided by zoom. Within the container the card occupies
+      // 0,0 → cardW,cardH (zoom-compensated), and the bands are drawn in that
+      // local space using the spill extents recorded by checkOverflow.
+      const cardW = rect.width / zoom;
+      const cardH = rect.height / zoom;
       frame.style.top = (rect.top / zoom) + 'px';
       frame.style.left = (rect.left / zoom) + 'px';
-      frame.style.width = (rect.width / zoom) + 'px';
-      frame.style.height = (rect.height / zoom) + 'px';
+      frame.style.width = cardW + 'px';
+      frame.style.height = cardH + 'px';
+
+      const overTop = frame.dataset.overTop === '1';
+      const overBottom = frame.dataset.overBottom === '1';
+      const overLeft = frame.dataset.overLeft === '1';
+      const overRight = frame.dataset.overRight === '1';
+      const sT = parseFloat(frame.dataset.spillTop) || 0;
+      const sL = parseFloat(frame.dataset.spillLeft) || 0;
+      const sB = parseFloat(frame.dataset.spillBottom) || 0;
+      const sR = parseFloat(frame.dataset.spillRight) || 0;
+      const w = cardW + sL + sR;
+      const h = cardH + sT + sB;
+      const T = frame.querySelector('.of-top');
+      const R = frame.querySelector('.of-right');
+      const B = frame.querySelector('.of-bottom');
+      const L = frame.querySelector('.of-left');
+      T.style.display = overTop ? 'block' : 'none';
+      B.style.display = overBottom ? 'block' : 'none';
+      L.style.display = overLeft ? 'block' : 'none';
+      R.style.display = overRight ? 'block' : 'none';
+      // Each band is a FILLED strip in the overflow region (outside the card),
+      // so the spilled area reads as solid orange rather than a thin line.
+      T.style.left = (-sL) + 'px';    T.style.top = (-sT) + 'px';
+      T.style.width = w + 'px';       T.style.height = sT + 'px';
+      B.style.left = (-sL) + 'px';    B.style.top = cardH + 'px';
+      B.style.width = w + 'px';       B.style.height = sB + 'px';
+      L.style.left = (-sL) + 'px';    L.style.top = '0px';
+      L.style.width = sL + 'px';      L.style.height = cardH + 'px';
+      R.style.left = cardW + 'px';    R.style.top = '0px';
+      R.style.width = sR + 'px';      R.style.height = cardH + 'px';
     }
   }
 
@@ -327,6 +382,18 @@ const StructureUI = (() => {
     checkAllOverflows();
     syncAllFixedUI();
     _bindFixedSync();
+    // Re-check on a later frame. Callers like discardChanges / save / finish /
+    // layer toggles run Renderer.forceRepaint(), which sets #main-content to
+    // display:none and restores it inside a requestAnimationFrame. A synchronous
+    // overflow pass here would measure cards at zero geometry (display:none),
+    // pinning every frame to (0,0) with zero size so the red out-of-bounds fill
+    // appears to vanish. This pass is nested one frame deeper than forceRepaint's
+    // own restore rAF, so it measures the restored, laid-out DOM — not the
+    // display:none state.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      checkAllOverflows();
+      syncAllFixedUI();
+    }));
     if (typeof Layers !== 'undefined' && Layers.updateActiveLayerGroups) Layers.updateActiveLayerGroups();
   }
 
@@ -344,14 +411,13 @@ const StructureUI = (() => {
     document.querySelectorAll('.entry-add-actions').forEach(n => n.remove());
     document.querySelectorAll('.resize-handle').forEach(n => n.remove());
     document.querySelectorAll('.struct-add-chapter').forEach(n => n.remove());
-    // Drop any overflow marks so they never bleed into read/print view.
-    document.querySelectorAll('.pages .grid-card').forEach(c => {
-      c.classList.remove('overflowing', 'spill-hover');
-      const f = c.querySelector(':scope > .overflow-frame');
-      if (f) f.remove();
-    });
-    // Overflow frames now live on .page (sibling of cards), not inside them.
-    document.querySelectorAll('.overflow-frame').forEach(n => n.remove());
+    // NOTE: overflow frames are intentionally NOT removed here. They are
+    // persistent floating UI on .page (like resize-handles/actions) and are
+    // repositioned by syncFixedUI. Tearing them down on every structural
+    // change (e.g. a layer reorder that calls enable() per drag tick) is what
+    // caused the red out-of-bounds box to flicker — it would be destroyed and
+    // recreated at (0,0) between rebuilds. Their visibility is driven purely
+    // by the .overflowing class + syncFixedUI, which survives a repack.
   }
 
   // Sync stored card positions from the DOM back into the layout model.
@@ -442,6 +508,40 @@ const StructureUI = (() => {
     // sizing updates correctly (otherwise stale paint persists until a
     // refresh).
     Renderer.forceRepaint();
+  }
+
+  // Lightweight re-stack used during a LIVE layer reorder drag. A reorder only
+  // changes each .layer-group's z-index (and hidden state) — it does NOT move
+  // or resize any card, and pagination is unaffected. Rather than run the full
+  // repack() (which tears down and rebuilds the entire page DOM + floating UI
+  // on every mousemove and is what made the overflow frame flicker), we just
+  // re-apply the stacking order to the EXISTING .layer-group elements and let
+  // syncAllFixedUI reposition the persistent floating UI. This keeps every
+  // fixed element (handles, actions, overflow frame) perfectly in step with
+  // the cards without any destroy/recreate churn.
+  function syncLayerStacking() {
+    const layout = Renderer.getLayout();
+    if (!layout) return;
+    // Per page, assign z-index by the layer's position in layout.layers,
+    // matching the order pagination.js uses when it first builds the groups.
+    document.querySelectorAll('.pages .page').forEach(pageEl => {
+      const pageNum = Number(pageEl.dataset.page);
+      const pageLayers = (layout.layers || [])
+        .filter(l => l.scope === 'global' || l.page === pageNum);
+      const groups = pageEl.querySelectorAll(':scope > .layer-group');
+      groups.forEach(g => {
+        const lid = g.dataset.layerId;
+        const idx = pageLayers.findIndex(l => l.id === lid);
+        if (idx === -1) return;
+        g.style.zIndex = String(2 + idx);
+        const l = pageLayers[idx];
+        const hiddenInEdit = (typeof EditMode !== 'undefined' && EditMode.isActive())
+          ? (l.editHidden === true)
+          : false;
+        if (l.visible === false || hiddenInEdit) g.setAttribute('hidden', '');
+        else g.removeAttribute('hidden');
+      });
+    });
   }
 
   // ── Card Controls ─────────────────────────
@@ -1667,6 +1767,7 @@ const StructureUI = (() => {
     EditMode.setDirty();
     History.commit('resize');
     resize = null;
+    scheduleSyncFixedUI();
 
     document.removeEventListener('mousemove', onResizeMove);
     document.removeEventListener('mouseup', onResizeEnd);
@@ -1710,5 +1811,5 @@ const StructureUI = (() => {
     return String(s).replace(/[^a-zA-Z0-9_-]/g, c => '\\' + c);
   }
 
-  return { enable, disable, syncLayoutFromDOM, rebuild, repack, flushPendingEdits, clearPendingEdits, finalizeDeletes, clearPendingDeletes, markPendingDelete, getPendingEdits, setPendingEdits, applyPendingEditsToDOM, startAddEntry, startAddImageEntry, checkOverflow, checkAllOverflows, syncAllFixedUI, scheduleSyncFixedUI };
+  return { enable, disable, syncLayoutFromDOM, rebuild, repack, syncLayerStacking, flushPendingEdits, clearPendingEdits, finalizeDeletes, clearPendingDeletes, markPendingDelete, getPendingEdits, setPendingEdits, applyPendingEditsToDOM, startAddEntry, startAddImageEntry, checkOverflow, checkAllOverflows, syncAllFixedUI, scheduleSyncFixedUI };
 })();

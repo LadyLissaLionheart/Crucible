@@ -369,7 +369,25 @@ const Layers = (() => {
   // panel + z-order immediately, but defers the dirty-flag/save until drop.
   function reorderLayerLive(srcId, targetId, after) {
     reorderVisual(srcId, targetId, after);
-    relayout();
+    // A reorder only changes layer stacking — cards don't move or resize and
+    // pagination is unaffected. Update the existing groups in place and
+    // re-sync the floating UI (handles / actions / overflow frames) so they
+    // track the cards without the full repack() teardown, which is what made
+    // the overflow frame flicker on every drag tick.
+    if (typeof EditMode !== 'undefined' && EditMode.isActive()) {
+      if (typeof StructureUI !== 'undefined' && StructureUI.syncLayerStacking) {
+        StructureUI.syncLayerStacking();
+      }
+      if (typeof StructureUI !== 'undefined' && StructureUI.syncAllFixedUI) {
+        StructureUI.syncAllFixedUI();
+      }
+    } else if (typeof PageNumbers !== 'undefined') {
+      PageNumbers.paginate();
+    }
+    if (typeof Layers !== 'undefined' && Layers.updateActiveLayerGroups) {
+      Layers.updateActiveLayerGroups();
+    }
+    renderForPage(currentPage);
   }
 
   function rowUnderPoint(y) {

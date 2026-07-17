@@ -167,6 +167,9 @@ const ContentEditor = (() => {
         currentEntryEl.dataset.loaded = 'true';
         if (typeof StructureUI !== 'undefined' && StructureUI.checkOverflow) {
           StructureUI.checkOverflow(currentEntryEl);
+          // Band geometry is drawn by syncFixedUI (same pass as every other
+          // floating element); schedule it so the frame follows the new content.
+          if (StructureUI.scheduleSyncFixedUI) StructureUI.scheduleSyncFixedUI();
         }
       }
 
