@@ -62,6 +62,8 @@ body.edit-mode .page-margin { display: block; }
   padding: 0;
   overflow: hidden;
 }
+.grid-card.appendix,
+.grid-card .appendix { overflow: visible; }
 body.edit-mode .grid-card { overflow: visible; }
 
 /* The appendix isn't a positioned card; it sits inside a page as

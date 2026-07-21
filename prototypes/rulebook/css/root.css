@@ -20,8 +20,8 @@
   --inactive-bg: #fefefe;
   --inactive-border: #000000;
   --font-display: 'Bebas Neue', sans-serif;
-  --font-body: 'Libre Baskerville', Georgia, 'Times New Roman', serif;
-  --font-ui: 'Inter', Helvetica, Arial, sans-serif;
+  --font-body: 'Lora', Georgia, 'Times New Roman', serif;
+  --font-ui: 'Outfit', Helvetica, Arial, sans-serif;
 
   /* Page geometry — US Letter @ 96dpi */
   --page-w: 816px;            /* 8.5in */

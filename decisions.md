@@ -2,11 +2,13 @@
 
 ## Core Philosophy
 
-**Simple core mechanics** — easy to learn, fast at the table. The player's ritual is always identical: roll 5d12, count successes, spend edges if desired, check parity. No lookups, no conditional math. All risk is handled by the GM through a single number.
+**Simple core mechanics** — easy to learn, fast at the table. The player's ritual is always identical: roll 4d12, count successes against your Target Number (TN), need at least one. No parity, no conditional math, no lookups. All risk and reward is handled by a small set of named resources.
 
-**Allow cinematic moments** — mechanics create drama, not just pass/fail. The parity-based critical system ensures that even impossible rolls have a chance of breakthrough, and sure things can unravel. The Success Ladder (Misfortune, Setback, Triumph) provides narrative texture beyond binary outcomes.
+**Allow cinematic moments** — mechanics create drama, not just pass/fail. The shared Tenacity deck means every player watches every roll and can spend to help an ally; Setbacks feed both the player (Tenacity) and the GM (Threat), so even failure generates resources and onward pressure. The Success Ladder (Failure, Success, improved outcome) provides narrative texture beyond binary outcomes.
 
-**Scale to the complexity of the group** — simple for casual play, deep for invested groups. The Core book stands alone as a complete game for rules-lite groups. The Advanced book adds tactical depth, expanded subsystems, and crunchy options for groups that want them. The system itself scales naturally: the core resolution mechanic is immediately accessible, while edges, expertise dice, and the Inspiration/Tension economy provide layers of strategic depth for those who seek it.
+**Scale to the complexity of the group** — simple for casual play, deep for invested groups. The Core book stands alone as a complete game for rules-lite groups. The Advanced book adds tactical depth, expanded subsystems, and crunchy options (suit-based Tenacity effects, etc.) for groups that want them. The system itself scales naturally: the core resolution is immediately accessible, while Prowess, Burden, Tenacity, Threat, and Risk provide layers of strategic depth for those who seek it.
+
+**Shared economy, individual hands** — Tenacity is a single deck the whole party draws from, but each player holds their own hand. This keeps the table engaged on every roll: anyone can spend to rescue anyone.
 
 ## Book Structure
 
@@ -19,124 +21,129 @@ The Core must stand alone as a complete game. The Advanced book is additive, not
 
 ## Core Mechanic: d12 Success-Counting
 
-**Resolution**: Roll 5d12. Count successes against your Target Number (TN). The GM applies Risk as a penalty zone.
+**Resolution**: Roll **4d12**. Count successes against your Target Number (TN). You need **at least one success** to succeed.
 
-**The three-zone die** (per die):
+**Per-die outcome** (a die is exactly one of three states):
 | Condition | Result |
 |---|---|
-| Die ≤ Risk | −1 success |
-| Risk < die < TN | 0 |
-| Die ≥ TN | +1 success |
+| Die ≤ (1 + Risk) | **Setback** — locked, pays Tenacity + Threat, never a success |
+| (1 + Risk) < die < TN | Neutral miss — no success, not a Setback, may be rescued by Tenacity |
+| Die ≥ TN | **Success** (+1 success) |
 
-**Risk overrides success** — if a die is both ≥ TN and ≤ Risk, penalty wins.
+**Risk overrides nothing** — a die that is both ≥ TN and ≤ (1+Risk) cannot exist, because TN is always greater than (1+Risk). See Risk below.
 
 **Success Ladder**:
+| Net successes | Meaning |
+|---|---|
+| 0 | **Failure** — the attempt does not succeed |
+| 1+ | **Success** — the attempt succeeds |
+| 2+ | Success with an **improved outcome** (effect, magnitude, or narrative texture) |
+| 3 | Exceptional success |
 
-| Net | Tier | Meaning |
-|---|---|---|
-| −1 or less | **Misfortune** | Failure, things get complicated |
-| 0 | **Setback** | Failure |
-| 1+ | **Triumph** | Clean success and beyond |
+Surplus successes (beyond the first) improve the outcome. The specific scale of "improved outcome" is adjudicated by the GM and/or defined by future crunch; it is intentionally light at the Core level (the Expertise-dice magnitude system was removed).
 
 **Resolution flow**:
 1. Player says what they want to do and what attribute they're using.
-2. GM decides if it's automatic (no roll), impossible (no roll), or Risk N.
-3. Player rolls 5d12, counts successes ≥ TN, subtracts dice ≤ Risk.
-4. **Spend edges** (optional): each edge shifts one die up by 2 (max 12). A die can only be shifted once per roll. Recalculate successes/penalties after shifts.
-5. Check die parity:
-   - **5 evens**: **Critical Success** — ignore penalties, +1 success. Player gains +2 Inspiration.
-   - **4 evens**: Player gains +1 Inspiration.
-   - **3 evens**: Player gains +1 Inspiration.
-   - **2 evens**: GM gains +1 Tension.
-   - **1 even**: GM gains +1 Tension.
-   - **5 odds**: **Critical Failure** — ignore successes, −1 success. GM gains +2 Tension.
-6. GM narrates the result using the Success Ladder.
+2. GM decides TN (from the attribute) and the Risk (situation).
+3. Player rolls **4d12** (base) together with any **Edge** dice already declared before the roll (each granter rolls their own +1 d12, in a different color). Any **Burden** (Risk +1) declared before the roll is applied.
+4. Apply **Risk**: dice ≤ (1 + Risk) are **Setbacks** — locked, and each pays the rolling player +1 Tenacity and the GM +1 Threat. They never count as successes and cannot be rescued.
+5. Count successes: base dice ≥ TN (that are not Setbacks) plus Edge dice ≥ TN.
+6. Players may spend **Tenacity** to rescue a neutral-miss die (see Tenacity). Each player may spend at most one card per roll. Net successes ≥ 1 = Success. GM narrates using the Success Ladder.
 
 **Turn trivially possible → don't roll. Turn trivially impossible → don't roll.** Risk is only for the grey zone where a roll matters.
 
-## Resources
+## Risk & Setback
 
-Every roll generates resources based on die parity. Each d12 has 6 even faces (2,4,6,8,10,12) and 6 odd faces (1,3,5,7,9,11), giving fixed binomial odds regardless of TN or Risk. With an odd pool size, there is no tie — one side always outnumbers the other:
+**Risk** is a dial from **1 to 3**. It is the campaign's **uncertainty/consequence** knob, not a difficulty knob — it does not lower your chance of success (a Setback die is always below TN and would have missed anyway). Risk sets how many of your dice become **Setbacks**.
 
-| Name | Dice | Gain | Probability |
-|---|---|---|---|---|
-| Critical Success | 5e | +2 Inspiration | 1/32 = 3.125% |
-| — | 4e / 1o | +1 Inspiration | 5/32 = 15.625% |
-| — | 3e / 2o | +1 Inspiration | 10/32 = 31.25% |
-| — | 2e / 3o | +1 Tension | 10/32 = 31.25% |
-| — | 1e / 4o | +1 Tension | 5/32 = 15.625% |
-| Critical Failure | 5o | +2 Tension | 1/32 = 3.125% |
+**Setback threshold** = **1 + Risk**. A die showing that number or lower is a Setback.
+| Risk | Setback faces | Setback chance / die |
+|---|---|---|
+| 1 | 1–2 | 16.7% |
+| 2 | 1–3 | 25.0% |
+| 3 | 1–4 | 33.3% |
 
-On a **Critical Success** (5 evens), ignore the penalty zone and gain +1 success — only successes and neutral dice count, plus a bonus success. On a **Critical Failure** (5 odds), ignore the success zone and suffer −1 success — only penalties and neutral dice count, plus an extra penalty. This means a desperate roll can break through risk, and a sure thing can unravel despite high skill. Because the pool is odd-sized, every roll always generates either Inspiration or Tension — there is no dead zone.
+A natural **1 is always a Setback** (since Risk ≥ 1, 1 ≤ 1+Risk always).
 
-## Edges
+**Setback effects**:
+- The rolling player gains **+1 Tenacity**.
+- The GM gains **+1 Threat**.
+- The die is **locked**: it cannot be altered by Edge, and it cannot be rescued by Tenacity.
 
-Edges represent training, talent, circumstance, or equipment that lets a character exert mastery over a check. They can come from specializations, gear, situational bonuses, or other sources.
+Risk is set by the **situation** (the GM, for dangerous/uncertain actions) and may be raised by the player through **Burden** (opt-in). Because Risk never changes the success count, raising it is a *bet*: more Setbacks mean more Tenacity for the table and more Threat for the GM, but no change to whether you succeed.
 
-**Spending an edge**: after rolling but before checking parity, spend one edge to shift one die's face value up by 2 (to a maximum of 12). Recalculate successes and penalties based on the new value. A given die can only be shifted once per roll. Multiple edges can be spent on different dice in the same roll.
+## Exceptional, Disadvantage & Advantage (Deferred)
 
-Edges preserve parity (even+2 stays even, odd+2 stays odd), so the resource economy is unaffected by edge use. Edges also never cause a reroll, keeping the 5d12 resolution consistent.
+> **Deferred to Advanced.** Exceptional/Inferior aspect tags and their associated Advantage/Disadvantage mechanics are removed from Core. They may return in the Advanced book as a subsystem for representing notable foe strengths and weaknesses. At Core level, adversary strength is expressed through **Risk**, **Threat spends**, and **narrative**.
 
-**Per-session budget**: each edge source defines how many uses the player gets per session. Specializations typically grant 1–3 uses; other sources may vary.
+## Edge (from Prowess)
 
-## Risk
+**Edge** is a bonus die granted by spending **Prowess** (or by an ally who spends Prowess on your behalf).
 
-Risk is 0–12. The GM picks a number based on the situation. No table lookup — just instinct: "this is risk 7" or "this is standard (risk 0)."
+**Declared before the roll.** Edge is committed *before* any dice are rolled — the player who will roll and any ally who assists with Edge must decide and narrate their involvement up front, before the results are known. This keeps Edge a **proactive** resource (you stake your Prowess and set up the fiction in advance) and cleanly separates it from **Tenacity**, which is spent *after* the roll as a reactive rescue. Forcing the narrative before the outcome is known is intentional: it makes assists feel earned rather than retrofitted to a result.
 
-**What different Risk values mean** (at TN 8, the human average):
-| Risk | Penalty zone | Expected net successes | Feel |
-|---|---|---|---|
-| 0 | None | 2.03 | Routine |
-| 2 | 1–2 | 1.22 | Slightly risky |
-| 4 | 1–4 | 0.42 | Risky |
-| 6 | 1–6 | -0.39 | High risk |
-| 8 | 1–8 | -1.61 | Desperate |
-| 10 | 1–10 | -3.23 | Near-impossible |
-| 12 | 1–12 | -4.84 | Impossible |
+**Spending an Edge**: the active player rolls **+1 d12** in a **different color** alongside their base dice — the Edge die is part of the active player's pool but is visually distinct.
+- A die on the Edge die that is **≥ TN** counts as a success (like any other).
+- A **1** on the Edge die is a **Setback for the granter** (granter gains +1 Tenacity, GM +1 Threat).
+- Edge dice are **Risk-free**: Risk does not apply to them (only a 1 pays), so assisting never exposes the granter to the roller's Risk.
 
-At Risk 12 every die is a penalty — the normal calculation always results in Misfortune. A Critical Success (5 evens) ignores penalties, making success possible against impossible odds. The GM may let the roll happen for dramatic effect, knowing a breakout is always possible.
+**Limits**: each player may grant/hold at most **one Edge per roll** (so a roll can grow to 4 base + N Edge dice, one per participating player). Edge stacks across players but is capped by the number of players. Whether an Edge is self-applied by the roller or granted to an ally, the decision is made before the check.
 
-**Risk caps at TN−1 internally.** Risk can never equal or exceed TN — a die that beats the TN is always a success, never a penalty. This avoids contradictory outcomes where the same die scores and loses a success. The input field is freely editable; the cap is enforced in resolution and odds calculations only.
+## Critical Success
 
-## Expertise Dice
+**Trigger**: two or more dice showing **12** across the active player's **base dice only** (Edge dice do not count toward critical). A 12 is always a success (TN ≤ 12), so a critical represents multiple dice achieving the maximum face — a rare, exciting outcome.
 
-Players always roll 5d12, but the composition changes with tier. Expertise dice are mechanically identical to standard dice (same three-zone system, TN, Risk) but determine **Effect Magnitude** and can trigger special abilities.
+**Effect**:
+- The active player takes a **bonus turn** after the current turn resolves.
 
-**Tier by Level:**
+**Edge interaction**: Edge dice are a different color and do **not** count toward the critical trigger. They add raw success potential but never contribute to a crit.
 
-| Tier | Level | Expertise Dice | Standard Dice |
-|------|-------|----------------|---------------|
-| Heroic | 1-4 | 1d12 | 4d12 |
-| Paragon | 5-8 | 2d12 | 3d12 |
-| Ascendant | 9-12 | 3d12 | 2d12 |
-| Legendary | 13-16 | 4d12 | 1d12 |
-| Mythic | 17+ | 5d12 | 0d12 |
+**Crit rate** (2+ 12s on 4 base dice, p = 1/12 per die):
+| Pool | Crit % |
+|---|---|
+| 4 base dice | 3.72% |
 
-**Effect Magnitude** = sum of expertise dice. Only calculated when the check requires it (damage, progress, etc.). Not every check needs magnitude.
+## Tenacity (Player Resource)
 
-**Success Ladder and Magnitude:**
-- Misfortune: No Effect Magnitude
-- Setback: Magnitude at a cost (negotiated with GM)
-- Triumph: Magnitude
+Tenacity is the players' spendable resource, drawn from a **single shared deck** the whole party uses.
 
-**Successes/Penalties** (per-action augmentation, not persistent resource):
-- For each net success (Triumph), gain a successes point
-- For each net penalty (Misfortune), gain a penalty
-- Successes can be spent to augment the action: +5 Effect Magnitude per successes spent
-- Other successes/penalty effects TBD (crunchy book defines specific mechanics)
+**The deck**: standard player cards, **2–10 × 4 suits = 36 cards**. One shared draw pile; played and excess cards go to a discard pile; when the draw pile is empty, the discard is reshuffled into the draw pile. **Suit is irrelevant at Core level** (reserved as an Advanced/knack mechanic).
 
-**Key Design Notes:**
-- NPCs never roll — expertise dice are player-exclusive
-- Visual distinction via dice color teaches the system naturally
-- Effect Magnitude scales linearly with tier: ~6.5 (Heroic) to ~32.5 (Mythic)
+**Hands**: players draw from the shared pile into **individual hands**. A player's hand cap = **gameplay tier + 2** (3 at Heroic). A player at cap who would gain a card forfeits it (the card stays in the deck/discard; the draw is not depleted).
 
-## Rationale for d12
+**Gain**: each **Setback** a player rolls pays them **+1 Tenacity** (base-die Setbacks pay the roller; Edge-die Setbacks pay the granter).
 
-The d12 is the most underused die in the hobby. It gives 12 discrete outcomes and a clean 8.3% step per pip, which is finer granularity than a d10 (10%) or d20 (5%). Five dice creates a strong central tendency while leaving room for modifiers to matter. The odd pool size ensures every roll always generates resources — no dead zone.
+**Spend — card-match rescue**: a player may play **one Tenacity card** to turn a die into an **automatic success** if the **card's rank matches the die face**. Rules:
+- Only a die in the range **(1 + Risk) < die < TN** can be rescued — i.e. a neutral miss that is not a Setback and not already a success.
+- **Suit is ignored**; rank alone must match.
+- **Any player** may spend for **any other player's roll** (including the roller), as long as they can justify it in the fiction.
+- Max **one card per player per roll**.
+- The played card goes to the **discard** pile.
+
+This is the heart of the shared deck: every player tracks every roll, listening for a moment their card can turn a near-miss into a success.
+
+## Threat (GM Resource)
+
+**Threat** is the GM's resource pool. It is generated **live, by every Setback** (each Setback gives the GM +1 Threat). There is no automatic per-interval gain and no separate Risk→Threat conversion step — the Setback event is the source.
+
+The GM spends Threat on adversarial leverage (the specific spend vocabulary is deferred to the GM Tools section / Advanced book). Because Threat flows from the table's own Risk and Setbacks, a dangerous session naturally arms the GM.
+
+## Prowess & Burden (Player Systems)
+
+These are the character's limited-use, player-controlled systems (formerly "Specializations"). Each is a bucket of activated abilities with a **per-session use budget**; the character spends a use to grant the corresponding generic effect.
+
+| System | Spend effect | Notes |
+|--------|-------------|-------|
+| **Prowess** | Grant **Edge** (+1 bonus d12, granter rolls) | The character's drive/skill; spend to help self or ally |
+| **Burden** | Raise **Risk by 1** (table-wide to base dice, max 3) | The character's flaw/weight; spend to raise the stakes |
+
+- Each player may spend **at most one Prowess and one Burden per roll**.
+- Because Burden raises Risk, it feeds more Setbacks (more Tenacity for the table, more Threat for the GM) — spending a Burden is "my flaw creates opportunity."
+- Individual Prowess/Burden abilities list their own frequency (e.g. "Keen Eye: 1/session").
 
 ## Attributes
 
-Seven attributes, each with two TN values:
+Seven attributes, each with two TNs:
 
 | Attribute | Domain | Magic | Active Examples | Reactive Examples | Tolerance |
 |-----------|--------|-------|-----------------|-------------------|-----------|
@@ -148,62 +155,85 @@ Seven attributes, each with two TN values:
 | Presence | Charisma, force of will, leadership | Psychic Magic | Intimidate a thug, inspire allies, negotiate a deal | Resist intimidation, hold your ground against a terrifying creature, keep composure during a negotiation | Ego & Composure |
 | Conviction | Leadership, resolve | Divine Edict | Cast divine spells, uphold a vow, inspire through belief | Endure a mental assault, stay true under torture, reject a supernatural influence | Willpower & Integrity |
 
-**Attribute scale**: 1–14. Human average is 4.
+**Target Numbers**: Both TNs start at **12**. Each point in the attribute lets the player reduce *one* of the two TNs by 1. This means players must choose between being proactive (lower Active TN) or resilient (lower Reactive TN), or balance the two.
 
-**Target Numbers**: Each attribute has two TNs — **Active** (when the player declares an action) and **Reactive** (when the GM calls for a roll in response to a situation).
+**Human average**: an average person has attribute **2**, spending both points split → **TN 11 / 11** in both. Player characters are built above this baseline.
 
-**TN calculation**: Both TNs start at 12. Each point in the attribute lets the player reduce *one* of the two TNs by 1. This means players must choose between being proactive (lower Active TN) or resilient (lower Reactive TN), or balance the two.
+**TN floor**: a TN **cannot go below 5**. (Risk maxes at 3, so its Setback threshold reaches 4; TN ≥ 5 keeps the success zone strictly above the Setback zone, with no overlap.)
 
-**TN floor**: TNs can go as low as 2. At TN 2, dice succeed on 2–12 (91.7% per die) but Risk can still create tension.
+**Probability benchmarks** (single die ≥ TN, and 4d12 ≥ 1 success):
+| TN | P(success/die) | P(≥1 on 4d12) |
+|----|---------------|----------------|
+| 12 | 8.3% | 29.4% |
+| 11 | 16.7% | 51.8% |
+| 10 | 25.0% | 68.4% |
+| 9 | 33.3% | 80.2% |
+| 8 | 41.7% | 88.4% |
+| 7 | 50.0% | 93.8% |
+| 6 | 58.3% | 97.0% |
+| 5 | 66.7% | 98.8% |
 
-**Probability benchmarks** (single die ≥ TN):
-| TN | P(success per die) | P(≥1 on 5d12) | P(≥2 on 5d12) |
-|----|----|----|----|
-| 12 | 8.3% | 35.3% | 5.8% |
-| 10 | 25% | 76.3% | 36.7% |
-| 8 | 41.7% | 93.2% | 69.1% |
-| 6 | 58.3% | 98.7% | 90.0% |
-| 4 | 75% | 99.9% | 98.4% |
-| 2 | 91.7% | ~100% | ~100% |
+At the human-average TN 11, a plain 4d12 roll succeeds about 52% of the time; help (Edge, Tenacity rescue) and lower TNs raise that further. With 4 base dice, surplus successes (2+) are more common than the old 3-die pool, so the question of how frequently "improved outcome" triggers on a plain roll is an **open design decision** (see Open Decisions).
 
-**Net expected successes** across different TN/Risk combinations:
-| TN ↓ Risk → | 0 | 3 | 6 | 9 |
-|---|---|---|---|---|
-| 12 | 0.42 | -0.81 | — | — |
-| 10 | 1.22 | 0.00 | -1.20 | — |
-| 8 | 2.03 | 0.81 | — | — |
-| 6 | 2.84 | 1.61 | — | — |
-| 4 | 3.65 | 2.42 | — | — |
-| 2 | 4.45 | — | — | — |
+## Tiers
 
-## Open Decisions
+Tiers track character level. They govern the Tenacity **hand cap** (tier + 2). The game has a finite 15-level arc: characters begin at Heroic and end at Mythic.
+
+| Tier | Levels | Hand cap (tier + 2) |
+|------|--------|---------------------|
+| Heroic | 1–3 | 3 |
+| Paragon | 4–6 | 4 |
+| Ascendant | 7–9 | 5 |
+| Legendary | 10–12 | 6 |
+| Mythic | 13–15 | 7 |
+
+## Rationale for d12
+
+The d12 gives 12 discrete outcomes and a clean 8.3% step per pip, finer granularity than a d10 (10%) or d20 (5%). Four dice creates a strong central tendency while leaving room for modifiers to matter, and the small pool keeps the ritual fast. The odd-vs-even parity system was removed; the d12 is now read purely as a face-value die (success vs Setback vs neutral by TN and Risk).
+
+## Removed Mechanics
+
+The following were part of earlier drafts and are **removed** in this design:
+- **Even/odd parity** — no longer used for anything (Inspiration/Tension no longer derive from parity).
+- **Old "Edge" (spend to shift a die +2)** — replaced by Prowess → Edge (bonus die).
+- **Expertise dice / Effect Magnitude** — removed; surplus successes improve the outcome without a separate dice pool.
+- **Risk as a penalty zone** — Risk no longer subtracts from successes; it is the Setback/uncertainty dial.
+- **Difficulty values** — was replaced by Exceptional/Inferior aspect tags with Disadvantage/Advantage die rolls; those are now deferred to Advanced.
+
+## Open Decisions / Deferred
 
 ### Character Creation
-- Point-buy or array for attribute distribution?
-- Starting attribute points? (28 = all at human average; 35–40 for competent heroes?)
+- Attribute score range and maximum (human average is 2; PC baseline above that).
+- Starting attribute points / how attributes are distributed.
 - Skills layered on top, or pure attribute-based?
 - Derived stats (health, speed, etc.)?
-- Is the starting TN always 12, or do you start with some distribution already applied?
 
 ### Progression
-- How do attributes increase? XP-based, milestone, or something else?
-- Are there diminishing returns?
-- What else advances aside from attributes?
+- How attributes increase; XP-based, milestone, or other?
+- Confirmed vectors: attributes, new abilities, equipment, Prowess/Burden size. Base pool stays fixed at 4d12 (only Edge adds dice).
+- Success Ladder thresholds: with 4d12, "improved outcome" (2+) fires ~41% on a plain roll at TN9. Decide whether to bump thresholds (e.g., improved at 3+, exceptional at 4) or accept common improved outcomes as a feature of competent characters.
 
 ### GM Tools (Core)
-- Guidance for assigning Risk (what's Risk 3 vs Risk 8?)
-- Should the core book include a quick-reference Risk table by genre/situation?
+- Guidance for assigning Risk (what's Risk 1 vs Risk 3?).
+- The specific **Threat spend vocabulary** (what the GM buys with Threat).
+- How to express adversary strength through Risk and Threat (replaces Exceptional/Inferior at Core level).
+
+### Prowess & Burden
+- Standard per-session budget per ability?
+- Are uses refreshed mid-session (Tenacity spend, rest, milestone)?
+- Can multiple sources apply to the same roll?
+
+### Tenacity
+- Hand-overflow rule confirmed (card forfeited at cap).
+- Suit-based effects (Advanced).
+
+### Exceptional / Disadvantage / Advantage (Deferred to Advanced)
+- How to implement foe-strength tags mechanically (reroll, modifier, or different system?).
+- How many Exceptional/Inferior aspects can an adversary have?
+- Cap on Exceptional/Inferior modifiers?
+- Environmental Disadvantage — same system or different?
 
 ### The Advanced Book
-- Which subsystems get moved from core to advanced?
-- What new systems does the advanced book add? Combat maneuvers? Crafting? Social influence? Domain play?
-- Does the advanced book introduce any resolution modifiers beyond Risk? (E.g., boon/bane dice, successes floors.)
-
-### Edges
-- What is the standard per-session budget for specialization edges? (3? 5? scales with level?)
-- Can edges be refreshed mid-session (Inspiration spend, rest, milestone)?
-- Do GMs get a pool of edges for NPCs/enemies?
-- How do multiple edge sources on the same roll interact? (Can you spend a specialization edge AND a gear edge on the same roll?)
-
-### Meta
-- Genre/setting? The attributes are setting-agnostic by design — universal toolkit, or a specific world?
+- Suit-based Tenacity effects.
+- Expanded Prowess/Burden abilities, social/domain combat, crafting.
+- Formal outcome-magnitude scale for surplus successes.

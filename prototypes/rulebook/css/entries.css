@@ -31,28 +31,49 @@
   vertical-align: middle;
 }
 
-.entry h2 {
+.entry h1 {
   font-family: var(--font-display);
-  font-size: 18pt;
+  font-size: 32pt;
   font-weight: 400;
   letter-spacing: 0.05em;
+  text-transform: uppercase;
   color: var(--text);
-  margin: 0 0 0.75rem;
+  margin: 1rem 0 0.35rem;
+}
+.entry h2 {
+  font-family: var(--font-display);
+  font-size: 24pt;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text);
+  margin: 1rem 0 0.35rem;
 }
 .entry h3 {
-  font-family: var(--font-body);
-  font-size: 11pt;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: 20pt;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   color: var(--text);
-  margin: 1.5rem 0 0.5rem;
+  margin: 1rem 0 0.35rem;
 }
 .entry h4 {
-  font-family: var(--font-ui);
-  font-size: 7pt;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: 16pt;
+  font-weight: 400;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--text-muted);
+  color: var(--text);
+  margin: 1rem 0 0.35rem;
+}
+.entry h5 {
+  font-family: var(--font-display);
+  font-size: 12pt;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text);
   margin: 1rem 0 0.35rem;
 }
 .entry p { margin: 0 0 0.5rem; }
@@ -160,7 +181,6 @@
 /* ── Appendix ───────────────────────────── */
 .appendix {
   margin-top: 0;
-  padding-top: 1rem;
   border-top: none;
   display: flex;
   flex-direction: column;
@@ -168,12 +188,12 @@
 }
 .appendix-title {
   font-family: var(--font-display);
-  font-size: 24pt;
+  font-size: 32pt;
   font-weight: 400;
   letter-spacing: 0.05em;
-  color: var(--accent);
-  margin-bottom: 1.5rem;
-  flex: 0 0 auto;
+  text-transform: uppercase;
+  color: var(--text);
+  margin: 1rem 0 0.35rem;
 }
 .appendix-index {
   column-count: 3;
@@ -187,36 +207,47 @@
 .appendix-letter {
   break-inside: avoid;
   font-family: var(--font-display);
-  font-size: 14pt;
+  font-size: 16pt;
   font-weight: 400;
   letter-spacing: 0.05em;
   color: var(--accent);
   margin: 1rem 0 0.25rem;
   padding-bottom: 0.2rem;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--text-muted);
 }
 .appendix-entry {
   break-inside: avoid;
   padding: 0.15rem 0;
   font-family: var(--font-ui);
-  font-size: 8.5pt;
+  font-size: 8pt;
   line-height: 1.4;
-  display: flex;
-  gap: 0.35rem;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: baseline;
+  text-transform: uppercase;
+  background-image: radial-gradient(circle, var(--text-muted) 0.5px, transparent 0.5px);
+  background-size: 4px 1.4em;
+  background-position: 0 50%;
 }
 .appendix-entry .term {
-  font-family: var(--font-body);
+  font-family: var(--font-ui);
   font-weight: 700;
-  font-size: 8pt;
+  font-size: 7pt;
   white-space: nowrap;
+  background: var(--bg);
+  padding-right: 0.25rem;
 }
 .appendix-entry .refs {
-  color: var(--text-muted);
+  flex: 0 0 auto;
+  color: var(--text);
+  background: var(--bg);
+  padding-left: 0.25rem;
 }
 .appendix-entry .refs a {
-  color: var(--text-muted);
+  color: var(--text);
   text-decoration: none;
-  font-size: 8pt;
+  font-size: 7pt;
+  font-weight: 700 !important;
 }
 .appendix-entry .refs a:hover {
   color: var(--accent);

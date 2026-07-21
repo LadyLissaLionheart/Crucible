@@ -1,9 +1,14 @@
 {
   "terms": [
     {
-      "term": "chapter title",
-      "entry": "chapter-title",
-      "location": ""
+      "term": "New Section",
+      "entry": "entry-1784658619692",
+      "location": "Chapter One: Preparing for Adventure"
+    },
+    {
+      "term": "World Overview",
+      "entry": "entry-1784651303594",
+      "location": "Chapter One: Preparing for Adventure"
     }
   ]
 }

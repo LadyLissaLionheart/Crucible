@@ -109,9 +109,9 @@
   }
 
   body {
-    font-family: 'Inter', Helvetica, Arial, sans-serif;
+    font-family: 'Outfit', Helvetica, Arial, sans-serif;
     font-size: 10pt;
-    line-height: 0.6;
+    line-height: 1.1;
     background: white !important;
     color: black;
     -webkit-font-smoothing: none;
@@ -146,7 +146,7 @@
 
   .chapter-title {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 28pt;
+    font-size: 40pt;
     font-weight: 400;
     letter-spacing: 0.05em;
     color: black;
@@ -166,9 +166,11 @@
   }
 
   .section-title {
-    font-family: 'Libre Baskerville', Georgia, serif;
-    font-weight: 700;
-    font-size: 13pt;
+    font-family: 'Bebas Neue', sans-serif;
+    font-weight: 400;
+    font-size: 28pt;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
     color: black;
     page-break-after: avoid;
     margin-top: 1.5rem;
@@ -177,9 +179,9 @@
   }
 
   .entry {
-    font-family: 'Libre Baskerville', Georgia, serif;
+    font-family: 'Lora', Georgia, serif;
     font-size: 10pt;
-    line-height: 0.6;
+    line-height: 1.1;
     page-break-inside: avoid;
     border: none !important;
     border-radius: 0 !important;
@@ -195,36 +197,63 @@
      pushing titles past the card edge where overflow:hidden clips them. */
   .grid-card.entry { padding: 0.25rem 0 !important; }
 
-  .entry h2 {
+  .entry h1 {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 18pt;
+    font-size: 32pt;
     font-weight: 400;
     letter-spacing: 0.05em;
+    text-transform: uppercase;
     page-break-after: avoid;
     color: black;
-    margin: 0 0 0.75rem;
+    margin: 1rem 0 0.35rem;
+  }
+
+  .entry h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24pt;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    page-break-after: avoid;
+    color: black;
+    margin: 1rem 0 0.35rem;
   }
 
   .entry h3 {
-    font-family: 'Libre Baskerville', Georgia, serif;
-    font-size: 11pt;
-    font-weight: 700;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20pt;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
     page-break-after: avoid;
     color: black;
+    margin: 1rem 0 0.35rem;
   }
 
   .entry h4 {
-    font-family: 'Inter', sans-serif;
-    font-size: 7pt;
-    font-weight: 700;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16pt;
+    font-weight: 400;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
-    letter-spacing: 0.12em;
     page-break-after: avoid;
-    color: #444;
+    color: black;
+    margin: 1rem 0 0.35rem;
+  }
+
+  .entry h5 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 12pt;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    page-break-after: avoid;
+    color: black;
+    margin: 1rem 0 0.35rem;
   }
 
   .entry p {
-    font-family: 'Libre Baskerville', Georgia, serif;
+    font-family: 'Lora', Georgia, serif;
     margin: 0 0 0.5rem;
     color: black;
   }
@@ -233,8 +262,8 @@
   .entry em { font-style: italic; color: black; }
 
   .entry table {
-    font-family: 'Inter', sans-serif;
-    font-size: 8.5pt;
+    font-family: 'Outfit', sans-serif;
+    font-size: 9pt;
     width: 100%;
     border-collapse: collapse;
     margin: 0.75rem 0;
@@ -272,7 +301,7 @@
   }
 
   .entry .mechanic-label {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-size: 7pt;
     font-weight: 700;
     text-transform: uppercase;
@@ -282,7 +311,7 @@
   }
 
   .entry .mechanic-note {
-    font-family: 'Libre Baskerville', Georgia, serif;
+    font-family: 'Lora', Georgia, serif;
     font-style: italic;
     font-size: 8.5pt;
     color: #444;
@@ -304,7 +333,7 @@
 
   .entry dl { margin: 0.5rem 0; }
   .entry dt {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-size: 7pt;
     font-weight: 700;
     text-transform: uppercase;
@@ -313,7 +342,7 @@
     margin-top: 0.75rem;
   }
   .entry dd {
-    font-family: 'Libre Baskerville', Georgia, serif;
+    font-family: 'Lora', Georgia, serif;
     margin: 0.15rem 0 0 1rem;
     color: black;
   }
@@ -373,11 +402,13 @@
 
   .appendix-title {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 24pt;
+    font-size: 32pt;
     font-weight: 400;
     letter-spacing: 0.05em;
+    text-transform: uppercase;
     text-align: left;
     color: black;
+    margin: 1rem 0 0.35rem;
   }
 
   .appendix-index {
@@ -391,25 +422,46 @@
     letter-spacing: 0.05em;
     border-bottom: 1px solid #999;
     color: black;
+    margin: 1rem 0 0.25rem;
+    padding-bottom: 0.2rem;
   }
 
   .appendix-entry {
-    font-family: 'Inter', sans-serif;
-    font-size: 8.5pt;
+    font-family: 'Outfit', sans-serif;
+    font-size: 8pt;
+    line-height: 1.4;
     break-inside: avoid;
+    padding: 0.15rem 0;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: baseline;
+    text-transform: uppercase;
+    background-image: radial-gradient(circle, #999 0.5px, transparent 0.5px);
+    background-size: 4px 1.4em;
+    background-position: 0 50%;
   }
 
   .appendix-entry .term {
-    font-family: 'Libre Baskerville', Georgia, serif;
+    font-family: 'Outfit', sans-serif;
     font-weight: 700;
-    font-size: 8pt;
+    font-size: 7pt;
     color: black;
+    background: white;
+    padding-right: 0.25rem;
+  }
+
+  .appendix-entry .refs {
+    flex: 0 0 auto;
+    color: black;
+    background: white;
+    padding-left: 0.25rem;
   }
 
   .appendix-entry .refs a {
-    font-family: 'Inter', sans-serif;
-    color: #555;
-    font-size: 8pt;
+    font-family: 'Outfit', sans-serif;
+    color: black;
+    font-size: 7pt;
+    font-weight: 700;
     text-decoration: none;
   }
 

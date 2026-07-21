@@ -14,6 +14,7 @@ const PageNumbers = (() => {
 
   let pageOfEntry = null;
   let totalPages = 0;
+  let appendixPageEl = null;
 
   function ensureMigrated(layout) {
     if (!layout) return false;
@@ -146,6 +147,7 @@ const PageNumbers = (() => {
     });
 
     // Appendix: place on its dedicated page, filling the content rect.
+    appendixPageEl = null;
     const appEl = document.getElementById('appendix');
     if (appEl && appendixPage > 0) {
       const page = pageCards[appendixPage - 1];
@@ -154,12 +156,13 @@ const PageNumbers = (() => {
         page.appendChild(appEl);
         appEl.style.display = '';
         appEl.classList.add('grid-card');
-        const r = Grid.rect(Grid.CONTENT_COL, 4, Grid.CONTENT_W, Grid.ROWS - 8);
+        const r = Grid.rect(Grid.CONTENT_COL, 3, Grid.CONTENT_W, Grid.ROWS - 6);
         appEl.style.position = 'absolute';
         appEl.style.left = r.left + 'px';
         appEl.style.top = r.top + 'px';
         appEl.style.width = r.width + 'px';
         appEl.style.height = r.height + 'px';
+        appendixPageEl = page;
       }
     }
 
@@ -185,7 +188,7 @@ const PageNumbers = (() => {
     el.dataset.gridH = String(h);
   }
 
-  // Update appendix cross-reference labels ('p. N').
+  // Update appendix cross-reference labels (page number only).
   function stampPageNumbers() {
     document.querySelectorAll('.appendix-entry .refs a').forEach(a => {
       const href = a.getAttribute('href');
@@ -193,7 +196,7 @@ const PageNumbers = (() => {
         const entryId = href.substring(7);
         const page = getPageForEntry(entryId);
         if (page && page !== '?') {
-          a.textContent = 'p. ' + page;
+          a.textContent = page;
         }
       }
     });
@@ -219,6 +222,7 @@ const PageNumbers = (() => {
     stampPageNumbers,
     stampFooters,
     getPageForEntry,
-    getTotalPages
+    getTotalPages,
+    getAppendixPage: function () { return appendixPageEl; }
   };
 })();

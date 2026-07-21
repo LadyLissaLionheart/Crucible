@@ -220,11 +220,11 @@ const Grid = (() => {
   //   section / header / subheader are title-only cards
   //   entry (default) loads HTML from data/entries/{id}.html
   const DEFAULTS = {
-    chapter: { w: CONTENT_W, h: 8 },
-    section: { w: CONTENT_W, h: 6 },
-    header:  { w: CONTENT_W, h: 4 },
-    subheader: { w: CONTENT_W, h: 4 },
-    entry:   { w: CONTENT_W, h: 16 }
+    chapter: { w: CONTENT_W, h: 6 },
+    section: { w: 20, h: 6 },
+    header:  { w: 20, h: 5 },
+    subheader: { w: 20, h: 5 },
+    entry:   { w: 6, h: 16 }
   };
 
   return {

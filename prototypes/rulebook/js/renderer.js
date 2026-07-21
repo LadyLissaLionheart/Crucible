@@ -61,22 +61,48 @@ const Renderer = (() => {
     let currentSection = null;
     let currentHeader = null;
 
+    // Pre-scan: which header ids have at least one subheader following them
+    // (before the next header/section/chapter)? Used to decide whether to
+    // render a caret on a header.
+    const headersWithSubs = new Set();
+    const entries = layout.entries || [];
+    for (let i = 0; i < entries.length; i++) {
+      const e = entries[i];
+      if ((e.kind || 'entry') !== 'header') continue;
+      for (let j = i + 1; j < entries.length; j++) {
+        const k = entries[j].kind || 'entry';
+        if (k === 'chapter' || k === 'section' || k === 'header') break;
+        if (k === 'subheader') { headersWithSubs.add(e.id); break; }
+      }
+    }
+
     const ensureChapter = () => {
       if (curChapter) return;
       curChapter = document.createElement('div');
       curChapter.className = 'toc-chapter open';
       const titleEl = document.createElement('div');
       titleEl.className = 'toc-chapter-title';
+
+      // Caret container: top div is exactly one line height (16px),
+      // bottom div is auto to fill remaining space.
+      const caretWrap = document.createElement('div');
+      caretWrap.className = 'toc-caret-wrap';
+      const caretLine = document.createElement('div');
+      caretLine.className = 'toc-caret-line';
       const caret = document.createElement('span');
       caret.className = 'toc-caret';
       caret.textContent = '▸';
+      caretLine.appendChild(caret);
+      caretWrap.appendChild(caretLine);
+      caretWrap.appendChild(document.createElement('div'));
+
       const labelEl = document.createElement('span');
       labelEl.className = 'toc-label';
       caret.addEventListener('click', (e) => {
         e.stopPropagation();
         curChapter.classList.toggle('open');
       });
-      titleEl.appendChild(caret);
+      titleEl.appendChild(caretWrap);
       titleEl.appendChild(labelEl);
       curChapter.appendChild(titleEl);
       curListWrap = document.createElement('div');
@@ -132,31 +158,159 @@ if (kind === 'chapter') {
         currentHeader = null;
         return;
       }
-
-      ensureChapter();
-      const titleEl = makeTitle(obj, label);
+ensureChapter();
 
       if (kind === 'section') {
         const secEl = document.createElement('div');
-        secEl.className = 'toc-section';
+        secEl.className = 'toc-section open toc-has-children';
+
+        // Title with caret (mirrors chapter-title structure).
+        const titleEl = document.createElement('div');
+        titleEl.className = 'toc-section-title toc-kind-section';
+        titleEl.setAttribute('data-target', 'entry-' + obj.id);
+
+        const caretWrap = document.createElement('div');
+        caretWrap.className = 'toc-caret-wrap';
+        const caretLine = document.createElement('div');
+        caretLine.className = 'toc-caret-line';
+        const caret = document.createElement('span');
+        caret.className = 'toc-caret';
+        caret.textContent = '▸';
+        caretLine.appendChild(caret);
+        caretWrap.appendChild(caretLine);
+        caretWrap.appendChild(document.createElement('div'));
+
+        const labelEl = document.createElement('span');
+        labelEl.className = 'toc-label';
+        labelEl.textContent = label;
+
+        caret.addEventListener('click', (e) => {
+          e.stopPropagation();
+          secEl.classList.toggle('open');
+        });
+        labelEl.addEventListener('click', () => {
+          const target = document.getElementById('entry-' + obj.id);
+          if (target) scrollToEl(target);
+        });
+
+        titleEl.appendChild(caretWrap);
+        titleEl.appendChild(labelEl);
         secEl.appendChild(titleEl);
+
+        const secChildren = document.createElement('div');
+        secChildren.className = 'toc-section-children';
+        secEl.appendChild(secChildren);
+
         curListWrap.appendChild(secEl);
-        currentSection = secEl;
+        currentSection = secChildren;
         currentHeader = null;
       } else if (kind === 'header') {
-        const hdrEl = document.createElement('div');
-        hdrEl.className = 'toc-header';
-        hdrEl.appendChild(titleEl);
-        if (currentSection) currentSection.appendChild(hdrEl);
-        else curListWrap.appendChild(hdrEl);
-        currentHeader = hdrEl;
+        const wrapEl = document.createElement('div');
+        wrapEl.className = 'toc-header';
+        const hasSubs = headersWithSubs.has(obj.id);
+        if (hasSubs) wrapEl.classList.add('toc-has-children');
+
+        const titleEl = document.createElement('div');
+        titleEl.className = 'toc-section-title toc-kind-header';
+        titleEl.setAttribute('data-target', 'entry-' + obj.id);
+
+        if (hasSubs) {
+          // Caret-enabled header (collapsible, starts collapsed).
+          const caretWrap = document.createElement('div');
+          caretWrap.className = 'toc-caret-wrap';
+          const caretLine = document.createElement('div');
+          caretLine.className = 'toc-caret-line';
+          const caret = document.createElement('span');
+          caret.className = 'toc-caret';
+          caret.textContent = '▸';
+          caretLine.appendChild(caret);
+          caretWrap.appendChild(caretLine);
+          caretWrap.appendChild(document.createElement('div'));
+          caret.addEventListener('click', (e) => {
+            e.stopPropagation();
+            wrapEl.classList.toggle('open');
+          });
+          titleEl.appendChild(caretWrap);
+
+          const labelEl = document.createElement('span');
+          labelEl.className = 'toc-label';
+          labelEl.textContent = label;
+          labelEl.addEventListener('click', () => {
+            const target = document.getElementById('entry-' + obj.id);
+            if (target) scrollToEl(target);
+          });
+          titleEl.appendChild(labelEl);
+
+          const hdrChildren = document.createElement('div');
+          hdrChildren.className = 'toc-header-children';
+          wrapEl.appendChild(titleEl);
+          wrapEl.appendChild(hdrChildren);
+
+          if (currentSection) currentSection.appendChild(wrapEl);
+          else curListWrap.appendChild(wrapEl);
+          currentHeader = hdrChildren;
+        } else {
+          // Header without subheaders: reserve caret space (invisible) so the
+          // label aligns with caret-bearing headers.
+          const caretWrap = document.createElement('div');
+          caretWrap.className = 'toc-caret-wrap toc-caret-hidden';
+          const caretLine = document.createElement('div');
+          caretLine.className = 'toc-caret-line';
+          const caret = document.createElement('span');
+          caret.className = 'toc-caret';
+          caret.textContent = '▸';
+          caretLine.appendChild(caret);
+          caretWrap.appendChild(caretLine);
+          caretWrap.appendChild(document.createElement('div'));
+          titleEl.appendChild(caretWrap);
+
+          const labelEl = document.createElement('span');
+          labelEl.className = 'toc-label';
+          labelEl.textContent = label;
+          labelEl.addEventListener('click', () => {
+            const target = document.getElementById('entry-' + obj.id);
+            if (target) scrollToEl(target);
+          });
+          titleEl.appendChild(labelEl);
+          wrapEl.appendChild(titleEl);
+          if (currentSection) currentSection.appendChild(wrapEl);
+          else curListWrap.appendChild(wrapEl);
+          currentHeader = null;
+        }
       } else if (kind === 'subheader') {
-        const subEl = document.createElement('div');
-        subEl.className = 'toc-subheader';
-        subEl.appendChild(titleEl);
-        if (currentHeader) currentHeader.appendChild(subEl);
-        else if (currentSection) currentSection.appendChild(subEl);
-        else curListWrap.appendChild(subEl);
+        const wrapEl = document.createElement('div');
+        wrapEl.className = 'toc-subheader';
+
+        const titleEl = document.createElement('div');
+        titleEl.className = 'toc-section-title toc-kind-subheader';
+        titleEl.setAttribute('data-target', 'entry-' + obj.id);
+
+        // Reserve caret space (invisible) so the label aligns with headers.
+        const caretWrap = document.createElement('div');
+        caretWrap.className = 'toc-caret-wrap toc-caret-hidden';
+        const caretLine = document.createElement('div');
+        caretLine.className = 'toc-caret-line';
+        const caret = document.createElement('span');
+        caret.className = 'toc-caret';
+        caret.textContent = '▸';
+        caretLine.appendChild(caret);
+        caretWrap.appendChild(caretLine);
+        caretWrap.appendChild(document.createElement('div'));
+        titleEl.appendChild(caretWrap);
+
+        const labelEl = document.createElement('span');
+        labelEl.className = 'toc-label';
+        labelEl.textContent = label;
+        labelEl.addEventListener('click', () => {
+          const target = document.getElementById('entry-' + obj.id);
+          if (target) scrollToEl(target);
+        });
+        titleEl.appendChild(labelEl);
+        wrapEl.appendChild(titleEl);
+
+        if (currentHeader) currentHeader.appendChild(wrapEl);
+        else if (currentSection) currentSection.appendChild(wrapEl);
+        else curListWrap.appendChild(wrapEl);
       } else {
         // Plain entries (kind 'entry' or any other) are content blocks:
         // they carry no TOC title and never appear in the table of contents.
@@ -170,16 +324,29 @@ if (kind === 'chapter') {
       appDiv.className = 'toc-chapter toc-appendix open';
       const titleEl = document.createElement('div');
       titleEl.className = 'toc-chapter-title toc-appendix-title';
+
+      // Appendix caret spacer — same two-div structure as chapter caret.
+      const spacerWrap = document.createElement('div');
+      spacerWrap.className = 'toc-caret-wrap';
+      const spacerLine = document.createElement('div');
+      spacerLine.className = 'toc-caret-line';
       const spacer = document.createElement('span');
       spacer.className = 'toc-caret toc-caret-spacer';
       spacer.textContent = '▸';
+      spacerLine.appendChild(spacer);
+      spacerWrap.appendChild(spacerLine);
+      spacerWrap.appendChild(document.createElement('div'));
+
       const labelEl = document.createElement('span');
       labelEl.className = 'toc-label';
       labelEl.textContent = layout.appendix.title || 'Appendix';
-      titleEl.appendChild(spacer);
+      titleEl.appendChild(spacerWrap);
       titleEl.appendChild(labelEl);
       titleEl.addEventListener('click', () => {
-        scrollToEl(document.getElementById('appendix'));
+        var target = (typeof PageNumbers !== 'undefined' && PageNumbers.getAppendixPage)
+          ? PageNumbers.getAppendixPage()
+          : document.getElementById('appendix');
+        scrollToEl(target);
       });
       appDiv.appendChild(titleEl);
       sidebar.appendChild(appDiv);
@@ -288,15 +455,27 @@ if (kind === 'chapter') {
       termSpan.textContent = g.term;
       entry.appendChild(termSpan);
 
+      // Middle grid column is empty — dots are a background pattern on .appendix-entry
+      entry.appendChild(document.createElement('span'));
+
       const hasPageNumbers = PageNumbers && typeof PageNumbers.getPageForEntry === 'function';
+
+      // Sort refs by page number (lowest to highest)
+      const sortedRefs = [...g.refs].sort((a, b) => {
+        const pageA = hasPageNumbers ? PageNumbers.getPageForEntry(a.entry) : null;
+        const pageB = hasPageNumbers ? PageNumbers.getPageForEntry(b.entry) : null;
+        const numA = (pageA && pageA !== '?') ? parseInt(pageA, 10) : Infinity;
+        const numB = (pageB && pageB !== '?') ? parseInt(pageB, 10) : Infinity;
+        return numA - numB;
+      });
 
       const refsSpan = document.createElement('span');
       refsSpan.className = 'refs';
-      g.refs.forEach((ref, i) => {
+      sortedRefs.forEach((ref, i) => {
         if (i > 0) refsSpan.appendChild(document.createTextNode(', '));
 
         const page = hasPageNumbers ? PageNumbers.getPageForEntry(ref.entry) : null;
-        const label = (page && page !== '?') ? 'p. ' + page : ref.location;
+        const label = (page && page !== '?') ? page : ref.location;
 
         const a = document.createElement('a');
         a.href = '#entry-' + ref.entry;
@@ -406,7 +585,7 @@ if (kind === 'chapter') {
     }
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(observed => {
-        if (observed.isIntersecting) {
+        if (observed.isIntersecting && !observed.target.classList.contains('placing')) {
           const id = observed.target.id;
           document.querySelectorAll('.toc-section-title.active').forEach(el => el.classList.remove('active'));
           const tocItem = document.querySelector(`.toc-section-title[data-target="${id}"]`);
@@ -416,7 +595,7 @@ if (kind === 'chapter') {
     }, { rootMargin: '-20% 0px -70% 0px' });
 
     document.querySelectorAll('.grid-card[data-entry-id]').forEach(el => {
-      observer.observe(el);
+      if (!el.classList.contains('placing')) observer.observe(el);
     });
     activeTOCObserver = observer;
   }

@@ -1,6 +1,6 @@
 /* ── Popup Component ──────────────────────── */
 /* Reusable confirm / alert popup. Matches the tooltip aesthetic
-   (white card, soft shadow, rounded corners, Inter font). */
+   (white card, soft shadow, rounded corners, Outfit font). */
 
 .popup-overlay {
   position: fixed;

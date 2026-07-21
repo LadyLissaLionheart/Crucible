@@ -88,13 +88,20 @@ app.delete('/api/entries/:id', (req, res) => {
 });
 
 app.post('/api/entries', (req, res) => {
-  const { id, title, empty } = req.body;
+  const { id, title, empty, kind } = req.body;
   if (!id) return res.status(400).json({ error: 'id required' });
   const filePath = path.join(ENTRIES_DIR, id + '.html');
   if (fs.existsSync(filePath)) return res.status(409).json({ error: 'Entry already exists' });
+
+  // Heading level depends on kind: chapter=h1, section=h2, header=h3, subheader=h4
+  const headingTag = { chapter: 'h1', section: 'h2', header: 'h3', subheader: 'h4' }[kind] || null;
+
   const content = empty
     ? `<p><br></p>\n`
-    : `<h2>${escapeHtml(title || id)}</h2>\n<p>Start writing here...</p>\n`;
+    : headingTag
+      ? `<${headingTag}>${escapeHtml(title || id)}</${headingTag}>\n<p>Start writing here...</p>\n`
+      : `<h2>${escapeHtml(title || id)}</h2>\n<p>Start writing here...</p>\n`;
+
   try {
     fs.writeFileSync(filePath, content, 'utf8');
     res.json({ ok: true });

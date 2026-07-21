@@ -355,7 +355,7 @@ const StructureUI = (() => {
     if (card) return;
     // Floating entry UI lives on .page, OUTSIDE the card, so it is never inside a
     // .grid-card. Clicking it must not deselect the entry (which would hide the UI).
-    if (e.target.closest && e.target.closest('.entry-actions, .entry-edge-actions, .resize-handle, .entry-add-actions, .struct-btn')) return;
+    if (e.target.closest && e.target.closest('.entry-actions, .entry-edge-actions, .resize-handle, .entry-add-actions, .struct-btn, .popup-overlay, .popup')) return;
     clearSelection();
   }
 
@@ -1071,7 +1071,7 @@ const StructureUI = (() => {
     // plain 'entry' gets blank (title-less) content; TOC kinds get a title.
     try {
       if (newKind === 'entry') await API.createEntry(id, '', { empty: true });
-      else await API.createEntry(id, item.sidebarTitle || id);
+      else await API.createEntry(id, item.sidebarTitle || id, { kind: newKind });
     } catch (err) {
       if (!err.message.includes('409')) {
         console.warn('changeKind: could not ensure entry HTML file', err);
@@ -1130,7 +1130,7 @@ const StructureUI = (() => {
     const slot = Grid.findFreeSlot(layout, startPage, 0, Grid.DEFAULTS.chapter.h, Grid.DEFAULTS.chapter.w);
 
     try {
-      await API.createEntry(id, 'New Chapter');
+      await API.createEntry(id, 'New Chapter', { kind: 'chapter' });
     } catch (err) {
       if (!err.message.includes('409')) console.warn('addChapter: could not create HTML file', err);
     }
@@ -1173,10 +1173,10 @@ const StructureUI = (() => {
 
     const id = (kind === 'chapter' ? 'chapter-' : 'entry-') + Date.now();
 
-    // Every new entry comes in at 6 cells wide × 2 cells tall; the user can
-    // resize afterwards.
-    const w = 6;
-    const h = 2;
+    // Size depends on kind — use the same defaults as Grid.DEFAULTS.
+    const def = Grid.DEFAULTS[kind] || Grid.DEFAULTS.entry;
+    const w = def.w;
+    const h = def.h;
 
     // Seed the placement at the cursor (or a sane fallback if the cursor
     // isn't over a page at click time).
@@ -1195,7 +1195,7 @@ const StructureUI = (() => {
 
     try {
       if (kind === 'entry') await API.createEntry(id, '', { empty: true });
-      else await API.createEntry(id, title);
+      else await API.createEntry(id, title, { kind });
     } catch (err) {
       if (!err.message.includes('409')) console.warn('startAddEntry: could not create HTML file', err);
     }
@@ -1459,6 +1459,18 @@ const StructureUI = (() => {
     // the nearest card whose edge is within tolerance.
     let card = e.target.closest && e.target.closest('.grid-card');
     let edge = card ? edgeForPoint(card.getBoundingClientRect(), e.clientX, e.clientY, RESIZE_TOL) : '';
+
+    if (!card) {
+      // Floating entry UI (.entry-actions, .entry-edge-actions, .resize-handle)
+      // lives on the page element, outside the .grid-card. Resolve the owning
+      // card from data-entry-id so clicking its controls doesn't accidentally
+      // select a different nearby card via the edge-proximity fallback.
+      const floatingUI = e.target.closest && e.target.closest('.entry-actions, .entry-edge-actions, .resize-handle');
+      if (floatingUI && floatingUI.dataset.entryId) {
+        card = document.querySelector('.grid-card[data-entry-id="' + floatingUI.dataset.entryId + '"]');
+        if (card) edge = edgeForPoint(card.getBoundingClientRect(), e.clientX, e.clientY, RESIZE_TOL);
+      }
+    }
 
     if (!card) {
       const pageEl = e.target.closest && e.target.closest('.page');
