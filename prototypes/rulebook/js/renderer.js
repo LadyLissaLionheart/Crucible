@@ -117,9 +117,21 @@ const Renderer = (() => {
       titleEl.className = 'toc-section-title toc-kind-' + kind;
       titleEl.setAttribute('data-target', 'entry-' + obj.id);
       titleEl.textContent = label;
-      titleEl.addEventListener('click', () => {
+      titleEl.addEventListener('click', (e) => {
+        e.stopPropagation();
         const target = document.getElementById('entry-' + obj.id);
-        scrollToEl(target);
+        if (target) {
+          scrollToEl(target);
+          const card = target.closest && target.closest('.grid-card');
+          if (card && card.dataset.itemType) {
+            if (typeof Layers !== 'undefined' && Layers.selectLayerForEntry) {
+              Layers.selectLayerForEntry(obj.id);
+            }
+            if (typeof selectCard === 'function') {
+              selectCard(card);
+            }
+          }
+        }
       });
       return titleEl;
     };

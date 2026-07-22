@@ -5,6 +5,7 @@
   --header-h: 56px;
   --bg: #ffffff;
   --surface: #ffffff;
+  --page-bg: #fffaf5;
   --text: #1a1a1a;
   --text-muted: #666;
   --border: #e0e0e0;
@@ -17,7 +18,7 @@
   --highlight: #fff3a8;
   --edit-border: #1a4a80;
   --edit-bg: #f8fbff;
-  --inactive-bg: #fefefe;
+  --inactive-bg: #f5f0e8;
   --inactive-border: #000000;
   --font-display: 'Bebas Neue', sans-serif;
   --font-body: 'Lora', Georgia, 'Times New Roman', serif;
@@ -33,10 +34,10 @@
   --footer-h: 32px;           /* reserved for the in-card page footer */
 
   /* Grid geometry — full-page cell overlay (cells start from edges). */
-  --grid-cols: 49;
-  --grid-rows: 65;
-  --cell-w: 16.653px;         /* 816 / 49 */
-  --cell-h: 16.246px;         /* 1056 / 65 */
+  --grid-cols: 51;
+  --grid-rows: 66;
+  --cell-w: 16px;             /* 816 / 51 */
+  --cell-h: 16px;             /* 1056 / 66 */
   --cell-line: rgba(0, 0, 0, 0.08);
   --margin-bg: rgba(155, 95, 45, 0.06);
   --margin-bg-edge: rgba(155, 95, 45, 0.14);

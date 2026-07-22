@@ -326,7 +326,7 @@ color: #444;
 .page {
   width: var(--page-w);
   height: var(--page-h);
-  background: var(--surface);
+  background: var(--page-bg) url('../icons/paper-noise.png') repeat;
   box-shadow: var(--page-shadow);
   border-radius: 2px;
   position: relative;

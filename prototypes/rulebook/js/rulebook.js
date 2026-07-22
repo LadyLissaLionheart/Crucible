@@ -68,18 +68,10 @@
     }
 
     function update() {
-      var scrollY = main.scrollTop;
-      var viewH = main.clientHeight;
-      var viewportCenter = scrollY + viewH / 2;
-
       main.style.zoom = zoom;
       void main.scrollWidth;
       localStorage.setItem('rulebook-zoom', zoom);
       if (typeof StructureUI !== 'undefined' && StructureUI.scheduleSyncFixedUI) StructureUI.scheduleSyncFixedUI();
-
-      var ratio = zoom / prevZoom;
-      var newScrollY = viewportCenter * ratio - viewH / 2;
-      main.scrollTo(0, Math.max(0, newScrollY));
 
       prevZoom = zoom;
       labels.forEach(function (l) {

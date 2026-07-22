@@ -59,7 +59,7 @@ const StructureUI = (() => {
     // so only the spilled portion shows — and it grows as the card shrinks.
     const cardW = card.clientWidth;
     const cardH = card.clientHeight;
-    const tol = 1; // px tolerance so sub-pixel rounding doesn't false-flag
+    const tol = 3; // px tolerance so sub-pixel rounding doesn't false-flag
     let minTop = Infinity, minLeft = Infinity, maxBottom = -Infinity, maxRight = -Infinity;
     const walk = el => {
       for (const child of el.children) {
@@ -473,6 +473,7 @@ const StructureUI = (() => {
   function rebuild() {
     Renderer.renderChapters();
     Renderer.loadAllEntries().then(() => {
+      applyPendingEditsToDOM();
       PageNumbers.paginate();
       enable();
       Renderer.renderTOC();
@@ -1209,6 +1210,7 @@ const StructureUI = (() => {
     await new Promise(resolve => {
       Renderer.renderChapters();
       Renderer.loadAllEntries().then(() => {
+        applyPendingEditsToDOM();
         PageNumbers.paginate();
         enable();
         Renderer.renderTOC();
@@ -1271,6 +1273,7 @@ const StructureUI = (() => {
     await new Promise(resolve => {
       Renderer.renderChapters();
       Renderer.loadAllEntries().then(() => {
+        applyPendingEditsToDOM();
         PageNumbers.paginate();
         enable();
         Renderer.renderTOC();
@@ -1495,8 +1498,8 @@ const StructureUI = (() => {
     const pageEl = card.closest('.page');
     if (!pageEl) return;
     if (!card.dataset.itemType) return;
-    // Selecting the entry reveals its fixed-position edit UI and keeps it
-    // selected until another card is clicked or the user clicks outside.
+    const entryId = card.dataset.entryId;
+    // Select the entry - this brings up the edit UI and updates the active layer
     selectCard(card);
     // While a card is being edited inline (contenteditable), let the user
     // click into the text instead of dragging the card around.

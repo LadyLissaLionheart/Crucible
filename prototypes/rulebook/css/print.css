@@ -192,10 +192,10 @@
 
   /* In paginated (display) print the entry is a positioned grid-card and is
      clipped to its grid height, so its padding must match the on-screen
-     .grid-card box (0.25rem) — NOT the 1rem used for flat flow printing.
+     .grid-card box (0) — NOT the 1rem used for flat flow printing.
      The 1rem override above made every entry ~12px taller than on screen,
      pushing titles past the card edge where overflow:hidden clips them. */
-  .grid-card.entry { padding: 0.25rem 0 !important; }
+  .grid-card.entry { padding: 0 !important; }
 
   .entry h1 {
     font-family: 'Bebas Neue', sans-serif;
@@ -420,7 +420,6 @@
     font-size: 14pt;
     font-weight: 400;
     letter-spacing: 0.05em;
-    border-bottom: 1px solid #999;
     color: black;
     margin: 1rem 0 0.25rem;
     padding-bottom: 0.2rem;
@@ -436,6 +435,8 @@
     grid-template-columns: auto 1fr auto;
     align-items: baseline;
     text-transform: uppercase;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
     background-image: radial-gradient(circle, #999 0.5px, transparent 0.5px);
     background-size: 4px 1.4em;
     background-position: 0 50%;

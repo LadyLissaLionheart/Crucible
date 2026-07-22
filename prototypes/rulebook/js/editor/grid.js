@@ -1,13 +1,12 @@
 // Grid constants, migration, and helpers for the per-page cell grid.
 //
-// Each page is a 49×65 cell grid sized to a US-Letter card (816×1056px),
-// giving ~16.65×16.25px cells. The ODD dimensions let a 3-wide center
-// gutter (cols 23-25) sit exactly on the page's horizontal midpoint, and
-// the odd row count puts a true center row at the vertical midpoint — so
-// titles/entries can be perfectly centered. Margin cells (rows 0-2,
-// 62-64; cols 0-2, 46-48) flag the print margins — purely visual
-// reference. Content spans cols 3-45 (43 wide): left col 3-22, 3-wide
-// gutter 23-25, right col 26-45.
+// Each page is a 51×66 cell grid sized to a US-Letter card (816×1056px),
+// giving exactly 16×16px cells. The ODD column count lets a 1-wide center
+// gutter (col 25) sit exactly on the page's horizontal midpoint, and
+// the even row count gives two true center rows — so titles/entries can
+// be perfectly centered. Margin cells (rows 0-2, 63-65; cols 0-2, 48-50)
+// flag the print margins — purely visual reference. Content spans
+// cols 3-47 (45 wide): left col 3-24, 1-wide gutter 25, right 26-47.
 //
 // Every positioned item (chapter, section, header, subheader, entry)
 // carries { page, col, row, w, h } and a `kind`, stored in
@@ -21,20 +20,20 @@ const Grid = (() => {
 
   const PAGE_W = 816;
   const PAGE_H = 1056;
-  const COLS = 49;
-  const ROWS = 65;
-  const CELL_W = PAGE_W / COLS; // ~16.65
-  const CELL_H = PAGE_H / ROWS; // ~16.25
+  const COLS = 51;
+  const ROWS = 66;
+  const CELL_W = PAGE_W / COLS; // 16
+  const CELL_H = PAGE_H / ROWS; // 16
 
   const MARGIN_TOP_ROWS    = [0, 1, 2];
-  const MARGIN_BOT_ROWS    = [62, 63, 64];
+  const MARGIN_BOT_ROWS    = [63, 64, 65];
   const MARGIN_LEFT_COLS   = [0, 1, 2];
-  const MARGIN_RIGHT_COLS  = [46, 47, 48];
+  const MARGIN_RIGHT_COLS  = [48, 49, 50];
 
   // Default placement zone (inside the margin frame). Content spans
-  // cols 3-45 (43 wide): left col 3-22, 3-wide gutter 23-25, right 26-45.
+  // cols 3-47 (45 wide): left col 3-24, 1-wide gutter 25, right 26-47.
   const CONTENT_COL = 3;
-  const CONTENT_W = COLS - 6; // 43
+  const CONTENT_W = COLS - 6; // 45
 
   function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
@@ -221,9 +220,9 @@ const Grid = (() => {
   //   entry (default) loads HTML from data/entries/{id}.html
   const DEFAULTS = {
     chapter: { w: CONTENT_W, h: 6 },
-    section: { w: 20, h: 6 },
-    header:  { w: 20, h: 5 },
-    subheader: { w: 20, h: 5 },
+    section: { w: 21, h: 6 },
+    header:  { w: 21, h: 5 },
+    subheader: { w: 21, h: 5 },
     entry:   { w: 6, h: 16 }
   };
 
