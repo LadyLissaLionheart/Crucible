@@ -608,33 +608,8 @@ const StructureUI = (() => {
       // same row (the dropdown itself shifts right to make room).
       leftGroup.insertBefore(editBtn, kindSelect);
 
-      // Only TOC-linked kinds have a title — it is the TOC label. A plain
-      // `entry` never links back to the contents, so it gets no title input.
-      if (kind !== 'entry') {
-        const titleInput = document.createElement('input');
-        titleInput.type = 'text';
-        titleInput.className = 'struct-title-input';
-        titleInput.value = item.sidebarTitle || item.title || id.replace(/-/g, ' ');
-        titleInput.setAttribute('data-tooltip', 'Title displayed in the table of contents');
-        titleInput.placeholder = 'TOC title';
-        titleInput.style.flex = '1';
-        titleInput.addEventListener('mousedown', (e) => e.stopPropagation());
-        titleInput.addEventListener('click', (e) => e.stopPropagation());
-        titleInput.addEventListener('input', (e) => {
-          e.stopPropagation();
-          item.sidebarTitle = titleInput.value.trim();
-          EditMode.setDirty();
-        });
-        titleInput.addEventListener('change', () => {
-          Renderer.renderTOC();
-        });
-        titleInput.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter') titleInput.blur();
-        });
-        leftGroup.appendChild(titleInput);
-      }
-    }
 
+    }
     actions.appendChild(leftGroup);
 
     actions.dataset.entryId = entryId;

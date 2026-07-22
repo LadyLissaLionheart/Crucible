@@ -67,10 +67,10 @@ body.edit-mode .page-margin { display: block; }
 body.edit-mode .grid-card.entry {
   background-image: repeating-linear-gradient(
     to bottom,
-    transparent 0,
-    transparent calc(var(--cell-h) - 1px),
-    rgba(0, 0, 0, 0.15) calc(var(--cell-h) - 1px),
-    rgba(0, 0, 0, 0.15) var(--cell-h)
+    rgba(0, 0, 0, 0.15) 0,
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent var(--cell-h)
   );
 }
 .grid-card.appendix,

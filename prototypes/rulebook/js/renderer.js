@@ -541,7 +541,40 @@ ensureChapter();
 
   function populateEntry(entryEl, entryId, html) {
     cacheContent(entryId, html);
-    entryEl.innerHTML = html;
+    const layout = getLayout();
+    const item = layout && (layout.entries || []).find(e => e.id === entryId);
+    const kind = item && item.kind ? item.kind : 'entry';
+    const header = item && item.header ? item.header : '';
+    if (header && kind !== 'entry') {
+      let tag = 'h1';
+      if (kind === 'section') tag = 'h2';
+      else if (kind === 'header') tag = 'h3';
+      else if (kind === 'subheader') tag = 'h4';
+      const headerEl = document.createElement(tag);
+      headerEl.className = 'entry-header';
+      headerEl.setAttribute('data-editable', 'header');
+      headerEl.textContent = header;
+      headerEl.addEventListener('dblclick', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        if (headerEl.getAttribute('contenteditable') === 'true') return;
+        headerEl.setAttribute('contenteditable', 'true');
+        headerEl.classList.add('editing-header');
+        headerEl.focus();
+        const range = document.createRange();
+        range.selectNodeContents(headerEl);
+        range.collapse(false);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        headerEl.addEventListener('blur', onHeaderBlur);
+        headerEl.addEventListener('input', onHeaderInput);
+      });
+      entryEl.innerHTML = html;
+      entryEl.insertBefore(headerEl, entryEl.firstChild);
+    } else {
+      entryEl.innerHTML = html;
+    }
     entryEl.classList.remove('loading');
     entryEl.dataset.loaded = 'true';
     // Content can arrive after edit mode's initial overflow sweep; re-check
@@ -553,16 +586,43 @@ ensureChapter();
     const temp = document.createElement('div');
     temp.innerHTML = html;
     const text = temp.textContent || temp.innerText || '';
-    const heading = temp.querySelector('h2');
     const data = {
       id: entryId,
-      title: heading ? heading.textContent : entryId.replace(/-/g, ' '),
+      title: header || entryId.replace(/-/g, ' '),
       text: text,
       chapter: findChapterForEntry(entryId)
     };
     const existing = searchIndex.find(en => en.id === entryId);
     if (existing) Object.assign(existing, data);
     else searchIndex.push(data);
+  }
+
+  function onHeaderInput(e) {
+    const headerEl = e.target;
+    const entryEl = headerEl.closest('.entry');
+    if (!entryEl) return;
+    const entryId = entryEl.dataset.entryId;
+    if (!entryId) return;
+    const layout = getLayout();
+    if (!layout) return;
+    const item = (layout.entries || []).find(en => en.id === entryId);
+    if (!item) return;
+    const newHeader = headerEl.textContent.trim();
+    item.header = newHeader;
+    item.sidebarTitle = newHeader;
+    // Mark dirty - StructureUI should have a setDirty method
+    if (typeof window.StructureUI !== 'undefined' && window.StructureUI.setDirty) {
+      window.StructureUI.setDirty();
+    }
+  }
+
+  function onHeaderBlur(e) {
+    const headerEl = e.target;
+    headerEl.removeAttribute('contenteditable');
+    headerEl.classList.remove('editing-header');
+    headerEl.removeEventListener('blur', onHeaderBlur);
+    headerEl.removeEventListener('input', onHeaderInput);
+    renderTOC();
   }
 
   async function loadAllEntries() {

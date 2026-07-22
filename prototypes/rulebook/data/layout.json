@@ -6,6 +6,7 @@
     {
       "id": "chapter-title",
       "kind": "chapter",
+      "header": "Chapter One: Preparing for adventure",
       "sidebarTitle": "Chapter One: Preparing for Adventure",
       "title": "",
       "page": 1,
@@ -19,6 +20,7 @@
     {
       "id": "entry-1784651303594",
       "kind": "section",
+      "header": "World Overview",
       "page": 1,
       "col": 3,
       "row": 7,
@@ -32,6 +34,7 @@
     {
       "id": "entry-1784664805857",
       "kind": "header",
+      "header": "The Hallows Above",
       "page": 1,
       "col": 25,
       "row": 7,
@@ -45,6 +48,7 @@
     {
       "id": "entry-1784665154700",
       "kind": "subheader",
+      "header": "The Circles Below",
       "page": 1,
       "col": 25,
       "row": 29,
@@ -58,6 +62,7 @@
     {
       "id": "entry-1784664449942",
       "kind": "header",
+      "header": "Core Realms",
       "page": 1,
       "col": 3,
       "row": 30,
@@ -71,6 +76,7 @@
     {
       "id": "entry-1784664524870",
       "kind": "subheader",
+      "header": "The Mortal Realm",
       "page": 1,
       "col": 3,
       "row": 36,
@@ -84,6 +90,7 @@
     {
       "id": "entry-1784665422086",
       "kind": "subheader",
+      "header": "The Realms Beyond",
       "page": 1,
       "col": 25,
       "row": 53,
