@@ -73,10 +73,7 @@ const SearchUI = (() => {
         const id = item.dataset.entryId;
         const target = document.getElementById('entry-' + id);
         if (target) {
-          target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          target.style.transition = 'background 0.3s';
-          target.style.background = 'var(--highlight)';
-          setTimeout(() => { target.style.background = ''; }, 2000);
+          Renderer.scrollToEl(target);
         }
         resultsEl.classList.remove('active');
       });

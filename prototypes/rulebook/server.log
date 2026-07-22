@@ -1,0 +1,5 @@
+
+> crucible-rulebook@0.1.0 start
+> node server.js
+
+Crucible rulebook server → http://localhost:8080

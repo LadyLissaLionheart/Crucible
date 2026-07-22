@@ -26,6 +26,11 @@ const StructureUI = (() => {
   // (its file is still on disk) instead of hitting a 404 / blank placeholder.
   const pendingDeletes = new Set();
 
+  // ── Clipboard for copy / cut / paste ──────────────────
+  // Stores the layout properties and HTML content of a copied/cut entry so it
+  // can be pasted back as a new entry with the same kind, size, and content.
+  let clipboard = null;
+
   // ── Overflow Detection ────────────────────
   // Measures whether content extends past the card on either axis:
   //   vertical   — an element's bottom edge (incl. margin) past clientHeight
@@ -353,6 +358,7 @@ const StructureUI = (() => {
       Layers.updateActiveLayerGroups();
       Layers.sync();
     }
+    if (typeof EditMode !== 'undefined' && EditMode.syncClipboardButtons) EditMode.syncClipboardButtons();
   }
 
   function clearSelection() {
@@ -360,6 +366,7 @@ const StructureUI = (() => {
       c.classList.remove('selected');
       syncUIVisibility(c);
     });
+    if (typeof EditMode !== 'undefined' && EditMode.syncClipboardButtons) EditMode.syncClipboardButtons();
   }
 
   // Clicking empty page chrome (not a card, not the entry UI) deselects.
@@ -370,7 +377,7 @@ const StructureUI = (() => {
     if (card) return;
     // Floating entry UI lives on .page, OUTSIDE the card, so it is never inside a
     // .grid-card. Clicking it must not deselect the entry (which would hide the UI).
-    if (e.target.closest && e.target.closest('.entry-actions, .entry-edge-actions, .resize-handle, .entry-add-actions, .struct-btn, .popup-overlay, .popup')) return;
+    if (e.target.closest && e.target.closest('.entry-actions, .entry-edge-actions, .resize-handle, .entry-add-actions, .struct-btn, .popup-overlay, .popup, .action-bar')) return;
     clearSelection();
   }
 
@@ -706,7 +713,8 @@ const StructureUI = (() => {
     // Double-click the card body to jump straight into inline editing with
     // the caret placed near the pointer (bypasses the Edit button).
     card.addEventListener('dblclick', (e) => {
-      if (card.getAttribute('contenteditable') === 'true') { e.stopPropagation(); return; }
+      const bodyWrap = card.querySelector(':scope > .entry-body-wrap');
+      if ((bodyWrap || card).getAttribute('contenteditable') === 'true') { e.stopPropagation(); return; }
       // The header-wrap has its own dblclick editor — never start a body
       // edit when the click landed on the header.
       if (e.target.closest('.entry-header-wrap')) return;
@@ -828,73 +836,245 @@ const StructureUI = (() => {
     return null;
   }
 
+  // ── Entry Edit Mode ─────────────────────────
+  // Double-clicking the body or header (or clicking the Edit button) enables
+  // "entry edit mode": the card gets the thick outline on both wraps and a
+  // single left-click on either the header or body starts contenteditable
+  // editing on that part. Clicking outside the entry exits the mode entirely.
+
+  let _entryEditMode = null;
+  let _inlineBlurTimer = null;
+
+  // Called by the Edit button or body double-click.
   function toggleInlineEdit(card, btn, clientX, clientY) {
     const eid = card.dataset.entryId;
     if (!eid) return;
 
-    const pageElA = card.closest('.page');
-    const actions = pageElA ? pageElA.querySelector('.entry-actions[data-entry-id="' + eid + '"]') : null;
-    // For header-kind cards, only the body-wrap is editable — the header
-    // has its own dblclick editor (see populateEntry in renderer.js). For
-    // plain entries (no body-wrap), the whole card is editable.
-    const bodyWrap = card.querySelector(':scope > .entry-body-wrap');
-    const target = bodyWrap || card;
-    const editing = target.getAttribute('contenteditable') === 'true';
+    if (_entryEditMode === card) {
+      exitEntryEdit(card, btn);
+      return;
+    }
+    if (_entryEditMode) {
+      exitEntryEdit(_entryEditMode,
+        _entryEditMode.querySelector('.entry-actions .icon-btn'));
+    }
+    _enterEntryEdit(card, btn, 'body', clientX, clientY);
+  }
 
-    if (editing) {
-      target.removeAttribute('contenteditable');
-      card.classList.remove('editing');
-      syncUIEditing(card, false);
-      if (actions) actions.setAttribute('contenteditable', 'false');
-      if (btn) btn.classList.remove('active');
-      target.removeEventListener('input', onInlineInput);
-      bufferInlineEdit(card, eid);
-    } else {
-      // contenteditable on the body target only. tabindex makes the wrap
-      // focusable so the caret has a place to live.
-      target.setAttribute('contenteditable', 'true');
-      if (bodyWrap) target.setAttribute('tabindex', '-1');
-      card.classList.add('editing');
-      if (actions) actions.setAttribute('contenteditable', 'false');
-      syncUIEditing(card, true);
-      if (btn) btn.classList.add('active');
-      target.addEventListener('input', onInlineInput);
-      // An empty <p></p> has no line box, so the contenteditable caret has
-      // nowhere to render and typing does nothing. Seed a <br> so there's a
-      // caret position — done before the snapshot so an untouched entry
-      // still compares equal and stays clean.
-      const contentP = target.querySelector(':scope > p');
+  // Called by header double-click (renderer.js). Switches to header editing
+  // if the card is already in entry edit mode.
+  function enterEntryHeaderEdit(card, clientX, clientY) {
+    if (_entryEditMode === card) {
+      startEditingPart(card, 'header', clientX, clientY);
+      return;
+    }
+    if (_entryEditMode) {
+      exitEntryEdit(_entryEditMode,
+        _entryEditMode.querySelector('.entry-actions .icon-btn'));
+    }
+    _enterEntryEdit(card, null, 'header', clientX, clientY);
+  }
+
+  function _enterEntryEdit(card, btn, part, clientX, clientY) {
+    const eid = card.dataset.entryId;
+    if (!eid) return;
+
+    const pageEl = card.closest('.page');
+    const actions = pageEl
+      ? pageEl.querySelector('.entry-actions[data-entry-id="' + eid + '"]')
+      : null;
+
+    card.classList.add('editing');
+    _entryEditMode = card;
+    if (actions) actions.setAttribute('contenteditable', 'false');
+    if (btn) btn.classList.add('active');
+    syncUIEditing(card, true);
+
+    addEntryEditListeners(card);
+    startEditingPart(card, part, clientX, clientY);
+  }
+
+  function exitEntryEdit(card, btn) {
+    if (_entryEditMode !== card) return;
+    _entryEditMode = null;
+
+    const eid = card.dataset.entryId;
+    if (!eid) return;
+
+    const pageEl = card.closest('.page');
+    const actions = pageEl
+      ? pageEl.querySelector('.entry-actions[data-entry-id="' + eid + '"]')
+      : null;
+
+    const bodyWrap = card.querySelector(':scope > .entry-body-wrap');
+    const bodyTarget = bodyWrap || card;
+    const headerEl = card.querySelector('.entry-header');
+    let wasHeader = false;
+    if (bodyTarget.getAttribute('contenteditable') === 'true') {
+      bodyTarget.removeAttribute('contenteditable');
+      bodyTarget.removeEventListener('input', onInlineInput);
+      bodyTarget.removeEventListener('blur', onInlineBlur, true);
+    }
+    if (headerEl && headerEl.getAttribute('contenteditable') === 'true') {
+      headerEl.removeAttribute('contenteditable');
+      headerEl.classList.remove('editing-header');
+      wasHeader = true;
+    }
+
+    card.classList.remove('editing');
+    syncUIEditing(card, false);
+    if (actions) actions.setAttribute('contenteditable', 'false');
+    if (btn) btn.classList.remove('active');
+
+    removeEntryEditListeners(card);
+    bufferInlineEdit(card, eid);
+    if (wasHeader && typeof Renderer !== 'undefined' && Renderer.renderTOC) {
+      Renderer.renderTOC();
+    }
+  }
+
+  function startEditingPart(card, part, clientX, clientY) {
+    const bodyWrap = card.querySelector(':scope > .entry-body-wrap');
+    const bodyTarget = bodyWrap || card;
+    const headerEl = card.querySelector('.entry-header');
+    let wasHeader = false;
+
+    if (part !== 'body' && bodyTarget.getAttribute('contenteditable') === 'true') {
+      bodyTarget.removeAttribute('contenteditable');
+      bodyTarget.removeEventListener('input', onInlineInput);
+      bodyTarget.removeEventListener('blur', onInlineBlur, true);
+      const eid = card.dataset.entryId;
+      if (eid) bufferInlineEdit(card, eid);
+    }
+    if (part !== 'header' && headerEl && headerEl.getAttribute('contenteditable') === 'true') {
+      headerEl.removeAttribute('contenteditable');
+      headerEl.classList.remove('editing-header');
+      wasHeader = true;
+    }
+    if (wasHeader && typeof Renderer !== 'undefined' && Renderer.renderTOC) {
+      Renderer.renderTOC();
+    }
+
+    if (part === 'body') {
+      bodyTarget.setAttribute('contenteditable', 'true');
+      if (bodyWrap) bodyTarget.setAttribute('tabindex', '-1');
+      bodyTarget.addEventListener('input', onInlineInput);
+      const contentP = bodyTarget.querySelector(':scope > p');
       if (contentP && !contentP.textContent && !contentP.querySelector('br, img, table')) {
         contentP.appendChild(document.createElement('br'));
       }
-      // Snapshot current content to detect real changes on exit. Must strip
-      // the same affordances as bufferInlineEdit so an untouched entry
-      // still compares equal. Only snapshot the body content (the renderer
-      // rebuilds the wraps from layout.json on reload).
       const snap = card.cloneNode(true);
       const sa = snap.querySelector('.entry-actions');
       if (sa) sa.remove();
-      snap.querySelectorAll('.entry-edge-actions, .resize-handle, .struct-btn, .entry-add-actions').forEach(n => n.remove());
+      snap.querySelectorAll('.entry-edge-actions, .resize-handle, .struct-btn, .entry-add-actions')
+        .forEach(n => n.remove());
       const snapBody = snap.querySelector('.entry-body-wrap');
-      editOriginals.set(eid, snapBody ? snapBody.innerHTML.trim() : snap.innerHTML.trim());
-      target.focus();
-      // Drop the caret as close to the pointer as possible when the edit was
-      // opened from a double-click; otherwise leave the default focus caret.
+      editOriginals.set(card.dataset.entryId,
+        snapBody ? snapBody.innerHTML.trim() : snap.innerHTML.trim());
+      bodyTarget.focus();
       if (typeof clientX === 'number' && typeof clientY === 'number') {
         const range = caretFromPoint(clientX, clientY);
-        if (range && target.contains(range.startContainer)) {
+        if (range && bodyTarget.contains(range.startContainer)) {
           const sel = window.getSelection();
           sel.removeAllRanges();
           sel.addRange(range);
         }
       }
-      target.addEventListener('blur', onInlineBlur, true);
+      bodyTarget.addEventListener('blur', onInlineBlur, true);
+    } else if (part === 'header' && headerEl) {
+      headerEl.setAttribute('contenteditable', 'true');
+      headerEl.classList.add('editing-header');
+      headerEl.focus();
+      if (typeof clientX === 'number' && typeof clientY === 'number') {
+        const range = caretFromPoint(clientX, clientY);
+        if (range && headerEl.contains(range.startContainer)) {
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+        } else {
+          placeCaretAtEnd(headerEl);
+        }
+      } else {
+        placeCaretAtEnd(headerEl);
+      }
+      if (typeof Renderer !== 'undefined' && Renderer.onHeaderInput) {
+        headerEl.addEventListener('input', Renderer.onHeaderInput);
+      }
     }
   }
 
-  // Auto-buffer when focus leaves the card while editing (e.g. clicking
-  // elsewhere). Ignore blurs that land inside the card (its own controls).
-  let _inlineBlurTimer = null;
+  // ── Click-switching listeners ───────────────
+
+  function placeCaretAtEnd(el) {
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    range.collapse(false);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+
+  // While in entry edit mode, a single click on the body or header starts
+  // editing that part.
+
+  function addEntryEditListeners(card) {
+    removeEntryEditListeners(card);
+    const bodyWrap = card.querySelector(':scope > .entry-body-wrap');
+    const target = bodyWrap || card;
+    target.addEventListener('click', onPartClick);
+    target._entryEditPart = 'body';
+
+    const headerEl = card.querySelector('.entry-header');
+    if (headerEl) {
+      headerEl.addEventListener('click', onPartClick);
+      headerEl._entryEditPart = 'header';
+    }
+
+    document.addEventListener('mousedown', onDocMousedown, true);
+  }
+
+  function removeEntryEditListeners(card) {
+    const bodyWrap = card.querySelector(':scope > .entry-body-wrap');
+    const target = bodyWrap || card;
+    target.removeEventListener('click', onPartClick);
+    delete target._entryEditPart;
+
+    const headerEl = card.querySelector('.entry-header');
+    if (headerEl) {
+      headerEl.removeEventListener('click', onPartClick);
+      delete headerEl._entryEditPart;
+    }
+
+    document.removeEventListener('mousedown', onDocMousedown, true);
+  }
+
+  function onPartClick(e) {
+    const el = e.currentTarget;
+    const part = el._entryEditPart;
+    const card = el.closest('.grid-card') || el.closest('.entry');
+    if (!card || _entryEditMode !== card) return;
+
+    if (part === 'body') {
+      const bodyWrap = card.querySelector(':scope > .entry-body-wrap');
+      const target = bodyWrap || card;
+      if (target.getAttribute('contenteditable') === 'true') { target.focus(); return; }
+    } else if (part === 'header') {
+      if (el.getAttribute('contenteditable') === 'true') { el.focus(); return; }
+    }
+
+    startEditingPart(card, part, e.clientX, e.clientY);
+  }
+
+  // ── Outside click detection ─────────────────
+  function onDocMousedown(e) {
+    if (!_entryEditMode) return;
+    const card = _entryEditMode;
+    if (card.contains(e.target)) return;
+    if (e.target.closest('.entry-actions, .entry-edge-actions, .resize-handle, .overflow-frame')) return;
+    exitEntryEdit(card, card.querySelector('.entry-actions .icon-btn'));
+  }
+
+  // ── Blur handling ───────────────────────────
   function onInlineBlur(e) {
     const target = e.currentTarget;
     if (!target || target.getAttribute('contenteditable') !== 'true') return;
@@ -905,7 +1085,9 @@ const StructureUI = (() => {
       if (target.getAttribute('contenteditable') !== 'true') return;
       if (target.contains(document.activeElement)) return;
       const card = target.closest('.grid-card') || target;
-      toggleInlineEdit(card, card.querySelector('.entry-actions .icon-btn'));
+      if (_entryEditMode === card) {
+        exitEntryEdit(card, card.querySelector('.entry-actions .icon-btn'));
+      }
     }, 150);
   }
 
@@ -998,6 +1180,119 @@ const StructureUI = (() => {
     pendingDeletes.clear();
   }
 
+  // ── Copy / Cut / Paste ──────────────────────────────
+  function copyEntry(card) {
+    const entryId = card.dataset.entryId;
+    const layout = Renderer.getLayout();
+    const item = Grid.findItem(layout, 'entry', entryId);
+    if (!item) return;
+
+    let content = pendingEdits.get(entryId);
+    if (content === undefined) {
+      const cached = Renderer.getCachedContent(entryId);
+      if (cached !== undefined) content = cached;
+      else {
+        const bodyWrap = card.querySelector('.entry-body-wrap');
+        content = bodyWrap ? bodyWrap.innerHTML.trim() : '';
+      }
+    }
+
+    clipboard = {
+      kind: item.kind,
+      header: item.header,
+      w: item.w,
+      h: item.h,
+      content: content || ''
+    };
+    if (typeof EditMode !== 'undefined' && EditMode.syncClipboardButtons) EditMode.syncClipboardButtons();
+  }
+
+  function cutEntry(card) {
+    copyEntry(card);
+    const layout = Renderer.getLayout();
+    const entryId = card.dataset.entryId;
+    if (layout && layout.entries) {
+      layout.entries = layout.entries.filter(en => en.id !== entryId);
+    }
+    pendingDeletes.add(entryId);
+    Renderer.renderChapters();
+    Renderer.populateFromCache();
+    PageNumbers.paginate();
+    enable();
+    Renderer.renderTOC();
+    Renderer.forceRepaint();
+    EditMode.setDirty();
+    History.commit('cut');
+  }
+
+  async function pasteEntry(clientX, clientY) {
+    if (!clipboard) return;
+    if (placement) return;
+
+    const layout = Renderer.getLayout();
+    if (!layout) return;
+    layout.entries = layout.entries || [];
+
+    const id = 'entry-' + Date.now();
+    const kind = clipboard.kind || 'entry';
+    const def = Grid.DEFAULTS[kind] || Grid.DEFAULTS.entry;
+    const w = clipboard.w || def.w;
+    const h = clipboard.h || def.h;
+
+    const target = pageCellAt(clientX, clientY);
+    let page = target ? target.page : (maxPage(layout) || 1);
+    let col = target ? target.col : Grid.CONTENT_COL;
+    let row = target ? target.row : 4;
+
+    const title = clipboard.header || (kind === 'entry' ? '' : 'New ' + kind[0].toUpperCase() + kind.slice(1));
+    const activeLayer = (typeof Layers !== 'undefined') ? Layers.getActiveLayerId(page) : null;
+    const item = { id, kind, page, col, row, w, h, layerId: activeLayer };
+    if (kind !== 'entry' && title) {
+      item.header = title;
+    }
+
+    try {
+      if (kind === 'entry') {
+        await API.createEntry(id, '', { empty: true });
+      } else {
+        await API.createEntry(id, title, { kind });
+      }
+      if (clipboard.content) {
+        await API.saveEntry(id, clipboard.content);
+      }
+    } catch (err) {
+      if (!err.message.includes('409')) console.warn('pasteEntry: could not create HTML file', err);
+    }
+
+    Renderer.cacheContent(id, clipboard.content || '');
+    layout.entries.push(item);
+    Renderer.renderChapters();
+    Renderer.populateFromCache();
+    PageNumbers.paginate();
+    enable();
+    Renderer.renderTOC();
+    Renderer.forceRepaint();
+    EditMode.setDirty();
+    History.commit('paste');
+
+    const card = document.querySelector('.pages .grid-card[data-item-id="' + id + '"]');
+    if (!card) { placement = null; return; }
+
+    placement = { id, el: card, pageEl: card.closest('.page') };
+    card.classList.add('placing');
+    document.body.classList.add('placing-entry');
+
+    if (typeof clientX === 'number' && typeof clientY === 'number') {
+      positionAtMouse(clientX, clientY);
+    }
+
+    document.addEventListener('mousemove', onPlaceMove);
+    document.addEventListener('mousedown', onPlaceDown, true);
+    document.addEventListener('keydown', onPlaceKey);
+  }
+
+  function getClipboard() { return clipboard; }
+
   // Used by the modal CodeMirror editor's delete (not routed through
   // deleteCard) — schedules the server file for deletion on Save.
   function markPendingDelete(id) {
@@ -1019,7 +1314,12 @@ const StructureUI = (() => {
     pendingEdits.forEach((html, id) => {
       const el = document.getElementById('entry-' + id);
       if (!el) return;
-      el.innerHTML = html;
+      const bodyWrap = el.querySelector('.entry-body-wrap');
+      if (bodyWrap) {
+        bodyWrap.innerHTML = html;
+      } else {
+        el.innerHTML = html;
+      }
       el.dataset.loaded = 'true';
       checkOverflow(el);
     });
@@ -1169,7 +1469,7 @@ const StructureUI = (() => {
     History.commit('add chapter');
     setTimeout(() => {
       const t = document.querySelector('.pages .grid-card[data-item-id="' + id + '"]');
-      if (t) t.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (t) Renderer.scrollToEl(t);
     }, 100);
   }
 
@@ -1847,5 +2147,5 @@ const StructureUI = (() => {
     return String(s).replace(/[^a-zA-Z0-9_-]/g, c => '\\' + c);
   }
 
-  return { enable, disable, syncLayoutFromDOM, rebuild, repack, syncLayerStacking, flushPendingEdits, clearPendingEdits, finalizeDeletes, clearPendingDeletes, markPendingDelete, getPendingEdits, setPendingEdits, applyPendingEditsToDOM, startAddEntry, startAddImageEntry, checkOverflow, checkAllOverflows, syncAllFixedUI, scheduleSyncFixedUI };
+  return { enable, disable, syncLayoutFromDOM, rebuild, repack, syncLayerStacking, flushPendingEdits, clearPendingEdits, finalizeDeletes, clearPendingDeletes, markPendingDelete, getPendingEdits, setPendingEdits, applyPendingEditsToDOM, startAddEntry, startAddImageEntry, checkOverflow, checkAllOverflows, syncAllFixedUI, scheduleSyncFixedUI, enterEntryHeaderEdit, copyEntry, cutEntry, pasteEntry, getClipboard };
 })();

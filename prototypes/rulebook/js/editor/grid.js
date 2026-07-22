@@ -198,14 +198,19 @@ const Grid = (() => {
     return layout;
   }
 
-  // Re-order the flat list to match visual position (page → row → col).
-  // Used after a drag so the TOC sidebar structure reflects where cards
-  // actually sit. Cards that lack a position sort to the end.
+  // Re-order the flat list to match visual position (page → column → row).
+  // Reads top-to-bottom of the left column first, then top-to-bottom of
+  // the right column — matching how a reader's eye moves across a page.
+  // Cards that lack a position sort to the end.
+  // Left column = cols 3-24, right column = cols 26-47 (gutter at col 25).
   function sortEntriesByPosition(layout) {
     if (!layout || !Array.isArray(layout.entries)) return layout;
     layout.entries.sort((a, b) => {
       const pa = a.page || 0, pb = b.page || 0;
       if (pa !== pb) return pa - pb;
+      const ca = (a.col || 0) < 25 ? 0 : 1;
+      const cb = (b.col || 0) < 25 ? 0 : 1;
+      if (ca !== cb) return ca - cb;
       const ra = a.row || 0, rb = b.row || 0;
       if (ra !== rb) return ra - rb;
       return (a.col || 0) - (b.col || 0);

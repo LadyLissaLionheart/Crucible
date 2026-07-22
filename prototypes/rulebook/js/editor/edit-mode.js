@@ -36,6 +36,25 @@ const EditMode = (() => {
       if (undoBtn) undoBtn.disabled = !(active && History.canUndo());
       if (redoBtn) redoBtn.disabled = !(active && History.canRedo());
     });
+    syncClipboardButtons();
+  }
+
+  function syncClipboardButtons() {
+    if (!active) {
+      ['copy-btn', 'cut-btn', 'paste-btn'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.disabled = true;
+      });
+      return;
+    }
+    const hasSel = !!document.querySelector('.pages .grid-card.selected');
+    const hasClip = typeof StructureUI !== 'undefined' && StructureUI.getClipboard && StructureUI.getClipboard();
+    const copyBtn = document.getElementById('copy-btn');
+    const cutBtn = document.getElementById('cut-btn');
+    const pasteBtn = document.getElementById('paste-btn');
+    if (copyBtn) copyBtn.disabled = !hasSel;
+    if (cutBtn) cutBtn.disabled = !hasSel;
+    if (pasteBtn) pasteBtn.disabled = !hasClip;
   }
 
   function setup() {
@@ -129,6 +148,26 @@ const EditMode = (() => {
     bind('redo-btn', () => History.redo());
     bind('redo-btn-bottom', () => History.redo());
 
+    // ── Copy / Cut / Paste buttons ──
+    bind('copy-btn', () => {
+      const sel = document.querySelector('.pages .grid-card.selected');
+      if (sel && typeof StructureUI !== 'undefined' && StructureUI.copyEntry) {
+        StructureUI.copyEntry(sel);
+        syncClipboardButtons();
+      }
+    });
+    bind('cut-btn', () => {
+      const sel = document.querySelector('.pages .grid-card.selected');
+      if (sel && typeof StructureUI !== 'undefined' && StructureUI.cutEntry) {
+        StructureUI.cutEntry(sel);
+      }
+    });
+    bind('paste-btn', () => {
+      if (typeof StructureUI !== 'undefined' && StructureUI.getClipboard && StructureUI.getClipboard()) {
+        StructureUI.pasteEntry(window.innerWidth / 2, window.innerHeight / 2);
+      }
+    });
+
     // ── Undo / Redo hotkeys ──
     // Ctrl/Cmd+Z = undo, Ctrl+Y = redo. Ignored while typing in a field or
     // editing a card inline so native text undo still works there.
@@ -145,6 +184,19 @@ const EditMode = (() => {
       } else if (e.key === 'y') {
         e.preventDefault();
         History.redo();
+      } else if (e.key === 'c') {
+        e.preventDefault();
+        const sel = document.querySelector('.pages .grid-card.selected');
+        if (sel && typeof StructureUI !== 'undefined' && StructureUI.copyEntry) StructureUI.copyEntry(sel);
+      } else if (e.key === 'x') {
+        e.preventDefault();
+        const sel = document.querySelector('.pages .grid-card.selected');
+        if (sel && typeof StructureUI !== 'undefined' && StructureUI.cutEntry) StructureUI.cutEntry(sel);
+      } else if (e.key === 'v') {
+        if (typeof StructureUI !== 'undefined' && StructureUI.getClipboard && StructureUI.getClipboard()) {
+          e.preventDefault();
+          StructureUI.pasteEntry(e.clientX, e.clientY);
+        }
       }
     });
 
@@ -481,5 +533,5 @@ const EditMode = (() => {
     }
   }
 
-  return { setup, isActive, saveAll, saveAndExit, rebuildIndex, setDirty, isDirty, updateCancelButton };
+  return { setup, isActive, saveAll, saveAndExit, rebuildIndex, setDirty, isDirty, updateCancelButton, syncClipboardButtons };
 })();

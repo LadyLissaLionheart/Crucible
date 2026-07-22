@@ -246,11 +246,8 @@ const Layers = (() => {
     const layer = (getLayout().layers || []).find(l => l.id === id);
     if (!layer) return;
     layer.visible = layer.visible === false ? true : false;
-    // View-only state: persist immediately and keep it out of undo/redo and
-    // the save-dirty flag (same treatment as the edit-mode visibility checkbox).
-    API.saveLayout(getLayout()).catch(err => {
-      console.error('[Layers] failed to persist layer visibility:', err);
-    });
+    EditMode.setDirty();
+    History.commit('toggle layer visibility');
     relayout();
   }
 

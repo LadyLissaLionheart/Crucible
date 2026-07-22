@@ -44,12 +44,32 @@ const Renderer = (() => {
   // would align the element to the very top of the viewport, behind the
   // header.) Works under CSS `zoom` because rect.top + scrollY stay in the
   // same (zoomed) document coordinate space.
-  function scrollToEl(el) {
+  // Briefly highlights the target with a yellow background so the user can
+  // see where the scroll landed. The highlight should be enabled for most
+  // use cases — pass highlight=false only when the visual feedback would be
+  // redundant or distracting (e.g. clicking a cross-reference that is already
+  // on the same page).
+  var _highlightedEl = null;
+
+  function scrollToEl(el, highlight) {
     if (!el) return;
+    if (highlight === undefined) highlight = true;
+    if (highlight && _highlightedEl && _highlightedEl !== el) {
+      _highlightedEl.style.background = '';
+    }
     var main = document.getElementById('main-content');
     var mainTop = main.getBoundingClientRect().top;
     var top = el.getBoundingClientRect().top - mainTop + main.scrollTop - 8;
     main.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    if (highlight) {
+      el.style.transition = 'background 0.3s';
+      el.style.background = 'var(--highlight)';
+      _highlightedEl = el;
+      setTimeout(function () {
+        if (_highlightedEl === el) _highlightedEl = null;
+        el.style.background = '';
+      }, 2000);
+    }
   }
 
   function renderTOC() {
@@ -358,7 +378,7 @@ ensureChapter();
         var target = (typeof PageNumbers !== 'undefined' && PageNumbers.getAppendixPage)
           ? PageNumbers.getAppendixPage()
           : document.getElementById('appendix');
-        scrollToEl(target);
+        scrollToEl(target, false);
       });
       appDiv.appendChild(titleEl);
       sidebar.appendChild(appDiv);
@@ -496,10 +516,7 @@ ensureChapter();
           const target = document.querySelector(a.getAttribute('href'));
           if (target) {
             e.preventDefault();
-            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            target.style.transition = 'background 0.3s';
-            target.style.background = 'var(--highlight)';
-            setTimeout(() => { target.style.background = ''; }, 2000);
+            scrollToEl(target);
           }
         });
         refsSpan.appendChild(a);
@@ -558,26 +575,15 @@ ensureChapter();
       headerEl.className = 'entry-header';
       headerEl.setAttribute('data-editable', 'header');
       headerEl.textContent = header;
-       headerEl.addEventListener('dblclick', (e) => {
-         // While already editing, let the browser handle double-click (word selection).
-         // Just stop propagation to parent handlers; don't preventDefault.
-         if (headerEl.getAttribute('contenteditable') === 'true') { e.stopPropagation(); return; }
-         e.stopPropagation();
-         e.preventDefault();
-        headerEl.setAttribute('contenteditable', 'true');
-        headerEl.classList.add('editing-header');
-        headerEl.focus();
-        const range = document.createRange();
-        range.selectNodeContents(headerEl);
-        range.collapse(false);
-        const sel = window.getSelection();
-        sel.removeAllRanges();
-        sel.addRange(range);
-       headerEl.addEventListener('blur', onHeaderBlur);
-       headerEl.addEventListener('input', onHeaderInput);
-       // Track that we just double-clicked so onHeaderBlur doesn't immediately remove contenteditable.
-       headerEl._justDblClicked = false;
-     });
+headerEl.addEventListener('dblclick', (e) => {
+          if (headerEl.getAttribute('contenteditable') === 'true') { e.stopPropagation(); return; }
+          e.stopPropagation();
+          e.preventDefault();
+          const card = headerEl.closest('.grid-card') || headerEl.closest('.entry');
+          if (card && typeof StructureUI !== 'undefined' && StructureUI.enterEntryHeaderEdit) {
+            StructureUI.enterEntryHeaderEdit(card, e.clientX, e.clientY);
+          }
+      });
       wrap.appendChild(headerEl);
       const bodyWrap = document.createElement('div');
       bodyWrap.className = 'entry-body-wrap';
@@ -627,17 +633,6 @@ ensureChapter();
       window.StructureUI.setDirty();
     }
   }
-
-   function onHeaderBlur(e) {
-     // Don't remove contenteditable if a double-click just happened (within 500ms).
-     if (e.target._justDblClicked && Date.now() - e.target._dblClickTime < 500) { e.target._justDblClicked = false; return; }
-     const headerEl = e.target;
-     headerEl.removeAttribute('contenteditable');
-     headerEl.classList.remove('editing-header');
-     headerEl.removeEventListener('blur', onHeaderBlur);
-     headerEl.removeEventListener('input', onHeaderInput);
-     renderTOC();
-   }
 
   async function loadAllEntries() {
     const entryEls = document.querySelectorAll('#chapters-container .entry.loading');
@@ -759,14 +754,14 @@ ensureChapter();
     // Stamp cached HTML into the cards currently rendered from the layout
     // model. Used by client-side undo/redo so a re-render never needs to
     // refetch entry content from the server.
+    scrollToEl,
+    onHeaderInput,
     populateFromCache: function () {
       document.querySelectorAll('#chapters-container .entry[data-entry-id]').forEach(el => {
         const id = el.dataset.entryId;
         const html = contentCache.get(id);
         if (html != null) {
-          el.innerHTML = html;
-          el.classList.remove('loading');
-          el.dataset.loaded = 'true';
+          populateEntry(el, id, html);
         }
       });
     }

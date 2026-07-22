@@ -38,11 +38,16 @@ body.edit-mode .entry-header-wrap:hover,
 body.edit-mode .entry-body-wrap:hover {
   outline-color: var(--accent);
 }
-/* Inline-edit mode: solid accent outline on the body-wrap only (the
-   header has its own editor and shouldn't be highlighted while the body
-   is being edited). */
-body.edit-mode .entry.editing > .entry-body-wrap {
-  outline: 1px solid var(--accent);
+/* Inline-edit mode: solid accent outline on both the body-wrap and
+   header-wrap. When the body is being edited (.editing) or the header
+   is being edited (.editing-header), both wraps get the same highlight.
+   The wraps remain separate contenteditable targets so you can't select
+   text across the boundary. */
+body.edit-mode .entry.editing > .entry-body-wrap,
+body.edit-mode .entry.editing > .entry-header-wrap,
+body.edit-mode .entry.editing-header > .entry-body-wrap,
+body.edit-mode .entry.editing-header > .entry-header-wrap {
+  outline: 2px solid var(--accent);
   outline-offset: -1px;
 }
 body.edit-mode .entry.editing {
@@ -50,6 +55,9 @@ body.edit-mode .entry.editing {
 }
 body.edit-mode .entry.editing .entry-actions {
   border-color: var(--accent);
+}
+body.edit-mode .entry-header[contenteditable="true"] {
+  outline: none;
 }
 body.edit-mode .entry .entry-drag-handle {
   display: flex;
@@ -287,7 +295,8 @@ body.edit-mode .resize-handle::before {
 }
 body.edit-mode .resize-handle.hovered { opacity: 1; }
 body.edit-mode .resize-handle.visible { opacity: 1; }
-body.edit-mode .entry.editing ~ .resize-handle { opacity: 0; pointer-events: none; }
+body.edit-mode .entry.editing ~ .resize-handle,
+body.edit-mode .entry.editing-header ~ .resize-handle { opacity: 0; pointer-events: none; }
 /* When the pointer is OUTSIDE the card's blue box (over the orange overflow),
    hide the resize handles and show the default cursor — resize is measured by
    the blue boundary only, never the spill. (The handles themselves, at -5px

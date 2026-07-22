@@ -13,6 +13,7 @@
 
     const layout = Renderer.getLayout();
 
+    Grid.sortEntriesByPosition(layout);
     Renderer.renderTOC();
     Renderer.renderChapters();
 

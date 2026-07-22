@@ -28,30 +28,6 @@
       "z": 5
     },
     {
-      "id": "entry-1784664805857",
-      "kind": "subheader",
-      "header": "The Hallows Above",
-      "page": 1,
-      "col": 26,
-      "row": 11,
-      "w": 22,
-      "h": 21,
-      "layerId": "layer-7rnpnsz",
-      "z": 9
-    },
-    {
-      "id": "entry-1784665154700",
-      "kind": "subheader",
-      "header": "The Circles Below",
-      "page": 1,
-      "col": 26,
-      "row": 33,
-      "w": 22,
-      "h": 21,
-      "layerId": "layer-7rnpnsz",
-      "z": 8
-    },
-    {
       "id": "entry-1784664449942",
       "kind": "header",
       "header": "Core Realms",
@@ -76,6 +52,30 @@
       "z": 7
     },
     {
+      "id": "entry-1784664805857",
+      "kind": "subheader",
+      "header": "The Hallows Above",
+      "page": 1,
+      "col": 26,
+      "row": 11,
+      "w": 22,
+      "h": 21,
+      "layerId": "layer-7rnpnsz",
+      "z": 9
+    },
+    {
+      "id": "entry-1784665154700",
+      "kind": "subheader",
+      "header": "The Circles Below",
+      "page": 1,
+      "col": 26,
+      "row": 33,
+      "w": 22,
+      "h": 21,
+      "layerId": "layer-7rnpnsz",
+      "z": 8
+    },
+    {
       "id": "entry-1784665422086",
       "kind": "subheader",
       "header": "The Realms Beyond",
@@ -83,7 +83,7 @@
       "col": 26,
       "row": 55,
       "w": 22,
-      "h": 9,
+      "h": 8,
       "layerId": "layer-7rnpnsz",
       "z": 10
     }
