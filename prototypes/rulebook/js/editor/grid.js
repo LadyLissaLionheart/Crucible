@@ -133,19 +133,18 @@ const Grid = (() => {
     const flat = [];
      (layout.chapters || []).forEach(ch => {
        // Chapter becomes a single flat item of kind 'chapter'.
-       const chapterItem = {
-         id: ch.id,
-         kind: 'chapter',
-         sidebarTitle: ch.title || '',
-         title: ch.title || ''
-       };
+        const chapterItem = {
+          id: ch.id,
+          kind: 'chapter',
+          header: ch.title || ''
+        };
        copyPos(chapterItem, ch);
        flat.push(chapterItem);
 
       // Old format: entries nested inside sections.
       (ch.sections || []).forEach(sec => {
         if (sec.title) {
-          const sectionItem = { id: sec.id, kind: 'section', sidebarTitle: sec.title };
+          const sectionItem = { id: sec.id, kind: 'section', header: sec.title };
           copyPos(sectionItem, sec);
           flat.push(sectionItem);
         }

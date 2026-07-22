@@ -51,7 +51,7 @@ const SearchUI = (() => {
 
     const q = query.toLowerCase();
     const matches = searchIndex
-      .filter(entry => entry.text.toLowerCase().includes(q) || entry.title.toLowerCase().includes(q))
+       .filter(entry => entry.text.toLowerCase().includes(q) || entry.header.toLowerCase().includes(q))
       .slice(0, 20);
 
     if (matches.length === 0) {
@@ -61,7 +61,7 @@ const SearchUI = (() => {
         const ctx = getContextSnippet(m.text, q);
         return `<div class="search-result-item" data-entry-id="${esc(m.id)}">
           <div class="search-result-chapter">${esc(m.chapter || '')}</div>
-          <div class="search-result-text">${esc(m.title)}: ${ctx}</div>
+           <div class="search-result-text">${esc(m.header)}: ${ctx}</div>
         </div>`;
       }).join('');
     }

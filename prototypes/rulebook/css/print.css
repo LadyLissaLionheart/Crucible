@@ -66,6 +66,12 @@
     border: none !important;
     background: transparent !important;
   }
+  /* Strip the edit-mode dashed-border boxes from the header/body wraps. */
+  .entry-header-wrap,
+  .entry-body-wrap {
+    outline: none !important;
+    background: transparent !important;
+  }
 
   /* Clip regular cards to their resized bounds so print matches the
      on-screen read view: content that overflows a shrunk card is hidden,
@@ -111,7 +117,7 @@
   body {
     font-family: 'Outfit', Helvetica, Arial, sans-serif;
     font-size: 10pt;
-    line-height: 1.1;
+    line-height: var(--cell-h);
     background: white !important;
     color: black;
     -webkit-font-smoothing: none;
@@ -181,13 +187,15 @@
   .entry {
     font-family: 'Lora', Georgia, serif;
     font-size: 10pt;
-    line-height: 1.1;
+    line-height: var(--cell-h);
     page-break-inside: avoid;
     border: none !important;
     border-radius: 0 !important;
     background: transparent !important;
     outline: none !important;
-    padding: 0 0 1rem !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: 0 !important;
   }
 
   /* In paginated (display) print the entry is a positioned grid-card and is
@@ -197,65 +205,133 @@
      pushing titles past the card edge where overflow:hidden clips them. */
   .grid-card.entry { padding: 0 !important; }
 
+  /* Header-kind entries: lock header height to text, body absorbs the rest. */
+  .grid-card[data-kind="chapter"],
+  .grid-card[data-kind="section"],
+  .grid-card[data-kind="header"],
+  .grid-card[data-kind="subheader"] {
+    display: flex !important;
+    flex-direction: column;
+    padding-bottom: 0;
+    min-height: 0;
+    gap: 0.5rem;
+  }
+  .grid-card[data-kind="chapter"] > .entry-header-wrap,
+  .grid-card[data-kind="section"] > .entry-header-wrap,
+  .grid-card[data-kind="header"] > .entry-header-wrap,
+  .grid-card[data-kind="subheader"] > .entry-header-wrap {
+    flex: 0 0 auto;
+    margin: 0;
+  }
+  .grid-card[data-kind="chapter"] > .entry-body-wrap,
+  .grid-card[data-kind="section"] > .entry-body-wrap,
+  .grid-card[data-kind="header"] > .entry-body-wrap,
+  .grid-card[data-kind="subheader"] > .entry-body-wrap {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    margin: 0;
+  }
+  /* Chapter body: double-height lines, italic */
+  .grid-card[data-kind="chapter"] > .entry-body-wrap {
+    line-height: 1.2 !important;
+    font-size: 12pt !important;
+    font-style: italic !important;
+    text-align: center !important;
+  }
+  /* Tighten the header glyph box for header-kind cards. */
+  .grid-card[data-kind="chapter"] > .entry-header-wrap > .entry-header,
+  .grid-card[data-kind="header"] > .entry-header-wrap > .entry-header,
+  .grid-card[data-kind="subheader"] > .entry-header-wrap > .entry-header {
+    margin: 0;
+    padding-top: 2px;
+  }
+  .grid-card[data-kind="chapter"] > .entry-header-wrap > .entry-header {
+    padding-top: 4px;
+  }
+  .grid-card[data-kind="section"] > .entry-header-wrap > .entry-header {
+    margin: 0;
+    padding-top: 4px;
+  }
+
   .entry h1 {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 32pt;
+    font-size: 36pt;
     font-weight: 400;
+    line-height: 0.85;
     letter-spacing: 0.05em;
     text-transform: uppercase;
     page-break-after: avoid;
     color: black;
-    margin: 1rem 0 0.35rem;
+    margin: 0 0 0.375rem;
+    padding-top: 1px;
   }
 
   .entry h2 {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 24pt;
+    font-size: 28pt;
     font-weight: 400;
+    line-height: 0.7;
     letter-spacing: 0.05em;
     text-transform: uppercase;
     page-break-after: avoid;
     color: black;
-    margin: 1rem 0 0.35rem;
+    margin: 0 0 0.375rem;
+    padding-top: 2px;
   }
 
   .entry h3 {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 20pt;
+    font-size: 18pt;
     font-weight: 400;
+    line-height: 0.75;
     letter-spacing: 0.05em;
     text-transform: uppercase;
     page-break-after: avoid;
     color: black;
-    margin: 1rem 0 0.35rem;
+    margin: 0 0 0.375rem;
+    padding-top: 1px;
   }
 
   .entry h4 {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 16pt;
-    font-weight: 400;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    page-break-after: avoid;
-    color: black;
-    margin: 1rem 0 0.35rem;
-  }
-
-  .entry h5 {
-    font-family: 'Bebas Neue', sans-serif;
     font-size: 12pt;
     font-weight: 400;
+    line-height: 0.75;
     letter-spacing: 0.05em;
     text-transform: uppercase;
     page-break-after: avoid;
     color: black;
-    margin: 1rem 0 0.35rem;
+    margin: 0 0 0.375rem;
+    padding-top: 1px;
+    display: flex;
+    align-items: center;
+    position: relative;
+    padding-left: calc(3px + 0.375rem);
+  }
+  .entry h4::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 1em;
+    background: #d4a017;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
-  .entry p {
+  .entry p,
+  .entry div {
     font-family: 'Lora', Georgia, serif;
-    margin: 0 0 0.5rem;
+    margin: 0;
     color: black;
+  }
+  .entry-body-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: var(--cell-h);
   }
 
   .entry strong { font-weight: 700; color: black; }

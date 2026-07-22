@@ -14,39 +14,38 @@ body.edit-mode .page { overflow: visible; }
 body.edit-mode .appendix-page { display: none; }
 body.edit-mode .toc-appendix { display: none; }
 
-/* Entries: dashed border box + hover highlight signals "click to edit".
-   Chapters are just entries of kind 'chapter', so they get this box too —
-   there is no separate title styling. */
- body.edit-mode .entry {
-  /* Use outline (not border) + match read-mode padding so the entry
-     content sits in exactly the same spot as display mode. A border +
-     extra padding would inset the text relative to read mode. */
-  border: none;
-  outline: 1px dashed var(--edit-border);
-  outline-offset: -1px;
-  background: var(--edit-bg);
-  border-radius: 4px;
-  padding: 0;
-  transition: background 0.15s, outline-color 0.15s;
-}
+/* Entries: the parent card has NO border/background — the header-wrap and
+   body-wrap children carry the dashed edit box instead (see entries.css).
+   Chapters are just entries of kind 'chapter', so they get this too. */
+  body.edit-mode .entry {
+   padding: 0;
+   background: none;
+   outline: none;
+   border: none;
+ }
 
-/* Entries on a NON-active layer read as near-white with a near-black
-   dashed outline, so the selected layer stands out. The active layer
-   keeps --edit-bg / --edit-border (above). Layers.updateActiveLayerGroups
+/* Entries on a NON-active layer: the wraps read as white with a
+   near-black dashed outline, so the selected layer stands out. The active
+   layer keeps --edit-bg / --edit-border (entries.css). Layers.updateActiveLayerGroups
    toggles .active-layer on each .layer-group. */
-body.edit-mode .layer-group:not(.active-layer) > .grid-card.entry {
+body.edit-mode .layer-group:not(.active-layer) > .grid-card.entry > .entry-header-wrap,
+body.edit-mode .layer-group:not(.active-layer) > .grid-card.entry > .entry-body-wrap {
   background: var(--inactive-bg);
   outline: 1px dashed var(--inactive-border);
   border: none;
 }
-body.edit-mode .entry:hover {
+body.edit-mode .entry-header-wrap:hover,
+body.edit-mode .entry-body-wrap:hover {
   outline-color: var(--accent);
 }
-/* Inline-edit mode: solid accent outline + text cursor signal the card is
-   being edited in place (contenteditable), not dragged. */
-body.edit-mode .entry.editing {
+/* Inline-edit mode: solid accent outline on the body-wrap only (the
+   header has its own editor and shouldn't be highlighted while the body
+   is being edited). */
+body.edit-mode .entry.editing > .entry-body-wrap {
   outline: 1px solid var(--accent);
   outline-offset: -1px;
+}
+body.edit-mode .entry.editing {
   cursor: text;
 }
 body.edit-mode .entry.editing .entry-actions {

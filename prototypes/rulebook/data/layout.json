@@ -7,13 +7,11 @@
       "id": "chapter-title",
       "kind": "chapter",
       "header": "Chapter One: Preparing for adventure",
-      "sidebarTitle": "Chapter One: Preparing for Adventure",
-      "title": "",
       "page": 1,
       "col": 3,
       "row": 3,
-      "w": 43,
-      "h": 4,
+      "w": 45,
+      "h": 7,
       "z": 1,
       "layerId": "layer-25r37pr"
     },
@@ -23,26 +21,22 @@
       "header": "World Overview",
       "page": 1,
       "col": 3,
-      "row": 7,
-      "w": 21,
+      "row": 11,
+      "w": 22,
       "h": 22,
       "layerId": "layer-7rnpnsz",
-      "sidebarTitle": "World Overview",
-      "title": "New Section",
       "z": 5
     },
     {
       "id": "entry-1784664805857",
-      "kind": "header",
+      "kind": "subheader",
       "header": "The Hallows Above",
       "page": 1,
-      "col": 25,
-      "row": 7,
-      "w": 21,
+      "col": 26,
+      "row": 11,
+      "w": 22,
       "h": 21,
       "layerId": "layer-7rnpnsz",
-      "sidebarTitle": "The Hallows Above",
-      "title": "New Header",
       "z": 9
     },
     {
@@ -50,13 +44,11 @@
       "kind": "subheader",
       "header": "The Circles Below",
       "page": 1,
-      "col": 25,
-      "row": 29,
-      "w": 21,
+      "col": 26,
+      "row": 33,
+      "w": 22,
       "h": 21,
       "layerId": "layer-7rnpnsz",
-      "sidebarTitle": "The Circles Below",
-      "title": "New Subheader",
       "z": 8
     },
     {
@@ -65,12 +57,10 @@
       "header": "Core Realms",
       "page": 1,
       "col": 3,
-      "row": 30,
-      "w": 21,
+      "row": 34,
+      "w": 22,
       "h": 5,
       "layerId": "layer-7rnpnsz",
-      "sidebarTitle": "Core Realms",
-      "title": "New Header",
       "z": 6
     },
     {
@@ -79,12 +69,10 @@
       "header": "The Mortal Realm",
       "page": 1,
       "col": 3,
-      "row": 36,
-      "w": 21,
+      "row": 40,
+      "w": 22,
       "h": 22,
       "layerId": "layer-7rnpnsz",
-      "sidebarTitle": "The Mortal Realm",
-      "title": "New Subheader",
       "z": 7
     },
     {
@@ -92,18 +80,16 @@
       "kind": "subheader",
       "header": "The Realms Beyond",
       "page": 1,
-      "col": 25,
-      "row": 53,
-      "w": 21,
+      "col": 26,
+      "row": 55,
+      "w": 22,
       "h": 9,
       "layerId": "layer-7rnpnsz",
-      "sidebarTitle": "The Realms Beyond",
-      "title": "New Subheader",
       "z": 10
     }
   ],
   "appendix": {
-    "title": "Appendix"
+    "header": "Appendix"
   },
   "grid": {
     "cols": 51,
@@ -114,7 +100,7 @@
       "id": "layer-25r37pr",
       "scope": "global",
       "page": null,
-      "name": "Base",
+      "name": "Background",
       "visible": true,
       "editHidden": false
     },
@@ -122,7 +108,7 @@
       "id": "layer-7rnpnsz",
       "scope": "global",
       "page": null,
-      "name": "Layer 2",
+      "name": "Entries",
       "visible": true,
       "editHidden": false
     }

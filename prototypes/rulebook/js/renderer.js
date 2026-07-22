@@ -138,7 +138,7 @@ const Renderer = (() => {
 
     (layout.entries || []).forEach(obj => {
       const kind = obj.kind || 'entry';
-      const label = obj.sidebarTitle || obj.id.replace(/-/g, ' ');
+       const label = obj.header || obj.id.replace(/-/g, ' ');
 
 if (kind === 'chapter') {
          curChapter = document.createElement('div');
@@ -351,7 +351,7 @@ ensureChapter();
 
       const labelEl = document.createElement('span');
       labelEl.className = 'toc-label';
-      labelEl.textContent = layout.appendix.title || 'Appendix';
+       labelEl.textContent = layout.appendix.header || 'Appendix';
       titleEl.appendChild(spacerWrap);
       titleEl.appendChild(labelEl);
       titleEl.addEventListener('click', () => {
@@ -399,7 +399,7 @@ ensureChapter();
      // of kind 'chapter', nothing special. `kind` only drives TOC nesting.
     (layout.entries || []).forEach(item => {
       const kind = item.kind || 'entry';
-      const label = item.sidebarTitle || item.title || item.id.replace(/-/g, ' ');
+       const label = item.header || item.id.replace(/-/g, ' ');
 
       const entryDiv = document.createElement('div');
       entryDiv.className = 'grid-card entry loading' + (item.hidden ? ' entry-hidden' : '');
@@ -418,7 +418,7 @@ ensureChapter();
     if (!layout.appendix) return;
     const appendix = document.getElementById('appendix');
     appendix.style.display = '';
-    document.getElementById('appendix-title').textContent = layout.appendix.title || 'Appendix';
+     document.getElementById('appendix-title').textContent = layout.appendix.header || 'Appendix';
 
     try {
       const resp = await fetch('/api/appendix');
@@ -516,10 +516,12 @@ ensureChapter();
     const entryId = entryEl.dataset.entryId;
     if (!entryId || entryEl.dataset.loaded) return;
     try {
-      const resp = await fetch(ENTRY_DIR + entryId + '.html');
-      if (!resp.ok) throw new Error(resp.status);
+      const url = ENTRY_DIR + entryId + '.html';
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error(resp.status + ' ' + resp.statusText + ' for ' + url);
       populateEntry(entryEl, entryId, await resp.text());
     } catch (err) {
+      console.error('loadEntry failed for', entryEl.dataset.entryId, err);
        // Auto-heal missing HTML files (chapters included) so every entry
       // renders its own content rather than an error. createEntry is a
       // no-op (409) when the file already exists.
@@ -545,19 +547,23 @@ ensureChapter();
     const item = layout && (layout.entries || []).find(e => e.id === entryId);
     const kind = item && item.kind ? item.kind : 'entry';
     const header = item && item.header ? item.header : '';
-    if (header && kind !== 'entry') {
+    if (header && kind !== 'entry' && !entryEl.querySelector('.entry-body-wrap')) {
       let tag = 'h1';
       if (kind === 'section') tag = 'h2';
       else if (kind === 'header') tag = 'h3';
       else if (kind === 'subheader') tag = 'h4';
+      const wrap = document.createElement('div');
+      wrap.className = 'entry-header-wrap';
       const headerEl = document.createElement(tag);
       headerEl.className = 'entry-header';
       headerEl.setAttribute('data-editable', 'header');
       headerEl.textContent = header;
-      headerEl.addEventListener('dblclick', (e) => {
-        e.stopPropagation();
-        e.preventDefault();
-        if (headerEl.getAttribute('contenteditable') === 'true') return;
+       headerEl.addEventListener('dblclick', (e) => {
+         // While already editing, let the browser handle double-click (word selection).
+         // Just stop propagation to parent handlers; don't preventDefault.
+         if (headerEl.getAttribute('contenteditable') === 'true') { e.stopPropagation(); return; }
+         e.stopPropagation();
+         e.preventDefault();
         headerEl.setAttribute('contenteditable', 'true');
         headerEl.classList.add('editing-header');
         headerEl.focus();
@@ -567,11 +573,18 @@ ensureChapter();
         const sel = window.getSelection();
         sel.removeAllRanges();
         sel.addRange(range);
-        headerEl.addEventListener('blur', onHeaderBlur);
-        headerEl.addEventListener('input', onHeaderInput);
-      });
-      entryEl.innerHTML = html;
-      entryEl.insertBefore(headerEl, entryEl.firstChild);
+       headerEl.addEventListener('blur', onHeaderBlur);
+       headerEl.addEventListener('input', onHeaderInput);
+       // Track that we just double-clicked so onHeaderBlur doesn't immediately remove contenteditable.
+       headerEl._justDblClicked = false;
+     });
+      wrap.appendChild(headerEl);
+      const bodyWrap = document.createElement('div');
+      bodyWrap.className = 'entry-body-wrap';
+      bodyWrap.innerHTML = html;
+      entryEl.innerHTML = '';
+      entryEl.appendChild(wrap);
+      entryEl.appendChild(bodyWrap);
     } else {
       entryEl.innerHTML = html;
     }
@@ -608,22 +621,23 @@ ensureChapter();
     const item = (layout.entries || []).find(en => en.id === entryId);
     if (!item) return;
     const newHeader = headerEl.textContent.trim();
-    item.header = newHeader;
-    item.sidebarTitle = newHeader;
-    // Mark dirty - StructureUI should have a setDirty method
+     item.header = newHeader;
+     // Mark dirty - StructureUI should have a setDirty method
     if (typeof window.StructureUI !== 'undefined' && window.StructureUI.setDirty) {
       window.StructureUI.setDirty();
     }
   }
 
-  function onHeaderBlur(e) {
-    const headerEl = e.target;
-    headerEl.removeAttribute('contenteditable');
-    headerEl.classList.remove('editing-header');
-    headerEl.removeEventListener('blur', onHeaderBlur);
-    headerEl.removeEventListener('input', onHeaderInput);
-    renderTOC();
-  }
+   function onHeaderBlur(e) {
+     // Don't remove contenteditable if a double-click just happened (within 500ms).
+     if (e.target._justDblClicked && Date.now() - e.target._dblClickTime < 500) { e.target._justDblClicked = false; return; }
+     const headerEl = e.target;
+     headerEl.removeAttribute('contenteditable');
+     headerEl.classList.remove('editing-header');
+     headerEl.removeEventListener('blur', onHeaderBlur);
+     headerEl.removeEventListener('input', onHeaderInput);
+     renderTOC();
+   }
 
   async function loadAllEntries() {
     const entryEls = document.querySelectorAll('#chapters-container .entry.loading');
@@ -640,7 +654,7 @@ ensureChapter();
     for (const obj of (layout.entries || [])) {
       const kind = obj.kind || 'entry';
        if (kind === 'chapter') {
-        current = obj.sidebarTitle || obj.title || obj.id;
+         current = obj.header || obj.id;
       } else if (obj.id === entryId) {
         return current;
       }

@@ -63,27 +63,41 @@ const StructureUI = (() => {
     let minTop = Infinity, minLeft = Infinity, maxBottom = -Infinity, maxRight = -Infinity;
     const walk = el => {
       for (const child of el.children) {
-        if (child.matches(AFFORDANCE_SEL) || child.classList.contains('overflow-frame')) continue;
-        let top = child.offsetTop;
-        let left = child.offsetLeft;
-        let p = child.offsetParent;
-        while (p && p !== card) {
-          top += p.offsetTop;
-          left += p.offsetLeft;
-          p = p.offsetParent;
+        // Skip affordances, the overflow frame, and the header wrap (its
+        // tight line-heights make glyphs spill past the wrap and would
+        // false-flag overflow). The body wrap has overflow:hidden so its
+        // own scrollHeight reflects clipped content — skip measuring it
+        // but still walk into it to measure its real content children.
+        const skipMeasure = child.matches(AFFORDANCE_SEL)
+          || child.classList.contains('overflow-frame')
+          || child.classList.contains('entry-header-wrap')
+          || (child.classList.contains('entry-body-wrap') && getComputedStyle(child).overflow === 'hidden');
+        if (!skipMeasure) {
+          let top = child.offsetTop;
+          let left = child.offsetLeft;
+          let p = child.offsetParent;
+          while (p && p !== card) {
+            top += p.offsetTop;
+            left += p.offsetLeft;
+            p = p.offsetParent;
+          }
+          // Measure at the TRUE content extent, not just the element box.
+          // A block's offsetWidth stays pinned to the container width even when
+          // its content (e.g. a single unbreakable word, or wide inline content)
+          // spills past the right/bottom edge — scrollWidth/scrollHeight capture
+          // that overflow, so the spill is actually detected.
+          const bottom = top + Math.max(child.offsetHeight, child.scrollHeight);
+          const right = left + Math.max(child.offsetWidth, child.scrollWidth);
+          if (top < minTop) minTop = top;
+          if (left < minLeft) minLeft = left;
+          if (bottom > maxBottom) maxBottom = bottom;
+          if (right > maxRight) maxRight = right;
         }
-        // Measure at the TRUE content extent, not just the element box.
-        // A block's offsetWidth stays pinned to the container width even when
-        // its content (e.g. a single unbreakable word, or wide inline content)
-        // spills past the right/bottom edge — scrollWidth/scrollHeight capture
-        // that overflow, so the spill is actually detected.
-        const bottom = top + Math.max(child.offsetHeight, child.scrollHeight);
-        const right = left + Math.max(child.offsetWidth, child.scrollWidth);
-        if (top < minTop) minTop = top;
-        if (left < minLeft) minLeft = left;
-        if (bottom > maxBottom) maxBottom = bottom;
-        if (right > maxRight) maxRight = right;
-        walk(child);
+        // Always walk into children (unless it's an affordance/overflow-frame
+        // that has no measurable content).
+        if (!child.matches(AFFORDANCE_SEL) && !child.classList.contains('overflow-frame')) {
+          walk(child);
+        }
       }
     };
     walk(card);
@@ -336,7 +350,8 @@ const StructureUI = (() => {
     const item = layout && (layout.entries || []).find(en => en.id === eid);
     if (item && item.layerId && typeof Layers !== 'undefined') {
       Layers.setActiveLayerId(item.layerId);
-      if (Layers.updateActiveLayerGroups) Layers.updateActiveLayerGroups();
+      Layers.updateActiveLayerGroups();
+      Layers.sync();
     }
   }
 
@@ -472,7 +487,7 @@ const StructureUI = (() => {
   // created entries have content to load.
   function rebuild() {
     Renderer.renderChapters();
-    Renderer.loadAllEntries().then(() => {
+    return Renderer.loadAllEntries().then(() => {
       applyPendingEditsToDOM();
       PageNumbers.paginate();
       enable();
@@ -691,7 +706,10 @@ const StructureUI = (() => {
     // Double-click the card body to jump straight into inline editing with
     // the caret placed near the pointer (bypasses the Edit button).
     card.addEventListener('dblclick', (e) => {
-      if (card.getAttribute('contenteditable') === 'true') return;
+      if (card.getAttribute('contenteditable') === 'true') { e.stopPropagation(); return; }
+      // The header-wrap has its own dblclick editor — never start a body
+      // edit when the click landed on the header.
+      if (e.target.closest('.entry-header-wrap')) return;
       if (e.target.closest('button, input, select, .struct-btn, .entry-actions, .entry-edge-actions, .resize-handle')) return;
       e.stopPropagation();
       e.preventDefault();
@@ -816,51 +834,61 @@ const StructureUI = (() => {
 
     const pageElA = card.closest('.page');
     const actions = pageElA ? pageElA.querySelector('.entry-actions[data-entry-id="' + eid + '"]') : null;
-    const editing = card.getAttribute('contenteditable') === 'true';
+    // For header-kind cards, only the body-wrap is editable — the header
+    // has its own dblclick editor (see populateEntry in renderer.js). For
+    // plain entries (no body-wrap), the whole card is editable.
+    const bodyWrap = card.querySelector(':scope > .entry-body-wrap');
+    const target = bodyWrap || card;
+    const editing = target.getAttribute('contenteditable') === 'true';
 
     if (editing) {
-      card.removeAttribute('contenteditable');
+      target.removeAttribute('contenteditable');
       card.classList.remove('editing');
       syncUIEditing(card, false);
       if (actions) actions.setAttribute('contenteditable', 'false');
       if (btn) btn.classList.remove('active');
-      card.removeEventListener('input', onInlineInput);
+      target.removeEventListener('input', onInlineInput);
       bufferInlineEdit(card, eid);
     } else {
-      card.setAttribute('contenteditable', 'true');
+      // contenteditable on the body target only. tabindex makes the wrap
+      // focusable so the caret has a place to live.
+      target.setAttribute('contenteditable', 'true');
+      if (bodyWrap) target.setAttribute('tabindex', '-1');
       card.classList.add('editing');
       if (actions) actions.setAttribute('contenteditable', 'false');
       syncUIEditing(card, true);
       if (btn) btn.classList.add('active');
-      card.addEventListener('input', onInlineInput);
+      target.addEventListener('input', onInlineInput);
       // An empty <p></p> has no line box, so the contenteditable caret has
       // nowhere to render and typing does nothing. Seed a <br> so there's a
       // caret position — done before the snapshot so an untouched entry
       // still compares equal and stays clean.
-      const contentP = card.querySelector(':scope > p');
+      const contentP = target.querySelector(':scope > p');
       if (contentP && !contentP.textContent && !contentP.querySelector('br, img, table')) {
         contentP.appendChild(document.createElement('br'));
       }
       // Snapshot current content to detect real changes on exit. Must strip
       // the same affordances as bufferInlineEdit so an untouched entry
-      // still compares equal.
+      // still compares equal. Only snapshot the body content (the renderer
+      // rebuilds the wraps from layout.json on reload).
       const snap = card.cloneNode(true);
       const sa = snap.querySelector('.entry-actions');
       if (sa) sa.remove();
       snap.querySelectorAll('.entry-edge-actions, .resize-handle, .struct-btn, .entry-add-actions').forEach(n => n.remove());
-      editOriginals.set(eid, snap.innerHTML.trim());
-      card.focus();
+      const snapBody = snap.querySelector('.entry-body-wrap');
+      editOriginals.set(eid, snapBody ? snapBody.innerHTML.trim() : snap.innerHTML.trim());
+      target.focus();
       // Drop the caret as close to the pointer as possible when the edit was
       // opened from a double-click; otherwise leave the default focus caret.
       if (typeof clientX === 'number' && typeof clientY === 'number') {
         const range = caretFromPoint(clientX, clientY);
-        if (range && card.contains(range.startContainer)) {
+        if (range && target.contains(range.startContainer)) {
           const sel = window.getSelection();
           sel.removeAllRanges();
           sel.addRange(range);
         }
       }
-      card.addEventListener('blur', onInlineBlur, true);
+      target.addEventListener('blur', onInlineBlur, true);
     }
   }
 
@@ -868,14 +896,15 @@ const StructureUI = (() => {
   // elsewhere). Ignore blurs that land inside the card (its own controls).
   let _inlineBlurTimer = null;
   function onInlineBlur(e) {
-    const card = e.currentTarget;
-    if (!card || card.getAttribute('contenteditable') !== 'true') return;
-    if (card.contains(document.activeElement)) return;
+    const target = e.currentTarget;
+    if (!target || target.getAttribute('contenteditable') !== 'true') return;
+    if (target.contains(document.activeElement)) return;
     if (_inlineBlurTimer) clearTimeout(_inlineBlurTimer);
     _inlineBlurTimer = setTimeout(() => {
-      if (!card.isConnected) return;
-      if (card.getAttribute('contenteditable') !== 'true') return;
-      if (card.contains(document.activeElement)) return;
+      if (!target.isConnected) return;
+      if (target.getAttribute('contenteditable') !== 'true') return;
+      if (target.contains(document.activeElement)) return;
+      const card = target.closest('.grid-card') || target;
       toggleInlineEdit(card, card.querySelector('.entry-actions .icon-btn'));
     }, 150);
   }
@@ -894,7 +923,11 @@ const StructureUI = (() => {
     const a = clone.querySelector('.entry-actions');
     if (a) a.remove();
     clone.querySelectorAll('.entry-edge-actions, .resize-handle, .struct-btn, .entry-add-actions').forEach(n => n.remove());
-    const html = clone.innerHTML.trim();
+    // Only persist the body content — the renderer rebuilds the header-wrap
+    // and body-wrap from layout.json on reload, so saving the injected
+    // wraps would double-nest them.
+    const bodyWrap = clone.querySelector('.entry-body-wrap');
+    const html = bodyWrap ? bodyWrap.innerHTML.trim() : clone.innerHTML.trim();
     const original = editOriginals.get(eid);
     // No change → drop any prior pending edit for this entry, stay clean.
     if (html === original) {
@@ -1039,6 +1072,7 @@ const StructureUI = (() => {
     const item = Grid.findItem(layout, 'entry', id);
     if (!item) return;
     if (item.kind === newKind) return;
+    const wasSelected = card.classList.contains('selected');
     item.kind = newKind;
     EditMode.setDirty();
 
@@ -1047,14 +1081,19 @@ const StructureUI = (() => {
     // plain 'entry' gets blank (title-less) content; TOC kinds get a title.
     try {
       if (newKind === 'entry') await API.createEntry(id, '', { empty: true });
-      else await API.createEntry(id, item.sidebarTitle || id, { kind: newKind });
+       else await API.createEntry(id, item.header || id, { kind: newKind });
     } catch (err) {
       if (!err.message.includes('409')) {
         console.warn('changeKind: could not ensure entry HTML file', err);
       }
     }
 
-    rebuild();
+    rebuild().then(() => {
+      if (wasSelected) {
+        const fresh = document.getElementById('entry-' + id);
+        if (fresh) selectCard(fresh);
+      }
+    });
     History.commit('change kind');
   }
 
@@ -1073,7 +1112,7 @@ const StructureUI = (() => {
     // item removes that item and its file only — never any other entry.
     const confirmed = await Popup.confirm({
       message: item.kind === 'chapter'
-        ? 'Delete chapter "' + (item.sidebarTitle || item.title || id) + '"?'
+        ? 'Delete chapter "' + (item.header || id) + '"?'
         : 'Delete this entry permanently?',
       x: e.clientX,
       y: e.clientY,
@@ -1112,11 +1151,10 @@ const StructureUI = (() => {
     }
 
     const chapterLayer = (typeof Layers !== 'undefined') ? Layers.getActiveLayerId(slot.page) : null;
-    layout.entries.push({
-      id,
-      kind: 'chapter',
-      sidebarTitle: 'New Chapter',
-      title: 'New Chapter',
+     layout.entries.push({
+       id,
+       kind: 'chapter',
+       header: 'New Chapter',
       page: slot.page,
       col: slot.col,
       row: slot.row,
@@ -1164,10 +1202,9 @@ const StructureUI = (() => {
     const title = kind === 'entry' ? '' : 'New ' + kind[0].toUpperCase() + kind.slice(1);
     const activeLayer = (typeof Layers !== 'undefined') ? Layers.getActiveLayerId(page) : null;
     const item = { id, kind, page, col, row, w, h, layerId: activeLayer };
-    if (kind !== 'entry') {
-      item.sidebarTitle = title;
-      item.title = title;
-    }
+     if (kind !== 'entry') {
+       item.header = title;
+     }
 
     try {
       if (kind === 'entry') await API.createEntry(id, '', { empty: true });
@@ -1431,6 +1468,11 @@ const StructureUI = (() => {
     if (drag || resize) return;
     if (placement) return;
     if (e.button !== 0) return;
+    // If the click is inside any contenteditable element, don't interfere —
+    // let the browser handle text selection, cursor placement, etc.
+    // e.target might be a text node, so resolve to the nearest element first.
+    const el = e.target.nodeType === 3 ? e.target.parentNode : e.target;
+    if (el && el.closest && el.closest('[contenteditable="true"]')) { e.stopPropagation(); return; }
 
     // Resolve the card we're acting on. If the pointer is over a card, use
     // it. Otherwise (cursor just outside a card's box) search the page for
@@ -1457,6 +1499,7 @@ const StructureUI = (() => {
         pageEl.querySelectorAll('.grid-card').forEach(c => {
           if (!c.dataset.itemType) return;
           if (c.getAttribute('contenteditable') === 'true') return;
+          if (c.querySelector('[contenteditable="true"]')) return;
           const r = c.getBoundingClientRect();
           if (!edgeForPoint(r, e.clientX, e.clientY, RESIZE_TOL)) return;
           const dist = Math.min(
@@ -1476,8 +1519,11 @@ const StructureUI = (() => {
     const entryId = card.dataset.entryId;
     // Select the entry - this brings up the edit UI and updates the active layer
     selectCard(card);
-    // While a card is being edited inline (contenteditable), let the user
-    // click into the text instead of dragging the card around.
+    // While a card is being edited inline (contenteditable on body-wrap or
+    // header element), let the user click into the text instead of
+    // dragging the card around. Check the click target's ancestor chain
+    // — the editable element is no longer the card itself.
+    if (e.target.closest && e.target.closest('[contenteditable="true"]')) return;
     if (card.getAttribute('contenteditable') === 'true') return;
     if (e.target.closest('button, input, select, .struct-btn, .entry-actions, .resize-handle')) return;
 

@@ -140,6 +140,7 @@ const PageNumbers = (() => {
 
       group.appendChild(el);
       el.classList.add('grid-card');
+      el.dataset.kind = kind;
       positionCard(el, item.col, item.row, item.w, item.h);
       el.style.setProperty('--z', String(typeof item.z === 'number' ? item.z : 0));
 
